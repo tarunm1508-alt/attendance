@@ -59,13 +59,13 @@
             let endpoint = "";
             let payload = {};
 
-            if (currentRole === 'parent') {
-                endpoint = "http://localhost:5000/api/parent/login";
-                payload = { username: userVal, password: passVal };
-            } else {
-                endpoint = "http://localhost:5000/api/auth/login";
-                payload = { usn: userVal, password: passVal, role: currentRole };
-            }
+      if (currentRole === 'parent') {
+            endpoint = "https://d0mp6n0b-5000.inc1.devtunnels.ms/api/parent/login";
+            payload = { username: userVal, password: passVal };
+        } else {
+            endpoint = "https://d0mp6n0b-5000.inc1.devtunnels.ms/api/auth/login";
+            payload = { usn: userVal, password: passVal, role: currentRole };
+        }
 
             try {
                 const res = await fetch(endpoint, {
@@ -102,12 +102,7 @@
             } catch (err) {
                 console.error("Error:", err);
                 alert("Server Error. Make sure backend is running.");
-                // TO THIS:
-fetch("https://d0mp6n0b-5000.inc1.devtunnels.ms/api/auth/login", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                })
+
             }
         }
     </script>
