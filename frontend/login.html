@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Academic Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { text-align: center; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); width: 350px; }
+        .role-badge { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #3498db; letter-spacing: 1.5px; margin-bottom: 10px; display: block; }
+        h2 { color: #2c3e50; margin-top: 0; margin-bottom: 30px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
+        button { width: 100%; padding: 14px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #2980b9; }
+        
+        .footer-links { margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px; font-size: 14px; color: #7f8c8d; }
+        .footer-links p { margin: 8px 0; }
+        .footer-links a { color: #3498db; text-decoration: none; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <span id="roleBadge" class="role-badge">Loading...</span>
+        <h2 id="loginTitle">Login</h2>
+
+        <input id="username" type="text" placeholder="Username / USN / Employee ID" name="user_id" autocomplete="username">
+        <input id="password" type="password" placeholder="Password">
+
+        <button onclick="handleLogin()">Log In</button>
+
+        <div class="footer-links">
+            <p>New user? <a href="signup.html">Sign Up</a></p>
+            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+            <p><a href="index.html">← Back to Selection</a></p>
+        </div>
+    </div>
+
+    <script>
+        // 1. Detect role from URL (e.g., login.html?role=teacher)
+        const params = new URLSearchParams(window.location.search);
+        let currentRole = (params.get('role') || 'student').toLowerCase();
+
+        // 2. Set UI labels automatically
+        document.getElementById("roleBadge").innerText = currentRole;
+        document.getElementById("loginTitle").innerText = currentRole.charAt(0).toUpperCase() + currentRole.slice(1) + " Login";
+
+        async function handleLogin() {
+            const userVal = document.getElementById("username").value.trim();
+            const passVal = document.getElementById("password").value.trim();
+
+            if (!userVal || !passVal) {
+                alert("Please enter credentials.");
+                return;
+            }
+
+            // 3. Choose the right API endpoint based on the URL role
+            let endpoint = "";
+            let payload = {};
+
+            if (currentRole === 'parent') {
+                endpoint = "http://localhost:5000/api/parent/login";
+                payload = { username: userVal, password: passVal };
+            } else {
+                endpoint = "http://localhost:5000/api/auth/login";
+                payload = { usn: userVal, password: passVal, role: currentRole };
+            }
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.clear();
+                    localStorage.setItem("role", currentRole);
+
+                    // Handle data storage for specific dashboards
+                    if (currentRole === 'parent') {
+                        localStorage.setItem("student_id", data.student_id);
+                        localStorage.setItem("user_name", data.user_name);
+                    } else {
+                        const finalID = data.user ? data.user.usn : userVal;
+                        localStorage.setItem("student_id", finalID);
+                        if(data.user && data.user.name) {
+                            localStorage.setItem("user_name", data.user.name);
+                        }
+                    }
+
+                    alert("Login Successful!");
+                    // 4. Redirect to the specific role page (teacher.html, student.html, or parent.html)
+                    window.location.href = currentRole + ".html";
+
+                } else {
+                    alert("Login Failed: " + (data.message || "Invalid credentials"));
+                }
+            } catch (err) {
+                console.error("Error:", err);
+                alert("Server Error. Make sure backend is running.");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent Portal | Academic Monitoring</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f2f5; --success: #27ae60; --dark: #333; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--dark); }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 35px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        
+        .header-box { background: #eef2f3; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: left; border-left: 6px solid #f1c40f; position: relative; }
+        .live-indicator { position: absolute; top: 25px; right: 25px; color: var(--success); font-size: 12px; font-weight: bold; letter-spacing: 1px; }
+
+        /* Student Metadata Profiles Card */
+        .student-profile-card { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; background: white; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #e0e0e0; }
+        .profile-meta-item { font-size: 14px; color: #555; }
+        .profile-meta-item strong { color: var(--primary); }
+
+        .year-card { margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 6px rgba(0,0,0,0.02); }
+        .year-header { background: var(--primary); color: white; padding: 18px; cursor: pointer; font-weight: 600; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .year-header:hover { background: #1a252f; }
+        
+        .sem-content { display: none; padding: 20px; background: #fff; border-top: 1px solid #eee; }
+        .sem-btn-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        .sem-btn { background: var(--accent); color: white; border: none; padding: 10px 22px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .sem-btn:hover { background: #2980b9; transform: translateY(-1px); }
+
+        .table-wrapper { display: none; margin-top: 15px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        th { background: #f8f9fa; padding: 12px; border: 1px solid #ddd; font-size: 13px; color: #444; }
+        td { padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
+        
+        /* Specialized UI/UX styling for separate subject attendance tracks */
+        .attendance-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+        .attendance-good { background: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .attendance-critical { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+
+        .logout-btn { background: #e74c3c; color: white; padding: 14px; border: none; border-radius: 8px; cursor: pointer; margin-top: 25px; font-weight: bold; width: 100%; font-size: 15px; transition: 0.2s; }
+        .logout-btn:hover { background: #c0392b; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-box">
+        <span class="live-indicator">● LIVE TRACKING ACTIVE</span>
+        <h1 style="margin:0; color:var(--primary); font-size: 28px;">👪 Parent Dashboard</h1>
+        <p style="margin:5px 0 0 0; color:#7f8c8d;">Logged in as: <span id="parentName" style="font-weight:bold; color:#333;"></span></p>
+        
+        <div class="student-profile-card">
+            <div class="profile-meta-item"><strong>Child Name:</strong> <span id="childName">Loading...</span></div>
+            <div class="profile-meta-item"><strong>USN/SRN:</strong> <span id="displaySRN">Loading...</span></div>
+            <div class="profile-meta-item"><strong>Branch:</strong> <span id="childBranch">AIML</span></div>
+            <div class="profile-meta-item"><strong>Class & Sec:</strong> <span id="childClassSec">-</span></div>
+        </div>
+    </div>
+
+    <div id="academicSection">
+    <div class="year-card">
+        <div class="year-header" onclick="toggleYear('year1')">YEAR 1 (Semesters 1 & 2) <span>▼</span></div>
+        <div id="year1" class="sem-content">
+            <div class="sem-btn-row">
+                <button class="sem-btn" onclick="toggleTable('tableSem1')">Semester 1</button>
+                <button class="sem-btn" onclick="toggleTable('tableSem2')">Semester 2</button>
+            </div>
+            <div id="tableSem1" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem1"></tbody></table></div>
+            <div id="tableSem2" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem2"></tbody></table></div>
+        </div>
+    </div>
+
+    <div class="year-card">
+        <div class="year-header" onclick="toggleYear('year2')">YEAR 2 (Semesters 3 & 4) <span>▼</span></div>
+        <div id="year2" class="sem-content">
+            <div class="sem-btn-row">
+                <button class="sem-btn" onclick="toggleTable('tableSem3')">Semester 3</button>
+                <button class="sem-btn" onclick="toggleTable('tableSem4')">Semester 4</button>
+            </div>
+            <div id="tableSem3" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem3"></tbody></table></div>
+            <div id="tableSem4" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem4"></tbody></table></div>
+        </div>
+    </div>
+
+    <div class="year-card">
+        <div class="year-header" onclick="toggleYear('year3')">YEAR 3 (Semesters 5 & 6) <span>▼</span></div>
+        <div id="year3" class="sem-content">
+            <div class="sem-btn-row">
+                <button class="sem-btn" onclick="toggleTable('tableSem5')">Semester 5</button>
+                <button class="sem-btn" onclick="toggleTable('tableSem6')">Semester 6</button>
+            </div>
+            <div id="tableSem5" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem5"></tbody></table></div>
+            <div id="tableSem6" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem6"></tbody></table></div>
+        </div>
+    </div>
+
+    <div class="year-card">
+        <div class="year-header" onclick="toggleYear('year4')">YEAR 4 (Semesters 7 & 8) <span>▼</span></div>
+        <div id="year4" class="sem-content">
+            <div class="sem-btn-row">
+                <button class="sem-btn" onclick="toggleTable('tableSem7')">Semester 7</button>
+                <button class="sem-btn" onclick="toggleTable('tableSem8')">Semester 8</button>
+            </div>
+            <div id="tableSem7" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem7"></tbody></table></div>
+            <div id="tableSem8" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem8"></tbody></table></div>
+        </div>
+    </div>
+</div>
+
+    <button class="logout-btn" onclick="logout()">Secure Logout</button>
+</div>
+
+<script>
+    const childSRN = localStorage.getItem("student_id");
+    const parentName = localStorage.getItem("user_name");
+
+    if (!localStorage.getItem("role") || localStorage.getItem("role") !== 'parent') {
+        window.location.href = 'login.html?role=parent';
+    }
+
+    document.getElementById("parentName").innerText = parentName || "Parent";
+    document.getElementById("displaySRN").innerText = childSRN || "Not Linked";
+
+    function toggleYear(id) {
+        const el = document.getElementById(id);
+        const isVisible = el.style.display === 'block';
+        document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
+        el.style.display = isVisible ? 'none' : 'block';
+    }
+
+    function toggleTable(id) {
+        document.querySelectorAll('.table-wrapper').forEach(t => t.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+    }
+
+    async function loadParentDashboardData() {
+        if (!childSRN || childSRN === "null") return;
+
+        try {
+            // 1. Fetch entire profile object map (Includes Name, Branch, Class, Sec metadata)
+            const profileRes = await fetch(`http://localhost:5000/api/marks/student-profile/${childSRN}`);
+            const data = await profileRes.json();
+
+            if(data) {
+                // Populate Profile Metadata elements dynamically
+                document.getElementById("childName").innerText = data.student_name || "Tarun Bali";
+                document.getElementById("childBranch").innerText = data.branch || "AIML";
+                document.getElementById("childClassSec").innerText = `${data.current_class || '2nd Year'} - ${data.section || 'A'}`;
+            }
+
+            // 2. Clear out older references & cleanly map individual subject rows containing custom contextual badges
+            if (data.academic) {
+                data.academic.forEach(record => {
+                    const tbody = document.getElementById(`data-sem${record.semester}`);
+                    if (tbody) {
+                        const perc = record.total_classes > 0 ? ((record.attended_classes / record.total_classes) * 100).toFixed(1) : 0;
+                        
+                        // Pick elegant conditional UI styling rules based on aggregate values
+                        let attendanceClass = "attendance-badge";
+                        if(perc >= 75) attendanceClass += " attendance-good";
+                        if(perc < 65) attendanceClass += " attendance-critical";
+
+                        tbody.innerHTML += `
+                            <tr>
+                                <td style="text-align:left; font-weight:600;">${record.subject_name}</td>
+                                <td>${record.cie_1 || 0}</td>
+                                <td>${record.cie_2 || 0}</td>
+                                <td>${record.cie_3 || 0}</td>
+                                <td>${record.lab_marks || 0}</td>
+                                <td>${record.see_marks || 0}</td>
+                                <td>
+                                    <span class="${attendanceClass}">${record.attended_classes}/${record.total_classes} (${perc}%)</span>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+        } catch (e) { console.error("Error setting up premium view layer dashboard map:", e); }
+    }
+
+    function logout() { localStorage.clear(); window.location.href = "index.html"; }
+    window.onload = loadParentDashboardData;
+</script>
+</body>
+</html>

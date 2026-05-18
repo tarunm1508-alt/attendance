@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Academic Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body { text-align: center; font-family: 'Segoe UI', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .signup-container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); width: 400px; }
+        h2 { color: #2c3e50; margin-bottom: 25px; font-weight: 700; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; font-size: 14px; transition: 0.3s; }
+        input:focus, select:focus { border-color: #27ae60; box-shadow: 0 0 5px rgba(39, 174, 96, 0.2); }
+        button { width: 100%; padding: 14px; background-color: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #219150; transform: translateY(-1px); }
+        .link-text { margin-top: 20px; font-size: 14px; color: #7f8c8d; }
+        .link-text a { color: #3498db; text-decoration: none; font-weight: bold; }
+        
+        #parentLinkField { 
+            background: #fff9e6; 
+            padding: 15px; 
+            border-radius: 8px; 
+            border: 1px dashed #f1c40f; 
+            margin-bottom: 15px; 
+            display: none; 
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="signup-container">
+        <h2>Create Account</h2>
+        
+        <input id="usn" type="text" placeholder="USN / Employee ID">
+        <input id="name" type="text" placeholder="Full Name">
+        <input id="email" type="email" placeholder="Email Address">
+        <input id="password" type="password" placeholder="Create Password">
+
+        <select id="role" onchange="handleRoleChange()">
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="parent">Parent</option>
+        </select>
+
+        <div id="parentLinkField">
+            <p style="margin: 0 0 10px 0; font-size: 12px; color: #856404; font-weight: bold;">PARENT-STUDENT LINK</p>
+            <input id="child_usn" type="text" placeholder="Enter Child's USN (e.g., 1DA24AI015)">
+        </div>
+
+        <button onclick="handleSignup()">Sign Up</button>
+        <p class="link-text">Already have an account? <a href="login.html">Sign In</a></p>
+    </div>
+
+    <script>
+        function handleRoleChange() {
+            const role = document.getElementById("role").value;
+            const parentField = document.getElementById("parentLinkField");
+            const usnInput = document.getElementById("usn");
+
+            if (role === 'parent') {
+                parentField.style.display = 'block';
+                usnInput.placeholder = "Create Parent ID (e.g., P01)";
+            } else if (role === 'teacher') {
+                parentField.style.display = 'none';
+                usnInput.placeholder = "Employee ID (e.g., T01)";
+            } else {
+                parentField.style.display = 'none';
+                usnInput.placeholder = "Student USN (e.g., 1DA24AI015)";
+            }
+        }
+
+        async function handleSignup() {
+            const usn = document.getElementById("usn").value.trim();
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value.trim();
+            const role = document.getElementById("role").value;
+            const child_usn = document.getElementById("child_usn").value.trim();
+
+            if (!usn || !name || !email || !password) {
+                alert("Please fill in all basic fields.");
+                return;
+            }
+
+            if (role === 'parent' && !child_usn) {
+                alert("Please provide your child's USN to complete registration.");
+                return;
+            }
+
+            try {
+                const response = await fetch("http://localhost:5000/api/auth/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        usn, name, email, password, role, 
+                        child_usn: (role === 'parent' ? child_usn : null) 
+                    })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert(`Registration Successful as ${role}!`);
+                    window.location.href = `login.html?role=${role}`;
+                } else {
+                    alert("Registration Failed: " + data.message);
+                }
+            } catch (err) {
+                alert("Server error. Make sure your backend is running.");
+            }
+        }
+    </script>
+</body>
+</html>

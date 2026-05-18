@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Dashboard</title>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --secondary: #2196F3;
+            --dark: #343a40;
+            --light: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .dashboard-card {
+            background: white;
+            width: 90%;
+            max-width: 900px;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        h2 { color: var(--dark); margin-bottom: 5px; }
+        p { color: #666; margin-bottom: 25px; font-size: 14px; }
+
+        .table-container {
+            overflow-x: auto; /* Prevents overlap on small screens */
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+            padding: 15px 10px;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            color: #444;
+        }
+
+        tr:hover { background-color: #f9f9f9; }
+
+        .status-badge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-refresh {
+            background: var(--secondary);
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .btn-refresh:hover { background: #1976D2; transform: translateY(-2px); }
+
+        .btn-back {
+            background: var(--dark);
+            color: white;
+            margin-top: 25px;
+        }
+
+        .btn-back:hover { background: #000; }
+
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-card">
+        <h2>📊 Attendance Records</h2>
+        <p>Live student logs from the database</p>
+        
+        <button class="btn btn-refresh" onclick="loadAttendance()">🔄 Refresh Data</button>
+
+        <div class="table-container">
+            <table id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>Student ID</th>
+                        <th>Session</th>
+                        <th>Distance</th>
+                        <th>Status</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceData">
+                    <tr><td colspan="5">Click refresh to load data...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <button class="btn btn-back" onclick="window.location.href='teacher.html'">⬅️ Back to Panel</button>
+    </div>
+
+    <script>
+        async function loadAttendance() {
+            const tableBody = document.getElementById('attendanceData');
+            tableBody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+
+            try {
+                const response = await fetch('http://localhost:5000/api/attendance/records');
+                const data = await response.json();
+                
+                tableBody.innerHTML = ""; 
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = "<tr><td colspan='5'>No records found.</td></tr>";
+                    return;
+                }
+
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${row.student_id}</strong></td>
+                        <td><code>${row.session_code || 'N/A'}</code></td>
+                        <td>${row.distance}m</td>
+                        <td><span class="status-badge">PRESENT</span></td>
+                        <td>${new Date(row.created_at).toLocaleString()}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            } catch (err) {
+                tableBody.innerHTML = "<tr><td colspan='5' style='color:red'>Server Error</td></tr>";
+            }
+        }
+
+        window.onload = loadAttendance;
+    </script>
+
+    //Automatically refresh the table every 5 seconds
+    setInterval(loadAttendance, 5000);
+</body>
+</html>
