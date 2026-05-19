@@ -3,10 +3,10 @@ const router = express.Router();
 const pool = require("../db");
 const qrModule = require("./qr"); // Handles active memory management
 
-// 1. MARK ATTENDANCE (Student scans QR - Fully Dynamic for all subjects)
+// 1. MARK ATTENDANCE (Student scans QR - Fully Dynamic & Safe against string mismatches)
 router.post("/mark", async (req, res) => {
     try {
-        const { usn, qrData } = req.body; // 🎯 REMOVED 'subject' from req.body since it's dynamic now
+        const { usn, qrData } = req.body; 
         const currentActive = qrModule.activeQR;
 
         // Validation 1: Check if a session is actively running
@@ -14,9 +14,10 @@ router.post("/mark", async (req, res) => {
             return res.status(400).json({ success: false, message: "No active session found. Teacher must generate QR first." });
         }
 
-        // Validation 2: CRITICAL FRONTEND CHECK - Stop automatic dummy mock hits
-        // If the frontend didn't pass a real decoded string token from the camera lens, reject it instantly!
-        if (!qrData || qrData.trim() === "" || qrData !== currentActive.token) {
+        // 🎯 SECURITY CHECK FIX: Flexible matching rules!
+        // If qrData is missing OR it doesn't match/include the active token string, reject it.
+        // This handles cases where qrData is an entire URL or a structured JSON string cleanly!
+        if (!qrData || qrData.trim() === "" || (!qrData.includes(currentActive.token) && qrData !== currentActive.token)) {
             return res.status(400).json({ success: false, message: "Invalid or missing QR hardware scan signature data." });
         }
 
