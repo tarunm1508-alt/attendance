@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Portal | Academic Management System</title>
-    <script src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <style>
         /* Corporate Institutional Color Palette */
         :root { 
@@ -80,7 +80,8 @@
             border: 2px dashed #cbd5e1; 
             max-width: 440px; 
         }
-        #previewVideo { width: 100%; max-width: 400px; border-radius: 6px; background: #000; display: block; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        /* 🎯 FIXED: Container size adjusted for the new high-performance scanning engine grid box */
+        #previewVideo { width: 100%; max-width: 400px; border-radius: 6px; overflow: hidden; background: #000; display: block; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
         .btn-scan-trigger { 
             background-color: var(--accent); 
@@ -112,14 +113,6 @@
         .sem-btn:hover { border-color: #cbd5e1; color: var(--text-main); }
         .sem-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
 
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
-        .modal-card { background: white; padding: 35px; border-radius: 8px; width: 380px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); text-align: left; border: 1px solid var(--border); }
-        .modal-card h3 { margin-top: 0; color: var(--primary-dark); font-size: 18px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-        .modal-card label { font-weight: 600; font-size: 11px; color: var(--text-sub); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .modal-card input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; margin-bottom: 18px; outline: none; color: var(--text-main); font-size: 14px; transition: all 0.2s; }
-        .modal-card input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
-        .modal-actions { display: flex; gap: 12px; }
-
         .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); background: white; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         table { width: 100%; border-collapse: collapse; min-width: 950px; }
         th { background: #f8fafc; padding: 16px 10px; border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); font-size: 11px; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
@@ -140,6 +133,14 @@
         .btn-edit-trigger:hover { background: #e2e8f0; border-color: #cbd5e1; }
         .btn-logout { background: #fff5f5; color: var(--danger); border-color: #fee2e2; }
         .btn-logout:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal-card { background: white; padding: 35px; border-radius: 8px; width: 380px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); text-align: left; border: 1px solid var(--border); }
+        .modal-card h3 { margin-top: 0; color: var(--primary-dark); font-size: 18px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .modal-card label { font-weight: 600; font-size: 11px; color: var(--text-sub); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .modal-card input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; margin-bottom: 18px; outline: none; color: var(--text-main); font-size: 14px; transition: all 0.2s; }
+        .modal-card input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .modal-actions { display: flex; gap: 12px; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -163,7 +164,7 @@
 
     <div class="scanner-zone" id="cameraScannerBox">
         <h4 style="margin-top:0; color:var(--primary-dark); font-size: 14px; font-weight: 700;">🎥 Place QR Code Inside Camera Lens Bounds</h4>
-        <video id="previewVideo"></video>
+        <div id="previewVideo"></div>
         <button class="btn-action btn-logout" style="width:100%; padding:10px; margin-top:15px; font-size:12px;" onclick="stopQRScannerCamera()">
             Terminate Stream
         </button>
@@ -209,7 +210,7 @@
         <button class="sem-btn" id="sem8Btn" onclick="selectSemester(8)">Semester 8</button>
     </div>
 
-    <div class="table-responsive">
+    <div class="table-responsive" id="marksTableWrapper" style="display: none; margin-top: 20px;">
         <table>
             <thead>
                 <tr>
@@ -225,9 +226,14 @@
                 </tr>
             </thead>
             <tbody id="studentMarksTableBody">
-                <tr><td colspan="9" style="text-align: center; color:var(--text-sub); padding: 25px; font-style: italic;">Select academic year/semester rows to display.</td></tr>
-            </tbody>
+                </tbody>
         </table>
+        
+        <div style="background: #f8fafc; padding: 12px; text-align: right; border-top: 1px solid var(--border);">
+            <button class="btn-action btn-edit-trigger" style="margin: 0; padding: 6px 16px; font-size: 12px; max-width: 200px;" onclick="closeActiveLedgerGrid()">
+                ❌ Hide Academic Ledger
+            </button>
+        </div>
     </div>
 
     <div class="action-footer">
@@ -237,13 +243,13 @@
 </div>
 
 <script>
-    // ⚡ STEP 1 FIXED: Explicitly sets your active backend tunnel endpoint matching port 5000
     const BACKEND_URL = "https://d0mp6n0b-5000.inc1.devtunnels.ms"; 
 
     const currentStudentUSN = localStorage.getItem("user_usn") || localStorage.getItem("student_id") || "1DA24AI015";
-    let localMediaStreamTrack = null; 
+    let html5QrcodeScannerInstance = null; // 🎯 FIXED: Holds reference to our high-performance camera instance
     let globalAcademicRows = []; 
     let cachedUserRawData = {};
+    let activeSelectedSemester = null;
 
     if (!localStorage.getItem("role") || localStorage.getItem("role") !== 'student') {
         window.location.href = 'login.html?role=student';
@@ -256,16 +262,32 @@
         document.querySelectorAll('.sem-container').forEach(box => box.style.display = 'none');
         document.getElementById(`year${yearNum}Sems`).style.display = 'flex';
 
-        const defaultSems = { 1: 1, 2: 3, 3: 5, 4: 7 };
-        selectSemester(defaultSems[yearNum]);
+        closeActiveLedgerGrid();
     }
 
     function selectSemester(semNum) {
+        const tableWrapper = document.getElementById("marksTableWrapper");
+
+        if (activeSelectedSemester === semNum) {
+            closeActiveLedgerGrid();
+            return;
+        }
+
+        activeSelectedSemester = semNum;
+
         document.querySelectorAll('.sem-btn').forEach(btn => btn.classList.remove('active'));
         if(document.getElementById(`sem${semNum}Btn`)) {
             document.getElementById(`sem${semNum}Btn`).classList.add('active');
         }
+        
+        tableWrapper.style.display = "block";
         renderFilteredTableGrid(semNum);
+    }
+
+    function closeActiveLedgerGrid() {
+        document.getElementById("marksTableWrapper").style.display = "none";
+        document.querySelectorAll('.sem-btn').forEach(btn => btn.classList.remove('active'));
+        activeSelectedSemester = null;
     }
 
     function calculateVTUGradePoint(totalMarks) {
@@ -341,12 +363,11 @@
                 `;
             });
 
-            // FIXED BACKEND ENDPOINT FOR SYNC-GPA
             fetch(`${BACKEND_URL}/api/marks/sync-gpa/${currentStudentUSN}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sgpa: currentSgpa, cgpa: currentCgpa })
-            }).catch(e => console.log("Sync logged via Dev Tunnel."));
+            }).catch(e => console.log("Sync logged."));
 
         } else {
             tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-sub); padding:25px; font-style:italic;">No records found for Semester ${targetSem} inside database.</td></tr>`;
@@ -359,47 +380,66 @@
         else { scannerBox.style.display = "block"; initializeHardwareCameraStream(); }
     }
 
+    // 🎯 FIXED MASTER CAMERA CONTROLLER (Html5Qrcode Native Version)
     function initializeHardwareCameraStream() {
-        const video = document.getElementById('previewVideo');
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-            .then(function (stream) {
-                localMediaStreamTrack = stream;
-                video.srcObject = stream;
-                video.setAttribute("playsinline", true);
-                video.play();
+        // Create an instance linking directly to our target division frame element box
+        html5QrcodeScannerInstance = new Html5Qrcode("previewVideo");
+
+        const qrSuccessCallback = async (qrCodeContentData) => {
+            if (!qrCodeContentData) return;
+            
+            try {
+                const scanResponse = await fetch(`${BACKEND_URL}/api/attendance/mark`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        usn: currentStudentUSN, 
+                        qrData: qrCodeContentData 
+                    })
+                });
                 
-                setTimeout(async () => {
-                    if(!localMediaStreamTrack) return;
-                    try {
-                        const currentActiveSubject = "DBMS"; 
-                        // FIXED BACKEND ENDPOINT FOR ATTENDANCE
-                        const scanResponse = await fetch(`${BACKEND_URL}/api/attendance/mark`, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ usn: currentStudentUSN, subject: currentActiveSubject })
-                        });
-                        if (scanResponse.ok) {
-                            alert(`Attendance Success: Marked present for ${currentActiveSubject}! ✅`);
-                            stopQRScannerCamera();
-                            loadStudentDashboardPayload();
-                        }
-                    } catch(e) { console.log("Scan routine completed."); }
-                }, 2000);
-            })
-            .catch(function (err) {
-                alert('Webcam permissions blocked on Dev Tunnel handler loop.');
-                document.getElementById("cameraScannerBox").style.display = "none";
-            });
+                const resultLog = await scanResponse.json();
+                
+                if (scanResponse.ok && resultLog.success) {
+                    alert(`Attendance Success: ${resultLog.message} ✅`);
+                    stopQRScannerCamera();
+                    loadStudentDashboardPayload();
+                } else {
+                    alert(`Scanner Restriction: ${resultLog.message} ⚠️`);
+                    stopQRScannerCamera();
+                }
+            } catch(e) { 
+                console.error("Camera interface network failure:", e); 
+            }
+        };
+
+        // 🎯 CONFIG PROFILE: Explicitly forces hardware back lens initialization instantly 
+        const cameraConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+        html5QrcodeScannerInstance.start(
+            { facingMode: "environment" }, // Forces mobile phone back camera
+            cameraConfig,
+            qrSuccessCallback,
+            (errorMessage) => { /* Silently handle frames transition checks */ }
+        ).catch(err => {
+            console.error("Webcam allocation failure:", err);
+            alert("Camera device allocation lock encountered. Please make sure no other app is tracking the lens.");
+            document.getElementById("cameraScannerBox").style.display = "none";
+        });
     }
 
     function stopQRScannerCamera() {
-        const video = document.getElementById('previewVideo');
-        if (localMediaStreamTrack) {
-            localMediaStreamTrack.getTracks().forEach(track => track.stop());
-            localMediaStreamTrack = null;
+        if (html5QrcodeScannerInstance) {
+            html5QrcodeScannerInstance.stop().then(() => {
+                html5QrcodeScannerInstance = null;
+                document.getElementById("cameraScannerBox").style.display = "none";
+            }).catch(err => {
+                console.error("Failed to kill stream cleanly:", err);
+                document.getElementById("cameraScannerBox").style.display = "none";
+            });
+        } else {
+            document.getElementById("cameraScannerBox").style.display = "none";
         }
-        if(video) video.srcObject = null;
-        document.getElementById("cameraScannerBox").style.display = "none";
     }
 
     function openEditModal() {
@@ -416,7 +456,6 @@
         const updatedPassword = document.getElementById("editPassword").value.trim();
 
         try {
-            // FIXED BACKEND ENDPOINT FOR UPDATE PROFILE
             const res = await fetch(`${BACKEND_URL}/api/marks/update-profile/${currentStudentUSN}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
@@ -434,7 +473,6 @@
 
     async function loadStudentDashboardPayload() {
         try {
-            // FIXED BACKEND ENDPOINT FOR PROFILE FETCHER
             const response = await fetch(`${BACKEND_URL}/api/marks/student-profile/${currentStudentUSN}`);
             const data = await response.json();
 
@@ -449,7 +487,10 @@
                 cachedUserRawData.password = data.parent ? data.parent.password : "";
 
                 globalAcademicRows = data.academic || [];
-                selectYear(1); 
+                
+                document.querySelectorAll('.year-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.sem-container').forEach(box => box.style.display = 'none');
+                closeActiveLedgerGrid();
             }
         } catch (err) { console.error(err); }
     }

@@ -3,20 +3,31 @@ const router = express.Router();
 const pool = require("../db");
 const qrModule = require("./qr"); // Handles active memory management
 
-// 1. MARK ATTENDANCE (Student scans QR)
+// 1. MARK ATTENDANCE (Student scans QR - Fully Dynamic for all subjects)
 router.post("/mark", async (req, res) => {
     try {
-        const { usn, subject } = req.body;
+        const { usn, qrData } = req.body; // 🎯 REMOVED 'subject' from req.body since it's dynamic now
         const currentActive = qrModule.activeQR;
 
-        // Validation: Check if a session is actively running
+        // Validation 1: Check if a session is actively running
         if (!currentActive || !currentActive.token) {
             return res.status(400).json({ success: false, message: "No active session found. Teacher must generate QR first." });
         }
 
-        // Logic check: Ensure student is scanning the right subject QR
-        if (subject !== currentActive.subject) {
-             return res.status(400).json({ success: false, message: "Subject mismatch. Please scan the correct QR code." });
+        // Validation 2: CRITICAL FRONTEND CHECK - Stop automatic dummy mock hits
+        // If the frontend didn't pass a real decoded string token from the camera lens, reject it instantly!
+        if (!qrData || qrData.trim() === "" || qrData !== currentActive.token) {
+            return res.status(400).json({ success: false, message: "Invalid or missing QR hardware scan signature data." });
+        }
+
+        // 🎯 STRICT DUPLICATE PREVENTER: Query the DB to check if this USN already checked in for this specific token
+        const duplicateCheck = await pool.query(
+            "SELECT id FROM attendance WHERE usn = $1 AND session_code = $2",
+            [usn, currentActive.token]
+        );
+
+        if (duplicateCheck.rows.length > 0) {
+            return res.status(400).json({ success: false, message: `Attendance already logged for ${currentActive.subject} today!` });
         }
 
         // Start a Database Transaction to ensure data integrity
@@ -28,32 +39,27 @@ router.post("/mark", async (req, res) => {
             [usn, currentActive.token, currentActive.subject, 'Present']
         );
 
-        // DATABASE UPDATE 2: Increment "Attended Classes" inside the specialized subject metrics table
+        // DATABASE UPDATE 2: Increment "Attended Classes" inside the specialized subject metrics table dynamically
         const updateResult = await pool.query(
             `UPDATE subject_attendance 
              SET attended_classes = attended_classes + 1 
-             WHERE usn = $1 AND subject_name = $2`,
-            [usn, currentActive.subject]
+             WHERE usn = $1 AND LOWER(subject_name) LIKE LOWER($2)`,
+            [usn, `%${currentActive.subject}%`]
         );
 
         if (updateResult.rowCount === 0) {
             await pool.query('ROLLBACK');
-            return res.status(404).json({ success: false, message: "Student record assignment not found for this subject." });
+            return res.status(404).json({ success: false, message: `Student record assignment not found for ${currentActive.subject}.` });
         }
 
         // Commit transaction changes cleanly
         await pool.query('COMMIT');
-        res.json({ success: true, message: `Attendance marked for ${currentActive.subject} ✅` });
+        res.json({ success: true, message: `Attendance marked for ${currentActive.subject} successfully! ✅` });
 
     } catch (error) {
         // Rollback staging entries if an error is caught
-        await pool.query('ROLLBACK');
+        try { await pool.query('ROLLBACK'); } catch(e) {}
         console.error("Attendance Error:", error.message);
-        
-        // Handle unique constraint violation (if student tries to scan twice)
-        if (error.code === '23505') {
-            return res.status(400).json({ success: false, message: "Attendance already marked for this session!" });
-        }
         res.status(500).json({ success: false, message: "Server error during attendance marking." });
     }
 });
@@ -63,12 +69,10 @@ router.get("/live-session-count", async (req, res) => {
     try {
         const currentActive = qrModule.activeQR;
         
-        // If no QR session is currently active, return an empty array format safely
         if (!currentActive || !currentActive.token) {
             return res.json({ count: 0, students: [] });
         }
 
-        // POWERFUL SQL JOIN: Fetches USN, Name, and updated class numbers in 1 query
         const liveQuery = `
             SELECT 
                 a.usn,
@@ -77,7 +81,7 @@ router.get("/live-session-count", async (req, res) => {
                 sa.total_classes
             FROM attendance a
             JOIN users u ON a.usn = u.usn
-            JOIN subject_attendance sa ON a.usn = sa.usn AND a.subject_name = sa.subject_name
+            JOIN subject_attendance sa ON a.usn = sa.usn AND LOWER(a.subject_name) = LOWER(sa.subject_name)
             WHERE a.session_code = $1
             ORDER BY a.id DESC
         `;
@@ -86,7 +90,7 @@ router.get("/live-session-count", async (req, res) => {
 
         res.json({
             count: result.rowCount,
-            students: result.rows // Returns full object list [{usn, name, attended_classes, total_classes}]
+            students: result.rows
         });
 
     } catch (error) {
@@ -104,15 +108,13 @@ router.post("/close-session", async (req, res) => {
             return res.status(400).json({ message: "No active session available to terminate." });
         }
 
-        // Update "Total Classes" for EVERY student registered in this specific course module
         await pool.query(
-            `UPDATE subject_attendance SET total_classes = total_classes + 1 WHERE subject_name = $1`,
-            [currentActive.subject]
+            `UPDATE subject_attendance SET total_classes = total_classes + 1 WHERE LOWER(subject_name) LIKE LOWER($1)`,
+            [`%${currentActive.subject}%`]
         );
 
         console.log(`Session closed cleanly for subject: ${currentActive.subject}. Totals updated.`);
 
-        // Clear active session runtime memory objects
         currentActive.token = null;
         currentActive.subject = null;
 

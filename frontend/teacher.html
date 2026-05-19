@@ -86,23 +86,23 @@
             </div>
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 25%;">USN</th>
-                    <th style="width: 35%;">Student Name</th>
-                    <th style="width: 25%; text-align: center;">Total Subject Attendance</th>
-                    <th style="width: 15%; text-align: center;">Status</th>
-                </tr>
-            </thead>
-            <tbody id="liveScanTableBody">
-                <tr>
-                    <td colspan="4" style="padding: 20px; text-align: center; color: #7f8c8d; font-style: italic;">No active session tracking stream. Generate a QR code to start receiving live logs.</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
+       <div style="width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; box-sizing: border-box; margin-top: 15px;">
+            <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0; min-width: 600px; table-layout: fixed;">
+                <thead>
+                    <tr style="background: #f8fafc;">
+                        <th style="padding: 12px 10px; width: 25%; text-align: center; font-size: 13px; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0;">USN</th>
+                        <th style="padding: 12px 10px; width: 35%; text-align: center; font-size: 13px; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0;">Student Name</th>
+                        <th style="padding: 12px 10px; width: 25%; text-align: center; font-size: 13px; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0;">Total Subject Attendance</th>
+                        <th style="padding: 12px 10px; width: 15%; text-align: center; font-size: 13px; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="liveScanTableBody">
+                    <tr>
+                        <td colspan="4" style="padding: 20px; text-align: center; color: #7f8c8d; font-style: italic;">Awaiting incoming stream synchronization passes...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     <button class="btn btn-logout" onclick="logoutTeacher()">Secure Portal Logout</button>
 </div>
 
