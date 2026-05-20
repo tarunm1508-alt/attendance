@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Portal | Academic Management System</title>
+    
+    <link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <style>
         /* Corporate Institutional Color Palette */
@@ -80,7 +84,6 @@
             border: 2px dashed #cbd5e1; 
             max-width: 440px; 
         }
-        /* 🎯 FIXED: Container size adjusted for the new high-performance scanning engine grid box */
         #previewVideo { width: 100%; max-width: 400px; border-radius: 6px; overflow: hidden; background: #000; display: block; margin: 0 auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         
         .btn-scan-trigger { 
@@ -226,7 +229,7 @@
                 </tr>
             </thead>
             <tbody id="studentMarksTableBody">
-                </tbody>
+            </tbody>
         </table>
         
         <div style="background: #f8fafc; padding: 12px; text-align: right; border-top: 1px solid var(--border);">
@@ -246,7 +249,7 @@
     const BACKEND_URL = "https://d0mp6n0b-5000.inc1.devtunnels.ms"; 
 
     const currentStudentUSN = localStorage.getItem("user_usn") || localStorage.getItem("student_id") || "1DA24AI015";
-    let html5QrcodeScannerInstance = null; // 🎯 FIXED: Holds reference to our high-performance camera instance
+    let html5QrcodeScannerInstance = null; 
     let globalAcademicRows = []; 
     let cachedUserRawData = {};
     let activeSelectedSemester = null;
@@ -382,11 +385,21 @@
 
     // 🎯 FIXED MASTER CAMERA CONTROLLER (Html5Qrcode Native Version)
     function initializeHardwareCameraStream() {
-        // Create an instance linking directly to our target division frame element box
         html5QrcodeScannerInstance = new Html5Qrcode("previewVideo");
 
         const qrSuccessCallback = async (qrCodeContentData) => {
             if (!qrCodeContentData) return;
+            
+            // 🛑 FREEZE STATE STEP 1: Immediately pause scanning to prevent recursive double-triggers
+            // This cleanly handles your duplicate scan notice loop bug on mobile browsers!
+            if (html5QrcodeScannerInstance) {
+                try {
+                    await html5QrcodeScannerInstance.stop();
+                    html5QrcodeScannerInstance = null; // Unbind reference immediately
+                } catch (stopErr) {
+                    console.warn("Minor scanning track suspension delay:", stopErr);
+                }
+            }
             
             try {
                 const scanResponse = await fetch(`${BACKEND_URL}/api/attendance/mark`, {
@@ -400,30 +413,31 @@
                 
                 const resultLog = await scanResponse.json();
                 
+                // Hide the UI camera container frame since execution complete
+                document.getElementById("cameraScannerBox").style.display = "none";
+                
                 if (scanResponse.ok && resultLog.success) {
                     alert(`Attendance Success: ${resultLog.message} ✅`);
-                    stopQRScannerCamera();
                     loadStudentDashboardPayload();
                 } else {
                     alert(`Scanner Restriction: ${resultLog.message} ⚠️`);
-                    stopQRScannerCamera();
                 }
             } catch(e) { 
                 console.error("Camera interface network failure:", e); 
+                document.getElementById("cameraScannerBox").style.display = "none";
             }
         };
 
-        // 🎯 CONFIG PROFILE: Explicitly forces hardware back lens initialization instantly 
         const cameraConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
 
         html5QrcodeScannerInstance.start(
-            { facingMode: "environment" }, // Forces mobile phone back camera
+            { facingMode: "environment" }, 
             cameraConfig,
             qrSuccessCallback,
             (errorMessage) => { /* Silently handle frames transition checks */ }
         ).catch(err => {
             console.error("Webcam allocation failure:", err);
-            alert("Camera device allocation lock encountered. Please make sure no other app is tracking the lens.");
+            alert("Camera device allocation lock encountered. Please check browser privacy switches.");
             document.getElementById("cameraScannerBox").style.display = "none";
         });
     }

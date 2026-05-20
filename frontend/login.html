@@ -1,25 +1,84 @@
 <!DOCTYPE html>
-
-
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login | Academic Portal</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <style>
-        body { text-align: center; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        .login-container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.1); width: 350px; }
-        .role-badge { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #3498db; letter-spacing: 1.5px; margin-bottom: 10px; display: block; }
-        h2 { color: #2c3e50; margin-top: 0; margin-bottom: 30px; }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 14px; background-color: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; }
-        button:hover { background-color: #2980b9; }
+        body { text-align: center; font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #0f172a; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-container { background: #1e293b; padding: 40px; border-radius: 15px; box-shadow: 0 8px 30px rgba(0,0,0,0.3); width: 350px; border: 1px solid #334155; }
+        .role-badge { font-size: 11px; font-weight: bold; text-transform: uppercase; color: #38bdf8; letter-spacing: 1.5px; margin-bottom: 10px; display: block; }
+        h2 { color: #f8fafc; margin-top: 0; margin-bottom: 30px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; box-sizing: border-box; outline: none; color: #fff; }
+        input:focus { border-color: #38bdf8; }
         
-        .footer-links { margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px; font-size: 14px; color: #7f8c8d; }
+        button { width: 100%; padding: 14px; background-color: #0284c7; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        button:hover { background-color: #0369a1; }
+        
+        .footer-links { margin-top: 25px; border-top: 1px solid #334155; padding-top: 20px; font-size: 14px; color: #94a3b8; }
         .footer-links p { margin: 8px 0; }
-        .footer-links a { color: #3498db; text-decoration: none; font-weight: bold; }
+        .footer-links a { color: #38bdf8; text-decoration: none; font-weight: bold; }
+
+        /* 🌌 ULTRA-FUTURISTIC BIOMETRIC MODAL SYSTEM */
+        .biometric-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.9);
+            justify-content: center; align-items: center;
+            z-index: 2000; backdrop-filter: blur(8px);
+        }
+        .biometric-card {
+            background: #1e293b; padding: 40px; border-radius: 24px;
+            width: 320px; text-align: center; box-shadow: 0 0 40px rgba(56, 189, 248, 0.2);
+            border: 1px solid #334155;
+            animation: cyberPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes cyberPop { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        /* Cyberpunk Circular Fingerprint Scanner Box */
+        .fingerprint-scanner-node {
+            width: 120px; height: 120px; margin: 30px auto;
+            background: rgba(15, 23, 42, 0.6); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 2px dashed #38bdf8; position: relative;
+            box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        /* Futuristic Core Scan Ring Glows */
+        .scanner-glow-ring {
+            position: absolute; width: 106%; height: 106%;
+            border-radius: 50%; border: 2px solid transparent;
+            border-top-color: #38bdf8; border-bottom-color: #38bdf8;
+            animation: rotationRing 2s linear infinite;
+        }
+        @keyframes rotationRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Scanning Neon Laser HUD Line */
+        .laser-line {
+            position: absolute; width: 84%; height: 3px; background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+            top: 20%; left: 8%; display: none; box-shadow: 0 0 15px #38bdf8;
+            animation: cyberScan 1.5s infinite ease-in-out;
+            z-index: 5;
+        }
+        @keyframes cyberScan { 
+            0% { top: 20%; } 
+            50% { top: 80%; } 
+            100% { top: 20%; } 
+        }
+
+        /* Micro Data HUD Labels */
+        .hud-grid-metrics { display: flex; justify-content: space-between; margin-top: 15px; font-family: monospace; font-size: 10px; color: #64748b; text-transform: uppercase; }
+        .scan-status-text { font-size: 13px; font-family: monospace; font-weight: bold; color: #38bdf8; margin-top: 20px; letter-spacing: 0.5px; }
+
+        /* UI State Overrides */
+        .scanner-failed { border-color: #ef4444 !important; box-shadow: 0 0 30px rgba(239, 68, 68, 0.4) !important; }
+        .scanner-failed .scanner-glow-ring { border-top-color: #ef4444; border-bottom-color: #ef4444; }
+        .scanner-failed .laser-line { background: #ef4444 !important; box-shadow: 0 0 15px #ef4444 !important; }
     </style>
 </head>
 <body>
@@ -31,83 +90,163 @@
         <input id="username" type="text" placeholder="Username / USN / Employee ID" name="user_id" autocomplete="username">
         <input id="password" type="password" placeholder="Password">
 
-        <button onclick="handleLogin()">Log In</button>
+        <button onclick="openBiometricHardwarePrompt()">🧬 Initialize Biometric Lock</button>
 
         <div class="footer-links">
             <p>New user? <a href="signup.html">Sign Up</a></p>
-            <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+            <hr style="border:0; border-top:1px solid #334155; margin:15px 0;">
             <p><a href="index.html">← Back to Selection</a></p>
         </div>
     </div>
 
+    <div class="biometric-modal-overlay" id="biometricGatewayModal">
+        <div class="biometric-card">
+            <h3 style="margin:0; color:#f8fafc; font-size: 16px; font-family: monospace; letter-spacing: 1px;">CORE BIOMETRIC ID: AUTH</h3>
+            <p id="biometricInstruction" style="font-size:12px; color:#94a3b8; margin: 6px 0 0 0;">Place primary biometric finger on interface node</p>
+            
+            <div class="fingerprint-scanner-node" id="scannerNode">
+                <div class="scanner-glow-ring" id="glowRing"></div>
+                <div class="laser-line" id="laserLine"></div>
+                
+                <svg id="fingerprintSvg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-linecap="round">
+                    <path d="M12 2a10 10 0 0 0-8 4M12 5a7 7 0 0 0-5.5 3M12 8a4 4 0 0 0-3 1.5M8 15a4 4 0 0 1 .5-2M16 15a4 4 0 0 0-.5-2M4 11.5a10 10 0 0 1 .5-3M20 11.5a10 10 0 0 0-.5-3M12 11v3M12 17v2M9 20h6"/>
+                </svg>
+            </div>
+            
+            <div class="hud-grid-metrics">
+                <div>SYS: SECURE</div>
+                <div id="hudModeLabel">MODE: VERIFY</div>
+            </div>
+
+            <div class="scan-status-text" id="scanStatusMsg">SYS READY // AWAITING CONTACT</div>
+            
+            <div style="margin-top:15px; display:flex; gap:8px;">
+                <button style="background:#0284c7; padding:6px; font-size:11px;" onclick="setDemoFingerAction(true)">Finger 1 (Correct)</button>
+                <button style="background:#475569; padding:6px; font-size:11px;" onclick="setDemoFingerAction(false)">Finger 2 (Wrong)</button>
+            </div>
+            <button style="background:#ef4444; margin-top:15px; padding:10px; font-size:12px;" onclick="closeBiometricHardwarePrompt()">Abort Session</button>
+        </div>
+    </div>
+
     <script>
-        // 1. Detect role from URL (e.g., login.html?role=teacher)
         const params = new URLSearchParams(window.location.search);
         let currentRole = (params.get('role') || 'student').toLowerCase();
+        let isRightFingerSelected = true; // Tracks demo scan state evaluation 
 
-        // 2. Set UI labels automatically
         document.getElementById("roleBadge").innerText = currentRole;
         document.getElementById("loginTitle").innerText = currentRole.charAt(0).toUpperCase() + currentRole.slice(1) + " Login";
 
-        async function handleLogin() {
+        function setDemoFingerAction(isCorrect) {
+            isRightFingerSelected = isCorrect;
+            document.getElementById("scanStatusMsg").innerText = isCorrect ? "PRIMARY FINGER ALIGNED" : "SECONDARY FINGER ALIGNED";
+        }
+
+        async function openBiometricHardwarePrompt() {
             const userVal = document.getElementById("username").value.trim();
             const passVal = document.getElementById("password").value.trim();
 
             if (!userVal || !passVal) {
-                alert("Please enter credentials.");
+                alert("Please complete authorization inputs.");
                 return;
             }
 
-            // 3. Choose the right API endpoint based on the URL role
-            let endpoint = "";
-            let payload = {};
-
-      if (currentRole === 'parent') {
-            endpoint = "https://d0mp6n0b-5000.inc1.devtunnels.ms/api/parent/login";
-            payload = { username: userVal, password: passVal };
-        } else {
-            endpoint = "https://d0mp6n0b-5000.inc1.devtunnels.ms/api/auth/login";
-            payload = { usn: userVal, password: passVal, role: currentRole };
-        }
-
+            // Fetch registration lock status from database dynamically to set HUD interface display text
             try {
-                const res = await fetch(endpoint, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                });
+                const checkRes = await fetch(`https://d0mp6n0b-5000.inc1.devtunnels.ms/api/auth/check-lock/${userVal}`);
+                const lockData = await checkRes.json();
+                
+                document.getElementById("hudModeLabel").innerText = lockData.isLocked ? "MODE: ENFORCE" : "MODE: INITIAL REG";
+                document.getElementById("biometricInstruction").innerText = lockData.isLocked ? 
+                    "Verify registered identity signature layout" : "Register empty slot data mapping coordinates";
+            } catch(e) { console.log("HUD sync lag."); }
 
-                const data = await res.json();
-
-                if (res.ok) {
-                    localStorage.clear();
-                    localStorage.setItem("role", currentRole);
-
-                    // Handle data storage for specific dashboards
-                    if (currentRole === 'parent') {
-                        localStorage.setItem("student_id", data.student_id);
-                        localStorage.setItem("user_name", data.user_name);
-                    } else {
-                        const finalID = data.user ? data.user.usn : userVal;
-                        localStorage.setItem("student_id", finalID);
-                        if(data.user && data.user.name) {
-                            localStorage.setItem("user_name", data.user.name);
-                        }
-                    }
-
-                    alert("Login Successful!");
-                    // 4. Redirect to the specific role page (teacher.html, student.html, or parent.html)
-                    window.location.href = currentRole + ".html";
-
-                } else {
-                    alert("Login Failed: " + (data.message || "Invalid credentials"));
-                }
-            } catch (err) {
-                console.error("Error:", err);
-                alert("Server Error. Make sure backend is running.");
-
-            }
+            document.getElementById("biometricGatewayModal").style.display = "flex";
+            resetScannerUiState();
         }
+
+        function resetScannerUiState() {
+            const node = document.getElementById("scannerNode");
+            const svg = document.getElementById("fingerprintSvg");
+            node.classList.remove("scanner-failed");
+            svg.setAttribute("stroke", "#38bdf8");
+            document.getElementById("scanStatusMsg").innerText = "SYS READY // AWAITING CONTACT";
+            document.getElementById("laserLine").style.display = "none";
+        }
+
+        function closeBiometricHardwarePrompt() {
+            document.getElementById("biometricGatewayModal").style.display = "none";
+        }
+
+        function executePhysicalFingerprintScan() {
+            // Check if wrapper button explicitly routes active action
+            const node = document.getElementById("scannerNode");
+            const svg = document.getElementById("fingerprintSvg");
+            const statusText = document.getElementById("scanStatusMsg");
+            const laser = document.getElementById("laserLine");
+
+            resetScannerUiState();
+            statusText.innerText = "PARSING BIOMETRIC MATRIX CODES...";
+            laser.style.display = "block";
+
+            setTimeout(async () => {
+                laser.style.display = "none";
+                
+                const userVal = document.getElementById("username").value.trim();
+                const passVal = document.getElementById("password").value.trim();
+
+                // Generate key based on which finger was simulated during presentation click
+                const biometricPayloadKey = isRightFingerSelected ? 
+                    btoa(`BIOMETRIC-PRIMARY-SENSOR-${userVal}`) : 
+                    btoa(`BIOMETRIC-WRONG-PROXY-SHARING-TOKEN`);
+
+                try {
+                    const res = await fetch("https://d0mp6n0b-5000.inc1.devtunnels.ms/api/auth/combined-login", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            usn: userVal, password: passVal, role: currentRole, biometricKey: biometricPayloadKey
+                        })
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        statusText.innerText = "ACCESS GRANTED // INITIALIZING SECURE REDIRECT";
+                        svg.setAttribute("stroke", "#22c55e");
+                        setTimeout(() => {
+                            closeBiometricHardwarePrompt();
+                            localStorage.clear();
+                            localStorage.setItem("role", currentRole);
+                            localStorage.setItem("student_id", userVal);
+                            alert("🧬 Identity Authenticated Successfully.");
+                            window.location.href = currentRole + ".html";
+                        }, 800);
+                    } else {
+                        // Trigger visual UX crash failure notification layers natively!
+                        statusText.innerText = "SECURITY ALARM: FRAUDULENT PATTERN REJECTED ❌";
+                        statusText.style.color = "#ef4444";
+                        node.classList.add("scanner-failed");
+                        svg.setAttribute("stroke", "#ef4444");
+                    }
+                } catch (err) {
+                    closeBiometricHardwarePrompt();
+                    alert("Hardware transmission line timeout.");
+                }
+            }, 1500);
+        }
+
+        // Bind the touch listener directly to the modern scan capsule box
+        document.getElementById("scannerNode").addEventListener("click", executePhysicalFingerprintScan);
+    
+    // 🎯 REGISTER THE HARDWARE CONTAINER WORKER RUNTIME NATIVELY
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js")
+            .then(reg => console.log("✅ App Container Registered Successfully!"))
+            .catch(err => console.error("Container failed:", err));
+    });
+
+}
     </script>
 </body>
 </html>

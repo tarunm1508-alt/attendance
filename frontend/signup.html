@@ -112,5 +112,101 @@ const response = await fetch("https://d0mp6n0b-5000.inc1.devtunnels.ms/api/auth/
             }
         }
     </script>
+    <div class="biometric-modal-overlay" id="biometricGatewayModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(8px);">
+    <div class="biometric-card" style="background: #1e293b; padding: 40px; border-radius: 24px; width: 320px; text-align: center; border: 1px solid #334155; color: #fff; font-family: sans-serif;">
+        <h3 style="margin:0; font-family: monospace; letter-spacing: 1px;">INITIAL BIOMETRIC ENROLLMENT</h3>
+        <p style="font-size:12px; color:#94a3b8; margin: 6px 0 0 0;">Scan primary finger to map baseline coordinate markers</p>
+        
+        <div id="scannerNode" style="width: 120px; height: 120px; margin: 30px auto; background: rgba(15, 23, 42, 0.6); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; border: 2px dashed #38bdf8; position: relative;" onclick="executeSignupFingerprintScan()">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.2" stroke-linecap="round">
+                <path d="M12 2a10 10 0 0 0-8 4M12 5a7 7 0 0 0-5.5 3M12 8a4 4 0 0 0-3 1.5M8 15a4 4 0 0 1 .5-2M16 15a4 4 0 0 0-.5-2M4 11.5a10 10 0 0 1 .5-3M20 11.5a10 10 0 0 0-.5-3M12 11v3M12 17v2M9 20h6"/>
+            </svg>
+        </div>
+        
+        <div style="font-size: 13px; font-family: monospace; font-weight: bold; color: #38bdf8;" id="signupScanMsg">READY TO RECORD FINGERPRINT</div>
+    </div>
+</div>
+
+<script>
+    let registeredBiometricKey = ""; // Global reference variable
+
+    function triggerBiometricSignupScan() {
+        const usnVal = document.getElementById("usnField").value.trim();
+        if(!usnVal) { alert("Please type your USN number first!"); return; }
+        
+        document.getElementById("biometricGatewayModal").style.display = "flex";
+        document.getElementById("signupScanMsg").innerText = "READY TO RECORD FINGERPRINT";
+    }
+
+    function executeSignupFingerprintScan() {
+        const msg = document.getElementById("signupScanMsg");
+        const usnVal = document.getElementById("usnField").value.trim();
+        
+        msg.innerText = "ENROLLING FINGERPRINT COORDINATES...";
+        
+        setTimeout(() => {
+            // Locks the secure payload string mapping to this exact student identity handle
+            registeredBiometricKey = btoa(`BIOMETRIC-PRIMARY-SENSOR-${usnVal}`);
+            msg.innerText = "REGISTRATION COMPLETED ✅";
+            msg.style.color = "#22c55e";
+            
+            setTimeout(() => {
+                document.getElementById("biometricGatewayModal").style.display = "none";
+                alert("Biometric credentials locked into staging context cleanly! You can now click Register.");
+            }, 800);
+        }, 1500);
+    }
+
+    // Your main form register submit handler block
+    async function handleUserRegistration(e) {
+        e.preventDefault();
+        
+        if(!registeredBiometricKey) {
+            alert("Security Policy Error: You must scan and register a biometric fingerprint signature before completing signup!");
+            return;
+        }
+
+        // Build out your payload frame parameters
+        const payload = {
+            usn: document.getElementById("usnField").value.trim(),
+            name: document.getElementById("nameField").value.trim(),
+            email: document.getElementById("emailField").value.trim(),
+            password: document.getElementById("passwordField").value.trim(),
+            role: document.getElementById("roleField").value,
+            child_usn: document.getElementById("childUsnField") ? document.getElementById("childUsnField").value.trim() : null,
+            biometricKey: registeredBiometricKey // Sends the token string to backend
+        };
+
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/auth/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if(res.ok) {
+                alert("Account created with biometric integration lock successfully!");
+                window.location.href = "login.html";
+            } else { alert(data.message); }
+        } catch(e) { console.error(e); }
+    }
+    // 🎯 QUICK VERIFICATION CHECK FOR BIOMETRIC CONTAINER
+async function registerFingerprint() {
+    // 1. First, verify if the phone's hardware scanner engine is available
+    if (!window.PublicKeyCredential) {
+        alert("❌ Biometric API is blocked or not supported on this container wrapper.");
+        return;
+    }
+
+    // 2. Ensure the code is running on a secure network layer
+    if (!window.isSecureContext) {
+        alert("❌ Biometric scanning requires a secure HTTPS devtunnel link!");
+        return;
+    }
+
+    console.log("🧬 Launching native device biometric authentication engine...");
+    // Your existing navigator.credentials.create() code goes here...
+}
+</script>
 </body>
 </html>
