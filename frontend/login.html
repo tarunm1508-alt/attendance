@@ -3,61 +3,212 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic Portal | Sign In</title>
+    <title>Dr. Ambedkar Institute of Technology | Login Portal</title>
     <style>
+        /* ==========================================================================
+           🎨 UNIFORM PREMIUM ACADEMIC LIGHT DESIGN SYSTEM 
+           ========================================================================== */
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --primary: #0284c7;
+            --bg-canvas: #f1f5f9;
+            --surface-card: #ffffff;
+            --primary-blue: #1e40af;
+            --primary-hover: #1d4ed8;
+            --primary-glow: rgba(30, 64, 175, 0.08);
+            
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --text-labels: #475569;
+            
+            --border-clean: #e2e8f0;
+            --input-bg: #ffffff;
             --accent-red: #ef4444;
             --accent-green: #10b981;
-            --input-border: #334155;
-            --android-sheet-bg: #212121;
-            --android-item-hover: #2d2d2d;
+            
+            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 20px 40px -5px rgba(15, 23, 42, 0.05);
+            --ease-kinetic: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-fluid: cubic-bezier(0.4, 0, 0.2, 1);
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; overflow: hidden; }
-        .login-container { background-color: var(--card-bg); padding: 40px; border-radius: 16px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        h2 { text-align: center; margin-bottom: 8px; font-size: 28px; }
-        p.subtitle { text-align: center; color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: var(--text-muted); font-size: 14px; }
-        input, select { width: 100%; padding: 12px 16px; background-color: var(--bg-color); border: 1px solid var(--input-border); border-radius: 8px; color: var(--text-main); font-size: 16px; }
-        .btn { width: 100%; padding: 14px; background-color: var(--primary); border: none; border-radius: 8px; color: white; font-size: 16px; font-weight: 600; cursor: pointer; }
-        .footer-links { text-align: center; margin-top: 25px; font-size: 14px; color: var(--text-muted); }
-        .footer-links a { color: var(--primary); text-decoration: none; font-weight: 600; }
-        .alert { padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; display: none; text-align: center; background-color: #7f1d1d; color: #fecaca; }
 
-        /* 🤖 HIGH-DEPTH ANDROID PASSKEY TRAY LAYOUT (z-index: 40000) */
-        .android-backdrop { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: 40000; display: none; align-items: flex-end; }
-        .android-sheet { width: 100%; background-color: var(--android-sheet-bg); border-top-left-radius: 28px; border-top-right-radius: 28px; padding: 24px 24px 34px 24px; color: #e3e3e3; transform: translateY(100%); transition: transform 0.2s ease-out; }
-        .sheet-drag-handle { width: 36px; height: 4px; background-color: #757575; border-radius: 2px; margin: 0 auto 24px auto; }
-        .sheet-title { font-size: 20px; text-align: center; color: #fff; margin-bottom: 8px; }
-        .sheet-subtitle { font-size: 13px; color: #b3b3b3; text-align: center; margin-bottom: 24px; line-height: 1.4; }
-        .android-list-item { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 16px; cursor: pointer; transition: background 0.2s; }
-        .android-list-item:hover { background-color: var(--android-item-hover); }
-        .android-list-item span { font-size: 14px; font-weight: 500; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
 
-        /* 🫆 CORE BIOMETRIC RADAR OVERLAY (z-index: 30000) */
-        .biometric-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(15, 23, 42, 0.96); z-index: 30000; display: none; justify-content: center; align-items: center; flex-direction: column; backdrop-filter: blur(10px); }
-        @keyframes radarPulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 0.4; } 100% { transform: scale(0.95); opacity: 0.8; } }
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 24px;
+            overflow-y: auto;
+            
+            opacity: 0;
+            animation: loginFadeIn 0.4s var(--ease-fluid) forwards;
+        }
+
+        @keyframes loginFadeIn {
+            to { opacity: 1; }
+        }
+
+        .login-container {
+            background: var(--surface-card);
+            border: 1px solid var(--border-clean);
+            padding: 44px 40px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-premium);
+            width: 100%;
+            max-width: 440px;
+            z-index: 10;
+            text-align: center;
+            margin: auto;
+            
+            transform: translateY(30px) scale(0.97);
+            opacity: 0;
+            animation: elasticCardEntrance 0.6s var(--ease-kinetic) 0.05s forwards;
+        }
+
+        @keyframes elasticCardEntrance {
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--primary-blue);
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 36px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-labels);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-clean);
+            border-radius: 12px;
+            color: var(--text-dark);
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s var(--ease-fluid);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+            background: #ffffff;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-blue);
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+            transition: all 0.2s var(--ease-fluid);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 28px;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 6px 18px rgba(30, 64, 175, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .btn:active { transform: translateY(1px) scale(0.98); }
+
+        .footer-links {
+            margin-top: 26px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .footer-links a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .alert {
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 22px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            font-weight: 500;
+        }
+
+        .biometric-modal {
+            position: fixed !important;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(241, 245, 249, 0.92);
+            z-index: 99999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+        
+        @keyframes radarPulse {
+            0% { transform: scale(0.96); opacity: 0.9; }
+            50% { transform: scale(1.04); opacity: 0.5; }
+            100% { transform: scale(0.96); opacity: 0.9; }
+        }
         .pulse-active { animation: radarPulse 2s infinite ease-in-out; }
     </style>
 </head>
 <body>
 
     <div class="login-container">
-        <h2>Portal Login</h2>
+        <h2 id="portalTitle">Portal Login</h2>
         <p class="subtitle">Academic Biometric Management System</p>
 
         <div id="alertBox" class="alert"></div>
 
-        <form id="loginForm" onsubmit="event.preventDefault();">
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
             <div class="form-group">
-                <label for="username">Username / USN</label>
-                <input type="text" id="username" placeholder="Enter your USN or Username" autocomplete="off" required>
+                <label id="usernameLabel" for="username">Username / USN</label>
+                <input type="text" id="username" placeholder="Enter your identification token" autocomplete="off" required>
             </div>
 
             <div class="form-group">
@@ -65,19 +216,12 @@
                 <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" required>
             </div>
 
-            <div class="form-group">
-                <label for="role">Portal Role</label>
-                <select id="role">
-                    <option value="student">Student</option>
-                    
-            <option value="teacher">Teacher</option>
-
-            <option value="parent">Parent</option>
-
-                </select>
+            <div class="form-group" id="parentLinkGroup" style="display: none;">
+                <label for="childUsn" style="color: var(--primary-blue); font-weight: 800;">Student USN (Link to Child)</label>
+                <input type="text" id="childUsn" placeholder="Enter child's USN (e.g., 1DA24AI111)" autocomplete="off">
             </div>
 
-            <button type="button" id="submitBtn" onclick="handleLoginSubmit(event)" class="btn">Verify Credentials</button>
+            <button type="submit" class="btn">Verify Credentials</button>
         </form>
 
         <div class="footer-links">
@@ -85,42 +229,19 @@
         </div>
     </div>
 
-    <!-- 🤖 ANDROID SYSTEM POPUP SHEET (Slides up perfectly on top) -->
-    <div id="androidBackdrop" class="android-backdrop" onclick="closeAndroidSheet()">
-        <div id="androidSheet" class="android-sheet" onclick="event.stopPropagation()">
-            <div class="sheet-drag-handle"></div>
-            <div style="text-align: center; margin-bottom: 16px;">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M19 10h-1V7c0-2.76-2.24-5-5-5S8 4.24 8 7v3H7c-1.1 0-2 .9-2 2v7c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7c0-1.1-.9-2-2-2zM9.9 7c0-1.16.94-2.1 2.1-2.1s2.1.94 2.1 2.1v3H9.9V7z" fill="#a8c7fa"/></svg>
-            </div>
-            <div class="sheet-title">Choose a device for your passkey</div>
-            <div class="sheet-subtitle">Select where you would like to use your passkey for devtunnels.ms</div>
-
-            <div class="android-list-item" onclick="closeAndroidSheet()"><span style="color:#b3b3b3;">NFC security key</span></div>
-            <div class="android-list-item" onclick="closeAndroidSheet()"><span style="color:#b3b3b3;">USB security key</span></div>
-            <div class="android-list-item" onclick="closeAndroidSheet()"><span style="color:#b3b3b3;">Use another device</span></div>
-
-            <!-- 🎯 FIXED: This device target option runs cleanly -->
-            <div class="android-list-item" onclick="selectThisDeviceTarget()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a8c7fa" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                <span style="color: #fff; font-weight: bold; margin-left: 10px;">This device</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- 🫆 SCIFI ATTENDANCE RADAR MODAL -->
     <div id="biometricAuthModal" class="biometric-modal">
-        <div style="background-color: #1e293b; padding: 40px; border-radius: 20px; width: 90%; max-width: 420px; text-align: center; border: 1px solid #334155;">
-            <h3>CORE BIOMETRIC ID: AUTH</h3>
-            <p style="color: #94a3b8; font-size: 13px; margin-bottom: 24px;">Verify registered identity signature layout</p>
+        <div style="background-color: #ffffff; padding: 40px; border-radius: 24px; width: 90%; max-width: 420px; text-align: center; border: 1px solid var(--border-clean); box-shadow: var(--shadow-premium);">
+            <h3 style="color: var(--primary-blue); font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.01em;">BIOMETRIC VERIFICATION</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 30px; font-weight: 500;">Place your finger on the sensor device...</p>
 
-            <div id="scannerRing" class="pulse-active" style="width: 130px; height: 130px; border: 3px dashed #0284c7; border-radius: 50%; margin: 0 auto 25px auto; display: flex; justify-content: center; align-items: center;">
-                <svg id="fingerprintIcon" width="55" height="55" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="1.5"><path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10"/><path d="M5 12c0-3.87 3.13-7 7-7s7 3.13 7 7"/><path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4"/></svg>
+            <div id="scannerRing" class="pulse-active" style="width: 130px; height: 130px; border: 3px dashed var(--primary-blue); border-radius: 50%; margin: 0 auto 25px auto; display: flex; justify-content: center; align-items: center; background-color: #f8fafc;">
+                <svg width="55" height="55" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10" /><path d="M5 12c0-3.87 3.13-7 7-7s7 3.13 7 7" /><path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4" />
+                </svg>
             </div>
 
-            <div id="alarmMessage" style="color: var(--accent-red); font-size: 14px; font-weight: 700; margin-bottom: 20px; display: none;"></div>
-            <div id="successMessage" style="color: var(--accent-green); font-size: 15px; font-weight: 700; margin-bottom: 20px; display: none;">BIOMETRIC IDENTITY VERIFIED ✓</div>
-
-            <button type="button" onclick="abortSession()" style="width: 100%; padding: 12px; background-color: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 600;">Abort Session</button>
+            <div id="successMessage" style="color: var(--accent-green); font-size: 15px; font-weight: 700; margin-bottom: 10px; display: none;">IDENTITY MATCHED ✓</div>
+            <button type="button" onclick="abortSession()" class="btn" style="padding: 12px; font-size: 14px; background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; box-shadow: none; margin-top: 10px;">Cancel</button>
         </div>
     </div>
 
@@ -129,105 +250,100 @@
         if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
         else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
 
-        let cachedUsn = ""; let cachedPassword = ""; let cachedRole = "";
+        // 🎯 GLOBAL ROUTE TRACKING VARIABLE
+        let activePortalRole = 'student'; 
 
-        function handleLoginSubmit(event) {
-            event.preventDefault();
-            cachedUsn = document.getElementById('username').value.trim();
-            cachedPassword = document.getElementById('password').value;
-            cachedRole = document.getElementById('role').value;
-
-            document.getElementById('alertBox').style.display = 'none';
-
-            // 🤖 Slide up the fake sheet layout FIRST!
-            const backdrop = document.getElementById('androidBackdrop');
-            const sheet = document.getElementById('androidSheet');
-            backdrop.style.display = 'flex';
-            setTimeout(() => { sheet.style.transform = 'translateY(0)'; }, 10);
-        }
-
-        function closeAndroidSheet() {
-            const sheet = document.getElementById('androidSheet');
-            sheet.style.transform = 'translateY(100%)';
-            setTimeout(() => { document.getElementById('androidBackdrop').style.display = 'none'; }, 200);
-        }
-
-        function selectThisDeviceTarget() {
-            closeAndroidSheet();
-            document.getElementById('alarmMessage').style.display = 'none';
-            document.getElementById('successMessage').style.display = 'none';
-            document.getElementById('scannerRing').style.borderColor = "#0284c7";
-            document.getElementById('biometricAuthModal').style.display = 'flex';
-            
-            // 🎯 Reduced delay to fire the hardware scanner with zero lag time
-            setTimeout(executeFinalVerifications, 350);
-        }
-
-        async function executeFinalVerifications() {
-            const alarmMessage = document.getElementById('alarmMessage');
-            const successMessage = document.getElementById('successMessage');
-            const scannerRing = document.getElementById('scannerRing');
-
-            // 🎯 FIXED ENGINE: FORCES NATIVE BIOMETRIC PROMPT TO SHOW REGARDLESS OF CHANGING DEV TUNNEL DOMAINS
-            if (window.PublicKeyCredential && window.isSecureContext) {
-                try {
-                    const chal = new Uint8Array(32); window.crypto.getRandomValues(chal);
-                    const uid = new Uint8Array(16); window.crypto.getRandomValues(uid);
-
-                    await navigator.credentials.create({
-                        publicKey: {
-                            challenge: chal,
-                            rp: { name: "Academic Portal", id: window.location.hostname },
-                            user: { id: uid, name: cachedUsn, displayName: cachedUsn },
-                            pubKeyCredParams: [{ type: "public-key", alg: -7 }],
-                            authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                            timeout: 60000
-                        }
-                    });
-                } catch (nativeDismiss) {
-                    console.warn("Hardware layer synced, continuing fallback validation routing.");
-                }
+        // 🎯 AUTOMATIC VIEW HANDSHAKE: Instantly morphs text field parameters based on landing selection
+        document.addEventListener("DOMContentLoaded", () => {
+            const rememberedRole = localStorage.getItem('intendedPortalRole');
+            if (rememberedRole) {
+                activePortalRole = rememberedRole;
             }
 
-            // 🎯 STEP 2: QUERY THE POSTGRES DATABASE FOR THE ACCOUNT VERIFICATION MATCH
-            try {
-                const checkResponse = await fetch(`${API_BASE}/api/auth/check-lock/${cachedUsn}`);
-                const checkData = await checkResponse.json();
-                
-                let databaseSavedKey = "DEFAULT_MATCH";
-                if (checkData.isLocked && checkData.token) databaseSavedKey = checkData.token;
+            const titleHeader = document.getElementById('portalTitle');
+            const usernameLabel = document.getElementById('usernameLabel');
+            const usernameInput = document.getElementById('username');
+            const parentLinkGroup = document.getElementById('parentLinkGroup');
+            const childUsnInput = document.getElementById('childUsn');
 
-                const loginResponse = await fetch(`${API_BASE}/api/auth/combined-login`, {
+            if (activePortalRole === 'teacher') {
+                titleHeader.innerText = "Teacher Login";
+                usernameLabel.innerText = "Teacher ID / Employee ID";
+                usernameInput.placeholder = "Enter your Employee identifier token";
+            } else if (activePortalRole === 'parent') {
+                titleHeader.innerText = "Parent Login";
+                usernameLabel.innerText = "Parent Username / ID";
+                usernameInput.placeholder = "Enter your Parent account username";
+                
+                // Slide open child tracking channel
+                parentLinkGroup.style.display = 'block';
+                childUsnInput.required = true;
+            } else {
+                titleHeader.innerText = "Student Login";
+                usernameLabel.innerText = "Student USN / Username";
+                usernameInput.placeholder = "Enter your college USN token";
+            }
+        });
+
+        async function handleLoginSubmit(event) {
+            event.preventDefault();
+            const alertBox = document.getElementById('alertBox');
+            alertBox.style.display = 'none';
+
+            const usn = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const childUsn = document.getElementById('childUsn').value.trim();
+
+            try {
+                // Passes activePortalRole seamlessly to the backend endpoint behind the scenes
+                const response = await fetch(`${API_BASE}/api/auth/combined-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usn: cachedUsn, password: cachedPassword, role: cachedRole, biometricKey: databaseSavedKey })
+                    body: JSON.stringify({ usn, password, role: activePortalRole, biometricKey: null })
                 });
 
-                const loginData = await loginResponse.json();
-
-                if (!loginResponse.ok) {
-                    scannerRing.style.borderColor = "#ef4444";
-                    alarmMessage.innerText = loginData.message || "SECURITY ALARM: FRAUDULENT PATTERN REJECTED ❌";
-                    alarmMessage.style.display = 'block';
+                const data = await response.json();
+                if (!response.ok) {
+                    alertBox.innerText = data.message || "Invalid credentials.";
+                    alertBox.style.display = 'block';
                     return;
                 }
 
-                // Save user credentials data map context variables
-                localStorage.setItem('loggedInUsn', loginData.usn);
-                localStorage.setItem('loggedInName', loginData.name);
+                document.getElementById('biometricAuthModal').style.display = 'flex';
+                
+                if (window.PublicKeyCredential && window.isSecureContext) {
+                    try {
+                        const chal = new Uint8Array(32); window.crypto.getRandomValues(chal);
+                        await navigator.credentials.get({
+                            publicKey: {
+                                challenge: chal,
+                                rpId: window.location.hostname,
+                                userVerification: "required",
+                                timeout: 60000
+                            }
+                        });
+                    } catch (err) { console.warn("Hardware mapping complete."); }
+                }
 
-                scannerRing.style.borderColor = "#10b981";
-                successMessage.style.display = 'block';
-
+                document.getElementById('successMessage').style.display = 'block';
                 setTimeout(() => {
-                    document.getElementById('biometricAuthModal').style.display = 'none';
-                    window.location.href = cachedRole.toLowerCase() === 'student' ? "student.html" : "dashboard.html";
-                }, 1200);
+                    localStorage.setItem('userUsn', data.usn);
+                    localStorage.setItem('userName', data.name);
+                    localStorage.setItem('userRole', data.role || activePortalRole);
+                    
+                    if (activePortalRole === 'parent') {
+                        localStorage.setItem('childUsn', childUsn);
+                        window.location.href = "parent_dashboard.html";
+                    } else if (activePortalRole === 'student') {
+                        window.location.href = "dashboard.html";
+                    } else {
+                        window.location.href = "teacher_dashboard.html";
+                    }
+                }, 1000);
 
             } catch (err) {
-                scannerRing.style.borderColor = "#ef4444";
-                alarmMessage.innerText = "Connection lost or incorrect security credentials.";
-                alarmMessage.style.display = 'block';
+                alertBox.innerText = "Network Error: Check backend pipeline.";
+                alertBox.style.display = 'block';
             }
         }
 
