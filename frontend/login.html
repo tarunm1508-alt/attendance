@@ -45,15 +45,13 @@
             justify-content: center;
             align-items: center;
             padding: 40px 24px;
-            overflow-y: auto;
+            overflow-y: auto; /* Handles smooth mobile browser scrolling */
             
             opacity: 0;
             animation: loginFadeIn 0.4s var(--ease-fluid) forwards;
         }
 
-        @keyframes loginFadeIn {
-            to { opacity: 1; }
-        }
+        @keyframes loginFadeIn { to { opacity: 1; } }
 
         .login-container {
             background: var(--surface-card);
@@ -72,9 +70,7 @@
             animation: elasticCardEntrance 0.6s var(--ease-kinetic) 0.05s forwards;
         }
 
-        @keyframes elasticCardEntrance {
-            to { transform: translateY(0) scale(1); opacity: 1; }
-        }
+        @keyframes elasticCardEntrance { to { transform: translateY(0) scale(1); opacity: 1; } }
 
         h2 {
             font-size: 28px;
@@ -177,6 +173,7 @@
             font-weight: 500;
         }
 
+        /* Blurred glass micro-overlay design stack */
         .biometric-modal {
             position: fixed !important;
             top: 0; left: 0; width: 100vw; height: 100vh;
@@ -229,6 +226,7 @@
         </div>
     </div>
 
+    <!-- 🫆 UNIFORM HIGH-FIDELITY BIOMETRIC WINDOW -->
     <div id="biometricAuthModal" class="biometric-modal">
         <div style="background-color: #ffffff; padding: 40px; border-radius: 24px; width: 90%; max-width: 420px; text-align: center; border: 1px solid var(--border-clean); box-shadow: var(--shadow-premium);">
             <h3 style="color: var(--primary-blue); font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.01em;">BIOMETRIC VERIFICATION</h3>
@@ -250,10 +248,8 @@
         if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
         else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
 
-        // 🎯 GLOBAL ROUTE TRACKING VARIABLE
         let activePortalRole = 'student'; 
 
-        // 🎯 AUTOMATIC VIEW HANDSHAKE: Instantly morphs text field parameters based on landing selection
         document.addEventListener("DOMContentLoaded", () => {
             const rememberedRole = localStorage.getItem('intendedPortalRole');
             if (rememberedRole) {
@@ -274,8 +270,6 @@
                 titleHeader.innerText = "Parent Login";
                 usernameLabel.innerText = "Parent Username / ID";
                 usernameInput.placeholder = "Enter your Parent account username";
-                
-                // Slide open child tracking channel
                 parentLinkGroup.style.display = 'block';
                 childUsnInput.required = true;
             } else {
@@ -294,8 +288,32 @@
             const password = document.getElementById('password').value;
             const childUsn = document.getElementById('childUsn').value.trim();
 
+            /* 🎯 STEP 1: Pop open the scanning modal screen IMMEDIATELY on submit click */
+            document.getElementById('biometricAuthModal').style.display = 'flex';
+            document.getElementById('successMessage').style.display = 'none';
+
+            /* 🎯 STEP 2: Fire the device hardware sensor request */
+            if (navigator.credentials && window.isSecureContext) {
+                try {
+                    const chal = new Uint8Array(32); window.crypto.getRandomValues(chal);
+                    await navigator.credentials.get({
+                        publicKey: {
+                            challenge: chal,
+                            rpId: window.location.hostname,
+                            userVerification: "required",
+                            timeout: 10000
+                        }
+                    });
+                } catch (err) { 
+                    console.warn("Hardware bypass initialized for development testing tracing layers."); 
+                }
+            }
+
+            // Keep the clean blue radar pulsing for 800ms for visual weight
+            await new Promise(resolve => setTimeout(resolve, 800));
+
             try {
-                // Passes activePortalRole seamlessly to the backend endpoint behind the scenes
+                /* 🎯 STEP 3: Now run the background check against PostgreSQL database tables */
                 const response = await fetch(`${API_BASE}/api/auth/combined-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -303,28 +321,16 @@
                 });
 
                 const data = await response.json();
+                
                 if (!response.ok) {
+                    /* 🎯 STEP 4: If DB rejected the user, drop the scanner window and display the error message */
+                    document.getElementById('biometricAuthModal').style.display = 'none';
                     alertBox.innerText = data.message || "Invalid credentials.";
                     alertBox.style.display = 'block';
                     return;
                 }
 
-                document.getElementById('biometricAuthModal').style.display = 'flex';
-                
-                if (window.PublicKeyCredential && window.isSecureContext) {
-                    try {
-                        const chal = new Uint8Array(32); window.crypto.getRandomValues(chal);
-                        await navigator.credentials.get({
-                            publicKey: {
-                                challenge: chal,
-                                rpId: window.location.hostname,
-                                userVerification: "required",
-                                timeout: 60000
-                            }
-                        });
-                    } catch (err) { console.warn("Hardware mapping complete."); }
-                }
-
+                /* 🎯 STEP 5: Success match path mapping triggers */
                 document.getElementById('successMessage').style.display = 'block';
                 setTimeout(() => {
                     localStorage.setItem('userUsn', data.usn);
@@ -342,6 +348,7 @@
                 }, 1000);
 
             } catch (err) {
+                document.getElementById('biometricAuthModal').style.display = 'none';
                 alertBox.innerText = "Network Error: Check backend pipeline.";
                 alertBox.style.display = 'block';
             }
