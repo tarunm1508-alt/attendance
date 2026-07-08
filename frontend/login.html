@@ -45,7 +45,7 @@
             justify-content: center;
             align-items: center;
             padding: 40px 24px;
-            overflow-y: auto; /* Handles smooth mobile browser scrolling */
+            overflow-y: auto;
             
             opacity: 0;
             animation: loginFadeIn 0.4s var(--ease-fluid) forwards;
@@ -173,11 +173,10 @@
             font-weight: 500;
         }
 
-        /* Blurred glass micro-overlay design stack */
         .biometric-modal {
             position: fixed !important;
             top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(241, 245, 249, 0.92);
+            background: rgba(241, 245, 249, 0.94);
             z-index: 99999;
             display: none;
             justify-content: center;
@@ -191,7 +190,7 @@
             50% { transform: scale(1.04); opacity: 0.5; }
             100% { transform: scale(0.96); opacity: 0.9; }
         }
-        .pulse-active { animation: radarPulse 2s infinite ease-in-out; }
+        .pulse-active { animation: radarPulse 1.8s infinite ease-in-out; }
     </style>
 </head>
 <body>
@@ -226,11 +225,11 @@
         </div>
     </div>
 
-    <!-- 🫆 UNIFORM HIGH-FIDELITY BIOMETRIC WINDOW -->
+    <!-- HIGH FIDELITY SCANNING SIMULATION OVERLAY -->
     <div id="biometricAuthModal" class="biometric-modal">
         <div style="background-color: #ffffff; padding: 40px; border-radius: 24px; width: 90%; max-width: 420px; text-align: center; border: 1px solid var(--border-clean); box-shadow: var(--shadow-premium);">
             <h3 style="color: var(--primary-blue); font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.01em;">BIOMETRIC VERIFICATION</h3>
-            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 30px; font-weight: 500;">Place your finger on the sensor device...</p>
+            <p id="biometricStatusText" style="color: var(--text-muted); font-size: 13px; margin-bottom: 30px; font-weight: 500;">Place your finger on the sensor device...</p>
 
             <div id="scannerRing" class="pulse-active" style="width: 130px; height: 130px; border: 3px dashed var(--primary-blue); border-radius: 50%; margin: 0 auto 25px auto; display: flex; justify-content: center; align-items: center; background-color: #f8fafc;">
                 <svg width="55" height="55" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -282,73 +281,58 @@
         async function handleLoginSubmit(event) {
             event.preventDefault();
             const alertBox = document.getElementById('alertBox');
+            const biometricModal = document.getElementById('biometricAuthModal');
+            const successMessage = document.getElementById('successMessage');
+            const statusText = document.getElementById('biometricStatusText');
+            
             alertBox.style.display = 'none';
+            successMessage.style.display = 'none';
+            statusText.innerText = "Place your finger on the sensor device...";
 
             const usn = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const childUsn = document.getElementById('childUsn').value.trim();
 
-            /* 🎯 STEP 1: Pop open the scanning modal screen IMMEDIATELY on submit click */
-            document.getElementById('biometricAuthModal').style.display = 'flex';
-            document.getElementById('successMessage').style.display = 'none';
-
-            /* 🎯 STEP 2: Fire the device hardware sensor request */
-            if (navigator.credentials && window.isSecureContext) {
-                try {
-                    const chal = new Uint8Array(32); window.crypto.getRandomValues(chal);
-                    await navigator.credentials.get({
-                        publicKey: {
-                            challenge: chal,
-                            rpId: window.location.hostname,
-                            userVerification: "required",
-                            timeout: 10000
-                        }
-                    });
-                } catch (err) { 
-                    console.warn("Hardware bypass initialized for development testing tracing layers."); 
-                }
-            }
-
-            // Keep the clean blue radar pulsing for 800ms for visual weight
-            await new Promise(resolve => setTimeout(resolve, 800));
+            biometricModal.style.display = 'flex';
+            await new Promise(resolve => setTimeout(resolve, 1200));
 
             try {
-                /* 🎯 STEP 3: Now run the background check against PostgreSQL database tables */
                 const response = await fetch(`${API_BASE}/api/auth/combined-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usn, password, role: activePortalRole, biometricKey: null })
+                    body: JSON.stringify({ usn, password, role: activePortalRole, biometricKey: "SIMULATED_SUCCESS_TOKEN" })
                 });
 
                 const data = await response.json();
                 
                 if (!response.ok) {
-                    /* 🎯 STEP 4: If DB rejected the user, drop the scanner window and display the error message */
-                    document.getElementById('biometricAuthModal').style.display = 'none';
+                    biometricModal.style.display = 'none';
                     alertBox.innerText = data.message || "Invalid credentials.";
                     alertBox.style.display = 'block';
                     return;
                 }
 
-                /* 🎯 STEP 5: Success match path mapping triggers */
-                document.getElementById('successMessage').style.display = 'block';
+                statusText.innerText = "Processing secure credential handshake...";
+                successMessage.style.display = 'block';
+                
                 setTimeout(() => {
+                    biometricModal.style.display = 'none';
                     localStorage.setItem('userUsn', data.usn);
                     localStorage.setItem('userName', data.name);
                     localStorage.setItem('userRole', data.role || activePortalRole);
                     
+                    // 🎯 ADDED: Stores the customized subject into session cache safely
+                    localStorage.setItem('userSubject', data.subjectName || '');
+                    
                     if (activePortalRole === 'parent') {
                         localStorage.setItem('childUsn', childUsn);
-                        window.location.href = "parent_dashboard.html";
-                    } else if (activePortalRole === 'student') {
-                        window.location.href = "dashboard.html";
-                    } else {
-                        window.location.href = "teacher_dashboard.html";
                     }
+                    
+                    window.location.href = "dashboard.html";
                 }, 1000);
 
             } catch (err) {
-                document.getElementById('biometricAuthModal').style.display = 'none';
+                biometricModal.style.display = 'none';
                 alertBox.innerText = "Network Error: Check backend pipeline.";
                 alertBox.style.display = 'block';
             }

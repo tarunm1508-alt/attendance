@@ -212,6 +212,17 @@
                 </select>
             </div>
 
+            <div class="form-group" id="teacherSubjectGroup" style="display: none;">
+                <label for="teacherSubject" style="color: var(--primary-blue); font-weight: 800;">Assigned Core Subject</label>
+                <select id="teacherSubject">
+                    <option value="AI">Artificial Intelligence (AI)</option>
+                    <option value="DBMS">Database Management Systems (DBMS)</option>
+                    <option value="ADA">Analysis & Design of Algorithms (ADA)</option>
+                    <option value="MERN">Full-Stack MERN Development (MERN)</option>
+                    <option value="CDN">Cloud & Content Delivery Networks (CDN)</option>
+                </select>
+            </div>
+
             <div class="form-group">
                 <label id="nameLabel" for="fullName">Full Name</label>
                 <input type="text" id="fullName" placeholder="Enter full name" autocomplete="off" required>
@@ -245,7 +256,6 @@
         </div>
     </div>
 
-    <!-- BIOMETRIC REGISTRATION MODAL -->
     <div id="biometricAuthModal" class="biometric-modal">
         <div style="background-color: #ffffff; padding: 40px; border-radius: 24px; width: 90%; max-width: 420px; text-align: center; border: 1px solid var(--border-clean); box-shadow: var(--shadow-premium);">
             <h3 style="color: var(--primary-blue); font-size: 22px; font-weight: 800; margin-bottom: 6px; letter-spacing: -0.01em;">BIOMETRIC REGISTRATION</h3>
@@ -275,6 +285,7 @@
             const usernameInput = document.getElementById('username');
             const parentLinkGroup = document.getElementById('parentLinkGroup');
             const childUsnInput = document.getElementById('childUsn');
+            const teacherSubjectGroup = document.getElementById('teacherSubjectGroup');
 
             if (role === 'parent') {
                 nameLabel.innerText = "Parent Full Name";
@@ -282,6 +293,7 @@
                 idLabel.innerText = "Parent ID / Username";
                 usernameInput.placeholder = "Create a Parent ID";
                 parentLinkGroup.style.display = 'block';
+                teacherSubjectGroup.style.display = 'none';
                 childUsnInput.required = true;
             } else if (role === 'teacher') {
                 nameLabel.innerText = "Teacher Full Name";
@@ -289,6 +301,7 @@
                 idLabel.innerText = "Teacher ID / Employee ID";
                 usernameInput.placeholder = "Enter Teacher Employee ID";
                 parentLinkGroup.style.display = 'none';
+                teacherSubjectGroup.style.display = 'block'; // 🎯 Display subject selection configuration
                 childUsnInput.required = false;
                 childUsnInput.value = "";
             } else {
@@ -297,6 +310,7 @@
                 idLabel.innerText = "Username / USN";
                 usernameInput.placeholder = "Enter USN or Username";
                 parentLinkGroup.style.display = 'none';
+                teacherSubjectGroup.style.display = 'none';
                 childUsnInput.required = false;
                 childUsnInput.value = "";
             }
@@ -308,7 +322,6 @@
             document.getElementById('successMessage').style.display = 'none';
             document.getElementById('biometricAuthModal').style.display = 'flex';
 
-            // Kick off database save loop instantly
             setTimeout(executeDatabaseFirstSignup, 400);
         }
 
@@ -320,14 +333,14 @@
             const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
             const childUsn = document.getElementById('childUsn').value.trim();
+            const subjectName = document.getElementById('teacherSubject').value; // 🎯 Catch data payload element value
 
             try {
-                /* 🎯 STEP 1: Post text data to PostgreSQL DB first. 
-                   If the username or email is already taken, it flags it here instantly! */
+                /* 🎯 STEP 1: Post complete data array parameters to Express route handler */
                 const response = await fetch(`${API_BASE}/api/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usn, email, password, role, name, childUsn })
+                    body: JSON.stringify({ usn, email, password, role, name, childUsn, subjectName })
                 });
 
                 const data = await response.json();
@@ -339,7 +352,7 @@
                     return;
                 }
 
-                /* 🎯 STEP 2: Only after DB confirms safe storage, attempt biometric handshake initialization */
+                /* 🎯 STEP 2: Handle device hardware handshakes */
                 if (window.PublicKeyCredential && window.isSecureContext) {
                     try {
                         const chal = new Uint8Array(32); window.crypto.getRandomValues(chal);
@@ -355,12 +368,11 @@
                             }
                         });
                     } catch (err) { 
-                        // If laptop hardware has no sensor, it safely logs warning and bypasses crash blocks!
                         console.warn("No native scanner asset located on device canvas. Bypassing hardware layer."); 
                     }
                 }
 
-                // 🎯 STEP 3: Map backend biometric registry tables so registration is marked 100% complete
+                /* 🎯 STEP 3: Map security credentials down to data index hashes */
                 const fakeBioId = "BIO_TOKEN_" + Math.random().toString(36).substr(2, 9).toUpperCase();
                 await fetch(`${API_BASE}/api/auth/verify-registration`, {
                     method: 'POST',

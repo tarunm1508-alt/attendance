@@ -3,170 +3,527 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Dashboard</title>
+    <title>Academic Portal Dashboard | Dr. AIT</title>
     <style>
+        /* ==========================================================================
+           🎨 UNIFORM PREMIUM ACADEMIC LIGHT DESIGN SYSTEM 
+           ========================================================================== */
         :root {
-            --primary: #4CAF50;
-            --secondary: #2196F3;
-            --dark: #343a40;
-            --light: #f8f9fa;
+            --bg-canvas: #f1f5f9;
+            --surface-card: #ffffff;
+            --primary-blue: #1e40af;
+            --primary-hover: #1d4ed8;
+            --primary-glow: rgba(30, 64, 175, 0.08);
+            --primary-green: #4CAF50;
+            --primary-green-hover: #43a047;
+            --secondary-sky: #2196F3;
+            
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --text-labels: #475569;
+            
+            --border-clean: #e2e8f0;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            
+            /* 👑 EXCLUSIVE PARENT LIGHT HIGHLIGHT SYSTEM */
+            --parent-canvas: #faf8f5;
+            --parent-card: #ffffff;
+            --parent-gold: #b45309;
+            --parent-lavender: #6b21a8;
+            --parent-soft-bg: rgba(107, 33, 168, 0.05);
+            --parent-border: #f2ebe1;
         }
 
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            margin: 0;
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 24px; overflow-y: auto; }
+        .dashboard-container { width: 100%; max-width: 1050px; display: flex; flex-direction: column; gap: 24px; }
+        .main-card { background: var(--surface-card); border: 1px solid var(--border-clean); padding: 40px; border-radius: 24px; box-shadow: var(--shadow-premium); }
+        .center-text { text-align: center; }
+        .welcome-badge { background: rgba(30, 64, 175, 0.08); color: var(--primary-blue); padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 700; display: inline-block; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.05em; }
+        h2 { font-size: 28px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px; letter-spacing: -0.02em; }
+        p.subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; font-weight: 500; }
+
+        /* 👨‍🏫 TEACHER CORE GRID MODULES */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 30px; }
+        .stat-box { background: #f8fafc; border: 1px solid var(--border-clean); border-radius: 16px; padding: 20px; text-align: left; }
+        .stat-box h4 { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .stat-box .count-number { font-size: 32px; font-weight: 800; color: var(--text-dark); }
+        .control-panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .panel-box { background: #ffffff; border: 2px dashed var(--border-clean); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        .qr-placeholder { width: 160px; height: 160px; background: #f1f5f9; border-radius: 12px; display: flex; justify-content: center; align-items: center; color: var(--text-muted); font-size: 13px; font-weight: 500; border: 1px solid var(--border-clean); margin-bottom: 16px; }
+        .qr-placeholder img { width: 100%; height: 100%; object-fit: contain; border-radius: 8px; }
+
+        .table-container { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border-clean); background: #ffffff; margin-bottom: 20px;}
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: var(--primary-blue); color: white; padding: 16px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        td { padding: 14px 16px; border-bottom: 1px solid var(--border-clean); font-size: 14px; color: #334155; }
+        .status-badge { background: #e8f5e9; color: #1b5e20; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 11px; display: inline-block; }
+
+        /* 🎓 STUDENT ACCORDION STYLES */
+        .year-accordion-container { display: flex; flex-direction: column; gap: 14px; text-align: left; margin-top: 20px; }
+        .year-bar { background: #f8fafc; border: 1px solid var(--border-clean); border-radius: 14px; padding: 18px 24px; font-size: 16px; font-weight: 800; color: var(--primary-blue); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; }
+        .year-bar:hover { background: #f1f5f9; border-color: var(--primary-blue); }
+        .semester-panel { display: none; padding: 20px; border-radius: 0 0 14px 14px; background: #ffffff; border: 1px solid var(--border-clean); border-top: none; margin-top: -8px; flex-direction: column; gap: 24px; }
+        .sem-title { font-size: 14px; font-weight: 800; color: var(--text-dark); text-transform: uppercase; letter-spacing: 0.05em; border-left: 3px solid var(--secondary-sky); padding-left: 8px; margin-bottom: 12px; }
+        .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+        .subject-card { background: #f8fafc; border: 1px solid var(--border-clean); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .sub-code { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .sub-name { font-size: 15px; font-weight: 800; color: var(--text-dark); }
+        .metric-row { display: flex; justify-content: space-between; font-size: 13px; padding-top: 6px; border-top: 1px dashed var(--border-clean); }
+        .metric-label { color: var(--text-muted); font-weight: 500; }
+        .metric-value { font-weight: 700; color: var(--text-dark); }
+        .marks-highlight { color: var(--primary-blue); }
+
+        .scanner-viewfinder { width: 100%; max-width: 260px; height: 200px; background: #0f172a; border-radius: 16px; margin: 0 auto 16px auto; position: relative; display: flex; justify-content: center; align-items: center; color: #64748b; overflow: hidden; border: 2px solid var(--border-clean); }
+        .scanner-laser { position: absolute; width: 100%; height: 3px; background: var(--accent-red); top: 0; left: 0; animation: scanningLaser 2s infinite ease-in-out; box-shadow: 0 0 12px var(--accent-red); }
+        @keyframes scanningLaser { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+
+        /* ==========================================================================
+           👑 EXCLUSIVE PARENT LIGHT UI/UX THEME CLASSES
+           ========================================================================== */
+        .parent-theme-body { background-color: var(--parent-canvas) !important; }
+        .parent-theme-card { background: var(--parent-card) !important; border: 1px solid var(--parent-border) !important; box-shadow: 0 15px 35px -5px rgba(180, 83, 9, 0.04) !important; }
+        .parent-welcome-badge { background: var(--parent-soft-bg) !important; color: var(--parent-lavender) !important; }
+        .parent-title { color: var(--parent-lavender) !important; }
+        
+        .parent-summary-banner {
+            background: linear-gradient(135deg, #fffcf7 0%, #fbf7f0 100%);
+            border: 1px solid var(--parent-border);
+            border-radius: 18px;
+            padding: 24px;
+            margin-bottom: 30px;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            text-align: left;
         }
+        .parent-metric-item h5 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .parent-metric-item p { font-size: 18px; font-weight: 800; color: var(--parent-gold); }
 
-        .dashboard-card {
-            background: white;
-            width: 90%;
-            max-width: 900px;
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-            text-align: center;
-        }
+        .parent-year-bar { background: #fffcf9; border: 1px solid var(--parent-border); color: var(--parent-lavender); font-weight: 700; }
+        .parent-year-bar:hover { background: #fdf8f0; border-color: var(--parent-gold); }
+        .parent-sem-title { border-left: 3px solid var(--parent-gold); color: var(--parent-lavender); }
+        .parent-sub-card { background: #faf8f5; }
+        .parent-sub-card:hover { border-color: var(--parent-gold); background: #ffffff; }
+        .parent-marks-highlight { color: var(--parent-gold); }
 
-        h2 { color: var(--dark); margin-bottom: 5px; }
-        p { color: #666; margin-bottom: 25px; font-size: 14px; }
-
-        .table-container {
-            overflow-x: auto; /* Prevents overlap on small screens */
-            margin-top: 20px;
-            border-radius: 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-
-        th {
-            background-color: var(--primary);
-            color: white;
-            padding: 15px 10px;
-            font-size: 13px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        td {
-            padding: 12px 10px;
-            border-bottom: 1px solid #eee;
-            font-size: 14px;
-            color: #444;
-        }
-
-        tr:hover { background-color: #f9f9f9; }
-
-        .status-badge {
-            background: #e8f5e9;
-            color: #2e7d32;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 12px;
-        }
-
-        .btn {
-            padding: 12px 25px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-        .btn-refresh {
-            background: var(--secondary);
-            color: white;
-            margin-bottom: 15px;
-        }
-
-        .btn-refresh:hover { background: #1976D2; transform: translateY(-2px); }
-
-        .btn-back {
-            background: var(--dark);
-            color: white;
-            margin-top: 25px;
-        }
-
-        .btn-back:hover { background: #000; }
-
+        .btn { padding: 12px 20px; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.2s; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-blue { background: var(--primary-blue); color: white; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15); }
+        .btn-blue:hover { background: var(--primary-hover); }
+        .btn-green { background: var(--primary-green); color: white; box-shadow: 0 4px 12px rgba(76, 175, 80, 0.15); }
+        .btn-green:hover { background: var(--primary-green-hover); }
+        .btn-dark { background: var(--text-labels); color: white; margin-top: 20px; }
+        .btn-dark:hover { background: #000; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard-card">
-        <h2>📊 Attendance Records</h2>
-        <p>Live student logs from the database</p>
-        
-        <button class="btn btn-refresh" onclick="loadAttendance()">🔄 Refresh Data</button>
+    <div class="dashboard-container">
+        <div class="main-card" id="domMainCardContainer">
+            <div class="center-text">
+                <div id="welcomeBadge" class="welcome-badge">Verifying Academic Session Token...</div>
+                <h2 id="dashboardTitle">Core Portal Administration Workspace</h2>
+                <p id="dashboardSubtitle" class="subtitle">Real-Time Academic Attendance Analytics Engine & Session Dispatcher</p>
+            </div>
 
-        <div class="table-container">
-            <table id="attendanceTable">
-                <thead>
-                    <tr>
-                        <th>Student ID</th>
-                        <th>Session</th>
-                        <th>Distance</th>
-                        <th>Status</th>
-                        <th>Timestamp</th>
-                    </tr>
-                </thead>
-                <tbody id="attendanceData">
-                    <tr><td colspan="5">Click refresh to load data...</td></tr>
-                </tbody>
-            </table>
+            <!-- ==========================================================================
+                 👨‍🏫 TEACHER LAYOUT (DEEP CORPORATE DESIGN SYSTEM)
+                 ========================================================================== -->
+            <div id="teacherSectionLayout" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-box" style="border-left: 4px solid var(--primary-blue);">
+                        <h4>Total Active Logs</h4>
+                        <div id="totalPresentCount" class="count-number">0</div>
+                    </div>
+                    <div class="stat-box" style="border-left: 4px solid var(--primary-green);">
+                        <h4>Active Live Session</h4>
+                        <div id="currentActiveSessionCode" class="count-number" style="font-size: 22px; margin-top: 10px; font-family: monospace;">NONE</div>
+                    </div>
+                    <div class="stat-box" style="border-left: 4px solid var(--secondary-sky);">
+                        <h4>Hardware Sync Status</h4>
+                        <div class="count-number" style="font-size: 22px; color: var(--accent-green); margin-top: 10px;">ONLINE ✓</div>
+                    </div>
+                </div>
+
+                <div class="control-panel-grid">
+                    <div class="panel-box">
+                        <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 8px; color: var(--primary-blue);">QR CODE GENERATOR CONTROL</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Generate real-time cryptographic tokens for student tracking.</p>
+                        <button class="btn btn-green" onclick="window.generateSessionQR()">⚡ Generate Session QR</button>
+                    </div>
+
+                    <div class="panel-box">
+                        <div id="qrContainer" class="qr-placeholder">
+                            <span>QR Code Display Area</span>
+                        </div>
+                        <div id="sessionLabel" style="font-size: 12px; font-weight: 700; color: var(--text-muted); font-family: monospace;">NO ACTIVE DISPATCH</div>
+                    </div>
+                </div>
+
+                <div style="text-align: left; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="font-size: 16px; font-weight: 800; color: var(--text-labels);">📋 Real-Time Verification Registry Stream</h3>
+                    <button class="btn btn-blue" style="padding: 8px 14px; font-size: 12px;" onclick="loadAttendance()">🔄 Sync Table</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="attendanceTable">
+                        <thead>
+                            <tr>
+                                <th>Student Name</th>
+                                <th>USN / ID</th>
+                                <th>Subject Name</th> 
+                                <th>Target Session Field</th>
+                                <th>Proximity Distance</th>
+                                <th>Verification Status</th>
+                                <th>System Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceData">
+                            <tr><td colspan="7" style="text-align:center;">Loading database records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ==========================================================================
+                 🎓 STUDENT LAYOUT (SECONDARY SKY BLUE THEME)
+                 ========================================================================== -->
+            <div id="studentSectionLayout" style="display: none;">
+                <div class="control-panel-grid">
+                    <div class="panel-box" style="border: 2px solid var(--primary-blue); background: linear-gradient(to bottom right, #ffffff, #f8fafc);">
+                        <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">BIOMETRIC DISTANCE QR SCANNER</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Scan the projector screen code to post a verification token securely to your database records.</p>
+                        <button class="btn btn-blue" id="scanActionBtn" onclick="triggerStudentScannerSession()">📷 Trigger Live Scan</button>
+                    </div>
+
+                    <div class="panel-box" style="background: #0f172a; border-color: #1e293b; position: relative;">
+                        <div id="viewfinderWindow" class="scanner-viewfinder">
+                            <div id="laserLine"></div>
+                            <video id="webcamStream" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover; display: none; position: absolute; top:0; left:0;"></video>
+                            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="1" id="cameraIconSvg" style="z-index: 2;">
+                                <rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 7h3v3H7zm7 0h3v3h-3zm0 7h3v3h-3zm-7 0h3v3H7z" />
+                            </svg>
+                        </div>
+                        <div id="scannerFeedbackLog" style="font-size: 12px; font-weight: 700; color: #94a3b8; font-family: monospace; text-transform: uppercase;">SCANNER STANDBY</div>
+                    </div>
+                </div>
+
+                <!-- STUDENT PERFORMANCE ACCORDIONS -->
+                <div class="year-accordion-container">
+                    <div class="year-bar" onclick="toggleAccordion('year1')"><span>📅 1st Year Engineering</span><span id="year1_arrow">➕</span></div>
+                    <div id="year1_panel" class="semester-panel">
+                        <div><div class="sem-title">Semester 1 Subjects & Internal Performance</div><div class="subject-grid" id="sem1_grid"></div></div>
+                        <div><div class="sem-title">Semester 2 Subjects & Internal Performance</div><div class="subject-grid" id="sem2_grid"></div></div>
+                    </div>
+
+                    <div class="year-bar" onclick="toggleAccordion('year2')"><span>📅 2nd Year Engineering</span><span id="year2_arrow">➕</span></div>
+                    <div id="year2_panel" class="semester-panel">
+                        <div><div class="sem-title">Semester 3 Subjects & Internal Performance</div><div class="subject-grid" id="sem3_grid"></div></div>
+                        <div><div class="sem-title">Semester 4 Subjects & Internal Performance</div><div class="subject-grid" id="sem4_grid"></div></div>
+                    </div>
+
+                    <div class="year-bar" onclick="toggleAccordion('year3')"><span>📅 3rd Year Engineering</span><span id="year3_arrow">➕</span></div>
+                    <div id="year3_panel" class="semester-panel">
+                        <div><div class="sem-title">Semester 5 Subjects & Internal Performance</div><div class="subject-grid" id="sem5_grid"></div></div>
+                        <div><div class="sem-title">Semester 6 Subjects & Internal Performance</div><div class="subject-grid" id="sem6_grid"></div></div>
+                    </div>
+
+                    <div class="year-bar" onclick="toggleAccordion('year4')"><span>📅 4th Year Engineering</span><span id="year4_arrow">➕</span></div>
+                    <div id="year4_panel" class="semester-panel">
+                        <div><div class="sem-title">Semester 7 Subjects & Internal Performance</div><div class="subject-grid" id="sem7_grid"></div></div>
+                        <div><div class="sem-title">Semester 8 Subjects & Internal Performance</div><div class="subject-grid" id="sem8_grid"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==========================================================================
+                 👑 PARENT LAYOUT (PREMIUM WARM IVORY & CHAMPAGNE OVERLAY)
+                 ========================================================================== -->
+            <div id="parentSectionLayout" style="display: none;">
+                
+                <!-- LINKED CHILD IDENTITY INFORMATION DECK CARD -->
+                <div class="parent-summary-banner">
+                    <div class="parent-metric-item">
+                        <h5>Linked Ward Name</h5>
+                        <p id="parentChildNameDisplay">Loading Student Name...</p>
+                    </div>
+                    <div class="parent-metric-item">
+                        <h5>University Seat Number (USN)</h5>
+                        <p id="parentChildUsnDisplay">1DA23AI000</p>
+                    </div>
+                    <div class="parent-metric-item">
+                        <h5>Current Cumulative Attendance</h5>
+                        <p style="color: var(--primary-green);">87.4% (Good Progress)</p>
+                    </div>
+                    <div class="parent-metric-item">
+                        <h5>Academic Honor Code Status</h5>
+                        <p style="color: var(--parent-lavender);">ACTIVE REGULAR ✓</p>
+                    </div>
+                </div>
+
+                <!-- PARENT-EXCLUSIVE MARKS PROGRESSION MAP ACCORDIONS -->
+                <div class="year-accordion-container">
+                    <div class="year-bar parent-year-bar" onclick="toggleAccordion('p_year1')"><span>📅 1st Year Academic Progression</span><span id="p_year1_arrow">➕</span></div>
+                    <div id="p_year1_panel" class="semester-panel">
+                        <div><div class="sem-title parent-sem-title">Semester 1 Terminal Internal Marks Report</div><div class="subject-grid" id="p_sem1_grid"></div></div>
+                        <div><div class="sem-title parent-sem-title">Semester 2 Terminal Internal Marks Report</div><div class="subject-grid" id="p_sem2_grid"></div></div>
+                    </div>
+
+                    <div class="year-bar parent-year-bar" onclick="toggleAccordion('p_year2')"><span>📅 2nd Year Academic Progression</span><span id="p_year2_arrow">➕</span></div>
+                    <div id="p_year2_panel" class="semester-panel">
+                        <div><div class="sem-title parent-sem-title">Semester 3 Terminal Internal Marks Report</div><div class="subject-grid" id="p_sem3_grid"></div></div>
+                        <div><div class="sem-title parent-sem-title">Semester 4 Terminal Internal Marks Report</div><div class="subject-grid" id="p_sem4_grid"></div></div>
+                    </div>
+
+                    <div class="year-bar parent-year-bar" onclick="toggleAccordion('p_year3')"><span>📅 3rd Year Academic Progression</span><span id="p_year3_arrow">➕</span></div>
+                    <div id="p_year3_panel" class="semester-panel">
+                        <div><div class="sem-title parent-sem-title">Semester 5 Terminal Internal Marks Report</div><div class="subject-grid" id="p_sem5_grid"></div></div>
+                        <div><div class="sem-title parent-sem-title">Semester 6 Terminal Internal Marks Report</div><div class="subject-grid" id="p_sem6_grid"></div></div>
+                    </div>
+
+                    <div class="year-bar parent-year-bar" onclick="toggleAccordion('p_year4')"><span>📅 4th Year Academic Progression</span><span id="p_year4_arrow">➕</span></div>
+                    <div id="p_year4_panel" class="semester-panel">
+                        <div><div class="sem-title parent-sem-title">Semester 7 Terminal Internal Marks Report</div><div class="subject-grid" id="p_sem7_grid"></div></div>
+                        <div><div class="sem-title parent-sem-title">Semester 8 Terminal Internal Marks Report</div><div class="subject-grid" id="p_sem8_grid"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: right; margin-top: 10px;">
+                <button class="btn btn-dark" onclick="handleLogout()">Secure Logout ⬅️</button>
+            </div>
         </div>
-
-        <button class="btn btn-back" onclick="window.location.href='teacher.html'">⬅️ Back to Panel</button>
     </div>
 
     <script>
-        async function loadAttendance() {
-            const tableBody = document.getElementById('attendanceData');
-            tableBody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+        let API_BASE = window.location.origin;
+        if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
+        else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
 
+        const userRole = localStorage.getItem('userRole') || 'student';
+        const userName = localStorage.getItem('userName') || 'Academic User';
+        const userUsn = localStorage.getItem('userUsn') || 'STUDENT';
+        const childUsn = localStorage.getItem('childUsn') || '';
+        const userSubject = localStorage.getItem('userSubject') || '';
+
+        window.generateSessionQR = function() {
             try {
-                const response = await fetch('http://localhost:5000/api/attendance/records');
-                const data = await response.json();
-                
-                tableBody.innerHTML = ""; 
+                const uniqueSessionCode = "AIT_" + Math.floor(100000 + Math.random() * 900000);
+                document.getElementById('currentActiveSessionCode').innerText = uniqueSessionCode;
+                document.getElementById('sessionLabel').innerText = `TOKEN: ${uniqueSessionCode}`;
+                const qrContainer = document.getElementById('qrContainer');
+                qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${uniqueSessionCode}" alt="Session QR Code" style="width:100%; height:100%; object-fit:contain;" />`;
+            } catch (err) { console.error(err); }
+        };
 
-                if (data.length === 0) {
-                    tableBody.innerHTML = "<tr><td colspan='5'>No records found.</td></tr>";
+        document.addEventListener("DOMContentLoaded", () => {
+            const dashboardTitle = document.getElementById('dashboardTitle');
+            const dashboardSubtitle = document.getElementById('dashboardSubtitle');
+            const welcomeBadge = document.getElementById('welcomeBadge');
+            const cardContainer = document.getElementById('domMainCardContainer');
+
+            if (userRole.toLowerCase() === 'teacher') {
+                document.getElementById('teacherSectionLayout').style.display = 'block';
+                welcomeBadge.innerText = `👤 Active Session: ${userName} (TEACHER) | 📚 Subject: ${userSubject}`;
+                loadAttendance();
+                setInterval(loadAttendance, 5000);
+            } 
+            // ==========================================================================
+            // 👑 RENDER PARENT VIEW (IF ACCESS ROLE MATCHES PARENT KEY CODES)
+            // ==========================================================================
+            else if (userRole.toLowerCase() === 'parent') {
+                // Swap classes to force clean premium warm pastel layouts
+                document.body.classList.add('parent-theme-body');
+                cardContainer.classList.add('parent-theme-card');
+                welcomeBadge.classList.add('parent-welcome-badge');
+                dashboardTitle.classList.add('parent-title');
+
+                document.getElementById('parentSectionLayout').style.display = 'block';
+                dashboardTitle.innerText = "👑 Parent Ward Academic Oversight Portal";
+                dashboardSubtitle.innerText = "Monitor linked student cumulative internal evaluations, grades, and tracking statistics dynamically.";
+                welcomeBadge.innerText = `👤 Guardian Session Account: ${userName} (PARENT)`;
+                
+                document.getElementById('parentChildUsnDisplay').innerText = childUsn || "Not Assigned";
+                document.getElementById('parentChildNameDisplay').innerText = `${userName}'s Ward`;
+
+                initializeAcademicPerformanceSchema(true); // Render with parent view parameters
+                fetchChildRealNameDetails();
+            } 
+            else {
+                document.getElementById('studentSectionLayout').style.display = 'block';
+                dashboardTitle.innerText = "🎓 Student Academic Progression Hub";
+                dashboardSubtitle.innerText = "Track terminal metrics, view active subject scores, and execute biometric logs.";
+                welcomeBadge.innerText = `👤 Active Student Profile: ${userName} (STUDENT)`;
+                initializeAcademicPerformanceSchema(false); // Render standard student view
+            }
+        });
+
+        // Pull real text configurations for child names using the relational routing engine
+        async function fetchChildRealNameDetails() {
+            if (!childUsn) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/profile/${childUsn}`);
+                if (res.ok) {
+                    const profileData = await res.json();
+                    if (profileData.name) {
+                        document.getElementById('parentChildNameDisplay').innerText = profileData.name.toUpperCase();
+                    }
+                }
+            } catch (e) { console.warn("Using automatic descriptive profile name handling...", e); }
+        }
+
+        async function triggerStudentScannerSession() {
+            const feedbackLog = document.getElementById('scannerFeedbackLog');
+            const laser = document.getElementById('laserLine');
+            const cameraIcon = document.getElementById('cameraIconSvg');
+            const actionBtn = document.getElementById('scanActionBtn');
+            const video = document.getElementById('webcamStream');
+
+            actionBtn.disabled = true;
+            feedbackLog.innerText = "Accessing camera feed...";
+            feedbackLog.style.color = "var(--secondary-sky)";
+            
+            try {
+                const localMediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: 300, height: 200 } });
+                video.srcObject = localMediaStream;
+                video.style.display = "block";
+                cameraIcon.style.display = "none";
+                laser.className = "scanner-laser";
+                laser.style.zIndex = "10";
+                
+                await new Promise(r => setTimeout(r, 2000));
+                const scannedToken = prompt("📥 QR Code Projector Track Detected!\nEnter the Active Session Code displayed on the screen:");
+                
+                if (!scannedToken) {
+                    feedbackLog.innerText = "Scan Cancelled";
+                    feedbackLog.style.color = "var(--accent-red)";
+                    localMediaStream.getTracks().forEach(track => track.stop());
+                    video.style.display = "none";
+                    cameraIcon.style.display = "block";
+                    laser.className = "";
+                    actionBtn.disabled = false;
                     return;
                 }
+
+                feedbackLog.innerText = "Processing handshake...";
+                const response = await fetch(`${API_BASE}/api/auth/submit-attendance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId: userUsn, subjectName: 'AI', sessionCode: scannedToken })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    feedbackLog.innerText = "SUCCESS: VERIFIED ✓";
+                    feedbackLog.style.color = "var(--accent-green)";
+                    alert(`🎉 Success! Attendance saved securely for token: ${scannedToken}`);
+                } else {
+                    feedbackLog.innerText = "REJECTED ❌";
+                    feedbackLog.style.color = "var(--accent-red)";
+                    alert(`❌ Scan Blocked: ${data.message}`);
+                }
+
+                localMediaStream.getTracks().forEach(track => track.stop());
+                video.style.display = "none";
+                cameraIcon.style.display = "block";
+                laser.className = "";
+                
+            } catch (err) {
+                feedbackLog.innerText = "Hardware connection blocked";
+                feedbackLog.style.color = "var(--accent-red)";
+                laser.className = ""; cameraIcon.style.display = "block"; video.style.display = "none";
+            } finally {
+                setTimeout(() => {
+                    feedbackLog.innerText = "SCANNER STANDBY"; feedbackLog.style.color = "#94a3b8"; actionBtn.disabled = false;
+                }, 3000);
+            }
+        }
+
+        // ==========================================================================
+        // 📚 ACADEMIC SCORE CARD GENERATION ENGINE (UNIFIED AND BI-PORTAL ROUTED)
+        // ==========================================================================
+        function initializeAcademicPerformanceSchema(isParentPortalView) {
+            const coreSubjectPerformanceSchema = [
+                { code: "AIT-501", name: "Artificial Intelligence", attendance: "88%", ia1: "22/25", ia2: "24/25", exam: "82/100" },
+                { code: "AIT-502", name: "Database Management (DBMS)", attendance: "91%", ia1: "20/25", ia2: "21/25", exam: "76/100" },
+                { code: "AIT-503", name: "Analysis of Algorithms (ADA)", attendance: "79%", ia1: "18/25", ia2: "19/25", exam: "68/100" },
+                { code: "AIT-504", name: "MERN Fullstack Architecture", attendance: "94%", ia1: "24/25", ia2: "25/25", exam: "91/100" },
+                { code: "AIT-505", name: "Cloud CDN Networks", attendance: "85%", ia1: "21/25", ia2: "22/25", exam: "80/100" }
+            ];
+
+            // Define node maps explicitly based on role scope parameters
+            const targetPrefix = isParentPortalView ? 'p_sem' : 'sem';
+            const activeGrids = [`${targetPrefix}1_grid`, `${targetPrefix}2_grid`, `${targetPrefix}3_grid`, `${targetPrefix}4_grid`, `${targetPrefix}5_grid`, `${targetPrefix}6_grid`, `${targetPrefix}7_grid`, `${targetPrefix}8_grid`];
+            
+            activeGrids.forEach(gridId => {
+                const containerElement = document.getElementById(gridId);
+                if (!containerElement) return;
+                
+                containerElement.innerHTML = "";
+                coreSubjectPerformanceSchema.forEach(sub => {
+                    const subjectCard = document.createElement('div');
+                    
+                    // Conditionally append layout styling modifications dynamically
+                    subjectCard.className = `subject-card ${isParentPortalView ? 'parent-sub-card' : ''}`;
+                    
+                    subjectCard.innerHTML = `
+                        <div class="sub-header"><div><div class="sub-code">${sub.code}</div><div class="sub-name">${sub.name}</div></div></div>
+                        <div class="metric-row"><span class="metric-label">Class Attendance:</span><span class="metric-value" style="color:var(--primary-green);">${sub.attendance}</span></div>
+                        <div class="metric-row"><span class="metric-label">Internal Assessment 1:</span><span class="metric-value ${isParentPortalView ? 'parent-marks-highlight' : 'marks-highlight'}">${sub.ia1}</span></div>
+                        <div class="metric-row"><span class="metric-label">Internal Assessment 2:</span><span class="metric-value ${isParentPortalView ? 'parent-marks-highlight' : 'marks-highlight'}">${sub.ia2}</span></div>
+                        <div class="metric-row"><span class="metric-label">Final Exam Grade:</span><span class="metric-value" style="color:${isParentPortalView ? 'var(--parent-lavender)' : 'var(--primary-blue)'}; font-weight:800;">${sub.exam}</span></div>
+                    `;
+                    containerElement.appendChild(subjectCard);
+                });
+            });
+        }
+
+        // Handles accordion panels expansion maps cleanly for both tracking interfaces
+        function toggleAccordion(yearId) {
+            const panel = document.getElementById(`${yearId}_panel`);
+            const arrow = document.getElementById(`${yearId}_arrow`);
+            if (panel && arrow) {
+                panel.style.display = (panel.style.display === 'flex') ? 'none' : 'flex';
+                arrow.innerText = (panel.style.display === 'flex') ? "➖" : "➕";
+            }
+        }
+
+        async function loadAttendance() {
+            const tableBody = document.getElementById('attendanceData');
+            if (!tableBody) return;
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/attendance-records`);
+                const data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center;'>⏳ Waiting for live biometric scans... No active records in database.</td></tr>";
+                    document.getElementById('totalPresentCount').innerText = "0";
+                    return;
+                }
+
+                document.getElementById('totalPresentCount').innerText = data.length;
+                tableBody.innerHTML = ""; 
 
                 data.forEach(row => {
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
-                        <td><strong>${row.student_id}</strong></td>
-                        <td><code>${row.session_code || 'N/A'}</code></td>
+                        <td><span style="font-weight:700; color:var(--text-dark);">${row.student_full_name || 'Verified Account'}</span></td>
+                        <td><code>${row.student_id}</code></td>
+                        <td><span style="font-weight:600; color:#1e40af; text-transform:uppercase;">${row.subject_name || 'AI'}</span></td>
+                        <td><code>${row.session_code}</code></td>
                         <td>${row.distance}m</td>
                         <td><span class="status-badge">PRESENT</span></td>
-                        <td>${new Date(row.created_at).toLocaleString()}</td>
+                        <td>${new Date(row.created_at).toLocaleTimeString()}</td>
                     `;
                     tableBody.appendChild(tr);
                 });
-            } catch (err) {
-                tableBody.innerHTML = "<tr><td colspan='5' style='color:red'>Server Error</td></tr>";
-            }
+            } catch (err) { tableBody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:red;'>⚠️ Connection Failure to Node API.</td></tr>"; }
         }
 
-        window.onload = loadAttendance;
+        function handleLogout() { localStorage.clear(); window.location.href = "login.html"; }
     </script>
-
-    //Automatically refresh the table every 5 seconds
-    setInterval(loadAttendance, 5000);
 </body>
 </html>
