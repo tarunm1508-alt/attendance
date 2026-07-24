@@ -208,7 +208,22 @@
                 <select id="role" onchange="toggleRoleFields()">
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
+                    <option value="hod">HOD (Head of Department)</option>
                     <option value="parent">Parent</option>
+                </select>
+            </div>
+
+            <!-- Branch Selection Group (For HOD & Teachers) -->
+            <div class="form-group" id="branchGroup" style="display: none;">
+                <label for="branch" style="color: var(--primary-blue); font-weight: 800;">Department Branch</label>
+                <select id="branch">
+                    <option value="AIML">Artificial Intelligence & Machine Learning (AIML)</option>
+                    <option value="CSE">Computer Science & Engineering (CSE)</option>
+                    <option value="ECE">Electronics & Communication (ECE)</option>
+                    <option value="EEE">Electrical & Electronics (EEE)</option>
+                    <option value="Mechanical">Mechanical Engineering</option>
+                    <option value="Civil">Civil Engineering</option>
+                    <option value="ISE">Information Science & Engineering (ISE)</option>
                 </select>
             </div>
 
@@ -235,7 +250,7 @@
 
             <div class="form-group" id="parentLinkGroup" style="display: none;">
                 <label for="childUsn" style="color: var(--primary-blue); font-weight: bold;">Student USN (Link to Child)</label>
-                <input type="text" id="childUsn" placeholder="Enter your child's USN (e.g., 1DA24AI111)" autocomplete="off">
+                <input type="text" id="childUsn" placeholder="Enter your child's USN" autocomplete="off">
             </div>
 
             <div class="form-group">
@@ -286,6 +301,7 @@
             const parentLinkGroup = document.getElementById('parentLinkGroup');
             const childUsnInput = document.getElementById('childUsn');
             const teacherSubjectGroup = document.getElementById('teacherSubjectGroup');
+            const branchGroup = document.getElementById('branchGroup');
 
             if (role === 'parent') {
                 nameLabel.innerText = "Parent Full Name";
@@ -294,6 +310,7 @@
                 usernameInput.placeholder = "Create a Parent ID";
                 parentLinkGroup.style.display = 'block';
                 teacherSubjectGroup.style.display = 'none';
+                branchGroup.style.display = 'none';
                 childUsnInput.required = true;
             } else if (role === 'teacher') {
                 nameLabel.innerText = "Teacher Full Name";
@@ -301,7 +318,18 @@
                 idLabel.innerText = "Teacher ID / Employee ID";
                 usernameInput.placeholder = "Enter Teacher Employee ID";
                 parentLinkGroup.style.display = 'none';
-                teacherSubjectGroup.style.display = 'block'; // 🎯 Display subject selection configuration
+                teacherSubjectGroup.style.display = 'block';
+                branchGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
+            } else if (role === 'hod') {
+                nameLabel.innerText = "HOD Full Name";
+                fullNameInput.placeholder = "Enter HOD full name";
+                idLabel.innerText = "HOD Employee ID / Username";
+                usernameInput.placeholder = "Enter HOD Employee ID";
+                parentLinkGroup.style.display = 'none';
+                teacherSubjectGroup.style.display = 'none';
+                branchGroup.style.display = 'block';
                 childUsnInput.required = false;
                 childUsnInput.value = "";
             } else {
@@ -311,6 +339,7 @@
                 usernameInput.placeholder = "Enter USN or Username";
                 parentLinkGroup.style.display = 'none';
                 teacherSubjectGroup.style.display = 'none';
+                branchGroup.style.display = 'none';
                 childUsnInput.required = false;
                 childUsnInput.value = "";
             }
@@ -333,14 +362,14 @@
             const password = document.getElementById('password').value;
             const role = document.getElementById('role').value;
             const childUsn = document.getElementById('childUsn').value.trim();
-            const subjectName = document.getElementById('teacherSubject').value; // 🎯 Catch data payload element value
+            const subjectName = document.getElementById('teacherSubject').value;
+            const branch = document.getElementById('branch').value;
 
             try {
-                /* 🎯 STEP 1: Post complete data array parameters to Express route handler */
                 const response = await fetch(`${API_BASE}/api/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usn, email, password, role, name, childUsn, subjectName })
+                    body: JSON.stringify({ usn, email, password, role, name, childUsn, subjectName, branch })
                 });
 
                 const data = await response.json();
@@ -352,7 +381,6 @@
                     return;
                 }
 
-                /* 🎯 STEP 2: Handle device hardware handshakes */
                 if (window.PublicKeyCredential && window.isSecureContext) {
                     try {
                         const chal = new Uint8Array(32); window.crypto.getRandomValues(chal);
@@ -372,7 +400,6 @@
                     }
                 }
 
-                /* 🎯 STEP 3: Map security credentials down to data index hashes */
                 const fakeBioId = "BIO_TOKEN_" + Math.random().toString(36).substr(2, 9).toUpperCase();
                 await fetch(`${API_BASE}/api/auth/verify-registration`, {
                     method: 'POST',
@@ -383,7 +410,7 @@
                 successMessage.style.display = 'block';
                 setTimeout(() => {
                     document.getElementById('biometricAuthModal').style.display = 'none';
-                    window.location.href = "login.html";
+                    window.location.href = `login.html?role=${role}`;
                 }, 1200);
 
             } catch (err) {

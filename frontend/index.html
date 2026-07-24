@@ -56,7 +56,7 @@
             border-radius: 20px;
             padding: 24px 32px;
             width: 100%;
-            max-width: 850px;
+            max-width: 950px;
             display: flex;
             align-items: center;
             gap: 24px;
@@ -118,7 +118,7 @@
             border-radius: 24px;
             padding: 40px;
             width: 100%;
-            max-width: 850px;
+            max-width: 950px;
             box-shadow: var(--shadow-premium);
             text-align: center;
             transform: translateY(20px);
@@ -144,10 +144,10 @@
             margin-bottom: 36px;
         }
 
-        /* Modern Grid Architecture for Role Choice Cards */
+        /* Modern Grid Architecture for 4 Role Choice Cards */
         .roles-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
             gap: 20px;
         }
 
@@ -155,7 +155,7 @@
             background: #f8fafc;
             border: 1px solid var(--border-clean);
             border-radius: 16px;
-            padding: 32px 24px;
+            padding: 32px 20px;
             cursor: pointer;
             transition: all 0.25s var(--ease-fluid);
             display: flex;
@@ -164,6 +164,7 @@
             gap: 16px;
             position: relative;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .role-icon-wrapper {
@@ -212,6 +213,10 @@
         }
 
         /* Responsive Mobile Scaling Interceptor Layouts */
+        @media (max-width: 768px) {
+            .roles-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
         @media (max-width: 680px) {
             .institution-header {
                 flex-direction: column;
@@ -243,18 +248,28 @@
         <p class="section-desc">Select your organizational profile role to log into your workspace dashboard</p>
 
         <div class="roles-grid">
+            <!-- 👔 1. HOD Card -->
+            <div class="role-choice-card" onclick="routeToAuthentication('hod')">
+                <div class="role-icon-wrapper">👔</div>
+                <h3>HOD Login</h3>
+                <div class="action-indicator">Proceed →</div>
+            </div>
+
+            <!-- 👨‍🏫 2. Teacher Card -->
             <div class="role-choice-card" onclick="routeToAuthentication('teacher')">
                 <div class="role-icon-wrapper">👨‍🏫</div>
                 <h3>Teacher Login</h3>
                 <div class="action-indicator">Proceed →</div>
             </div>
 
+            <!-- 🎓 3. Student Card -->
             <div class="role-choice-card" onclick="routeToAuthentication('student')">
                 <div class="role-icon-wrapper">🎓</div>
                 <h3>Student Login</h3>
                 <div class="action-indicator">Proceed →</div>
             </div>
 
+            <!-- 👥 4. Parent Card -->
             <div class="role-choice-card" onclick="routeToAuthentication('parent')">
                 <div class="role-icon-wrapper">👥</div>
                 <h3>Parent Login</h3>
@@ -264,13 +279,9 @@
     </main>
 
     <script>
-        // 🎯 SMART TRANSITION ENGINE: Auto-maps selection to login.html variables mapping layers
         function routeToAuthentication(selectedProfileRole) {
-            // Save the token flag so the next page knows who is entering
             localStorage.setItem('intendedPortalRole', selectedProfileRole);
-            
-            // Execute seamless window reposition routing sequence
-            window.location.href = "login.html";
+            window.location.href = `login.html?role=${selectedProfileRole}`;
         }
     </script>
 </body>

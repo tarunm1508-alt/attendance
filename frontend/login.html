@@ -49,13 +49,31 @@
             text-align: center;
         }
 
+        /* ⬅️ BACK BUTTON STYLING */
+        .back-link-wrapper {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            transition: color 0.2s ease;
+        }
+        
+        .back-link:hover { color: var(--primary-blue); }
+
         h2 { font-size: 26px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; letter-spacing: -0.02em; }
-        p.subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 32px; font-weight: 500; }
+        p.subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 28px; font-weight: 500; }
         
         .form-group { margin-bottom: 20px; text-align: left; }
         label { display: block; margin-bottom: 8px; color: var(--text-labels); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
         
-        /* Large touch-friendly input hit target areas for phone screens */
         input { 
             width: 100%; 
             padding: 16px; 
@@ -70,7 +88,7 @@
             appearance: none;
             -webkit-appearance: none;
         }
-        input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 4px var(--primary-blue-glow); }
+        input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 4px var(--primary-glow); }
         
         .btn { 
             width: 100%; 
@@ -107,7 +125,7 @@
             z-index: 99999;
             display: none;
             justify-content: center;
-            align-items: flex-end; /* Slides up naturally from bottom of mobile frame */
+            align-items: flex-end;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
         }
@@ -128,7 +146,6 @@
         .mobile-slate-sheet h3 { color: var(--text-dark); font-size: 18px; font-weight: 800; margin-bottom: 6px; }
         .mobile-slate-sheet p { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
 
-        /* Glowing touch fingerprint node scanner blueprint ring */
         .touch-sensor-node {
             width: 90px; height: 90px;
             border: 2px solid var(--border-clean);
@@ -150,32 +167,37 @@
 
         .twin-action-row { display: flex; gap: 12px; width: 100%; }
         .sheet-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
-        .btn-bypass-success { background: var(--primary-blue-glow); color: var(--primary-blue); border: 1px solid rgba(30,64,175,0.15); }
+        .btn-bypass-success { background: rgba(30,64,175,0.08); color: var(--primary-blue); border: 1px solid rgba(30,64,175,0.15); }
         .btn-cancel-abort { background: #f1f5f9; color: var(--text-labels); }
     </style>
 </head>
 <body>
 
     <div class="login-container">
+        <!-- ⬅️ Back Button Navigation directly to 1st Gateway Page -->
+        <div class="back-link-wrapper">
+            <a href="index.html" class="back-link">⬅️ Back to Role Selection</a>
+        </div>
+
         <h2 id="portalTitle">Portal Login</h2>
         <p class="subtitle">Academic Biometric Management System</p>
 
         <div id="alertBox" class="alert"></div>
 
-        <form id="loginForm" onsubmit="triggerMobileBiometricFlow(event)">
+        <form id="loginForm" autocomplete="off" onsubmit="triggerMobileBiometricFlow(event)">
             <div class="form-group">
                 <label id="usernameLabel" for="username">USN / Username</label>
-                <input type="text" id="username" placeholder="Enter identification key" required>
+                <input type="text" id="username" placeholder="Enter identification key" required autocomplete="off">
             </div>
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" placeholder="••••••••" required>
+                <input type="password" id="password" placeholder="••••••••" required autocomplete="new-password">
             </div>
 
             <div class="form-group" id="parentLinkGroup" style="display: none;">
                 <label for="childUsn">Student USN (Link to Child)</label>
-                <input type="text" id="childUsn" placeholder="Enter child's USN (e.g., 1DA23AI012)">
+                <input type="text" id="childUsn" placeholder="Enter child's USN (e.g., 1DA23AI012)" autocomplete="off">
             </div>
 
             <button type="submit" class="btn">Verify Credentials</button>
@@ -214,6 +236,10 @@
         let activePortalRole = 'student'; 
 
         document.addEventListener("DOMContentLoaded", () => {
+            // Automatically clear form input fields so previous session credentials don't linger
+            document.getElementById('username').value = "";
+            document.getElementById('password').value = "";
+
             const urlParams = new URLSearchParams(window.location.search);
             let roleParam = urlParams.get('role') || localStorage.getItem('intendedPortalRole') || 'student';
             
@@ -229,6 +255,10 @@
                 titleHeader.innerText = "Teacher Login";
                 usernameLabel.innerText = "Teacher ID / Employee ID";
                 usernameInput.placeholder = "Enter your Teacher Employee ID";
+            } else if (activePortalRole === 'hod') {
+                titleHeader.innerText = "HOD Executive Login";
+                usernameLabel.innerText = "HOD Employee ID / Username";
+                usernameInput.placeholder = "Enter HOD Employee ID";
             } else if (activePortalRole === 'parent') {
                 titleHeader.innerText = "Parent Login";
                 usernameLabel.innerText = "Parent Username / ID";
@@ -238,7 +268,7 @@
             } else {
                 titleHeader.innerText = "Student Login";
                 usernameLabel.innerText = "Student USN";
-                usernameInput.placeholder = "Enter your college USN (e.g., 1DA23AI012)";
+                usernameInput.placeholder = "Enter your college USN";
                 activePortalRole = 'student';
             }
         });
@@ -246,33 +276,22 @@
         function triggerMobileBiometricFlow(event) {
             event.preventDefault();
             document.getElementById('alertBox').style.display = 'none';
-            
-            // Pop the touch sheet up smoothly from screen bottom edge
             document.getElementById('biometricMobileSheet').style.display = 'flex';
             document.getElementById('mobileBioStatus').innerText = "Awaiting Phone Hardware...";
             document.getElementById('mobileBioStatus').style.color = "var(--primary-blue)";
-            
-            // 🎯 CORE HARDWARE CALL: Instantly fire native smartphone biometric prompt
             invokeNativePhoneBiometricBroker();
         }
 
-        // ==========================================================================
-        // 📲 AUTOMATED SMARTPHONE BIOMETRICS CONTAINER API BROKER
-        // ==========================================================================
         async function invokeNativePhoneBiometricBroker() {
             const status = document.getElementById('mobileBioStatus');
             
-            // Check if phone browser supports WebAuthn native credential verification
             if (window.PublicKeyCredential) {
                 try {
                     status.innerText = "Calling Phone Sensor Node...";
-                    
-                    // Fire the official native Android Fingerprint / iOS TouchID modal window natively!
                     const nativeHardwareResponseCheck = await navigator.credentials.isUserVerifyingPlatformAuthenticatorAvailable();
                     
                     if (nativeHardwareResponseCheck) {
                         status.innerText = "Touch Phone Fingerprint Sensor Now";
-                        // Automatically proceed to complete database authentication loop securely on check
                         setTimeout(() => { executeDatabaseAuthenticationHandshake('NATIVE_MOBILE_HARDWARE_KEY'); }, 1200);
                     } else {
                         status.innerText = "Hardware Ready // Use Sheet Actions";
@@ -327,12 +346,17 @@
                     localStorage.setItem('userName', data.name);
                     localStorage.setItem('userRole', data.role || activePortalRole);
                     localStorage.setItem('userSubject', data.subjectName || '');
+                    localStorage.setItem('userBranch', data.branch || 'AIML');
                     
                     if (activePortalRole === 'parent') {
                         localStorage.setItem('childUsn', childUsn);
                     }
                     
-                    window.location.href = "dashboard.html";
+                    if (data.role === 'hod' || activePortalRole === 'hod') {
+                        window.location.href = "hod_dashboard.html";
+                    } else {
+                        window.location.href = "dashboard.html";
+                    }
                 }, 800);
 
             } catch (err) {
