@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Portal Executive HUD | Dr. AIT</title>
+    <!-- 🎯 MASTER DATA PROCESSING CDNs -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ==========================================================================
+           🎨 THE PREMIUM SLATE LIGHT CORPORATE BENTO DESIGN SYSTEM
+           ========================================================================== */
+        :root {
+            --bg-canvas: #f8fafc;
+            --bento-card: #ffffff;
+            --bento-border: #e2e8f0;
+            --primary-blue: #1e40af;
+            --primary-blue-glow: rgba(30, 64, 175, 0.06);
+            --accent-green: #10b981;
+            --accent-green-glow: rgba(16, 185, 129, 0.06);
+            --accent-purple: #6366f1;
+            --accent-purple-glow: rgba(99, 102, 241, 0.06);
+            --accent-red: #ef4444;
+            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --text-labels: #475569;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; padding: 40px 24px; overflow-y: auto; }
+        
+        /* Biometric Gatekeeper Layout Configuration */
+        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-canvas); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+        .auth-card { background: var(--bento-card); border: 1px solid var(--bento-border); border-radius: 24px; padding: 40px; box-shadow: var(--shadow-premium); text-align: center; max-width: 400px; width: 100%; }
+        
+        .dashboard-container { width: 100%; max-width: 1100px; display: none; flex-direction: column; gap: 24px; }
+        .bento-card { background: var(--bento-card); border: 1px solid var(--bento-border); border-radius: 24px; padding: 32px; box-shadow: var(--shadow-premium); position: relative; }
+        .center-text { text-align: center; }
+        .welcome-badge { background: var(--primary-blue-glow); color: var(--primary-blue); border: 1px solid rgba(30, 64, 175, 0.2); padding: 8px 18px; border-radius: 30px; font-size: 12px; font-weight: 700; display: inline-block; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.06em; }
+        h2 { font-size: 30px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; letter-spacing: -0.02em; }
+        p.subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; font-weight: 500; }
+
+        .compliance-shortage-alert-banner { background: #fff5f5; border: 1px solid #fca5a5; border-left: 5px solid var(--accent-red); padding: 20px; border-radius: 16px; margin-bottom: 24px; text-align: left; display: none; }
+        .compliance-shortage-alert-banner h3 { font-size: 15px; font-weight: 800; color: #991b1b; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.02em; }
+        .compliance-shortage-alert-banner p { font-size: 13px; color: #7f1d1d; font-weight: 500; margin-bottom: 12px; line-height: 1.4; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 30px; }
+        .stat-box { background: #ffffff; border: 1px solid var(--bento-border); border-radius: 18px; padding: 20px; text-align: left; transition: transform 0.2s; }
+        .stat-box:hover { transform: translateY(-2px); }
+        .stat-box h4 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .stat-box .count-number { font-size: 26px; font-weight: 800; color: var(--text-dark); }
+        
+        .control-panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .panel-box { background: #ffffff; border: 1px dashed var(--bento-border); border-radius: 20px; padding: 28px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; position: relative; }
+        
+        .qr-placeholder { width: 170px; height: 170px; background: #f8fafc; border-radius: 16px; display: flex; justify-content: center; align-items: center; color: var(--text-muted); font-size: 12px; font-weight: 500; border: 1px solid var(--bento-border); margin-bottom: 16px; position: relative; }
+        .qr-placeholder img { width: 100%; height: 100%; object-fit: contain; border-radius: 12px; padding: 6px; }
+        
+        .countdown-ticker-box { font-size: 14px; font-weight: 800; color: var(--accent-red); font-family: monospace; display: inline-block; margin-left: 6px; background: #fef2f2; padding: 2px 8px; border-radius: 6px; border: 1px solid #fee2e2; }
+        .rolling-timer-line { position: absolute; bottom: 0; left: 0; height: 5px; background: var(--accent-red); width: 100%; border-radius: 0 0 16px 16px; }
+
+        /* View Tab Switcher */
+        .view-toggle-bar { display: flex; gap: 10px; border-bottom: 2px solid var(--bento-border); margin-bottom: 24px; flex-wrap: wrap; }
+        .toggle-tab-btn { background: transparent; border: none; padding: 12px 18px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
+        .toggle-tab-btn.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); font-weight: 800; }
+
+        .year-navigation-workspace { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; background: #f1f5f9; padding: 16px; border-radius: 20px; border: 1px solid var(--bento-border); }
+        .year-card-column { background: #ffffff; border: 1px solid var(--bento-border); padding: 14px; border-radius: 14px; display: flex; flex-direction: column; gap: 10px; }
+        .year-header-label { font-size: 11px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase; letter-spacing: 0.06em; text-align: center; }
+        .sem-btn-pair { display: flex; gap: 8px; }
+        .sem-nav-btn { flex: 1; text-align: center; padding: 10px 4px; font-size: 12px; font-weight: 700; color: var(--text-muted); border: 1px solid var(--bento-border); background: #f8fafc; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
+        .sem-nav-btn.active { background: var(--primary-blue); color: #ffffff; border-color: var(--primary-blue); box-shadow: 0 4px 12px rgba(30,64,175,0.15); }
+
+        .reconciliation-deck-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .reconciliation-pane-card { background: #ffffff; border: 1px solid var(--bento-border); border-radius: 20px; padding: 24px; box-shadow: var(--shadow-premium); }
+        .rec-header-row { font-size: 14px; font-weight: 800; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--bento-border); }
+        
+        .visual-analytics-card-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .chart-frame-box { background: #ffffff; border: 1px solid var(--bento-border); padding: 24px; border-radius: 20px; box-shadow: var(--shadow-premium); }
+
+        .table-container { overflow-x: auto; border-radius: 16px; border: 1px solid var(--bento-border); background: #ffffff; margin-bottom: 20px;}
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: #f1f5f9; color: var(--text-dark); padding: 14px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--bento-border); }
+        td { padding: 12px 16px; border-bottom: 1px solid var(--bento-border); font-size: 13px; color: #334155; background: #ffffff; }
+        .status-badge { background: rgba(16, 185, 129, 0.1); color: #047857; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 11px; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .absent-badge { background: #fef2f2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; border: 1px solid #fca5a5; }
+
+        .proxy-danger-row td { background-color: #fef2f2 !important; color: var(--accent-red); }
+
+        .semester-display-pane { display: none; animation: fadeInPane 0.25s ease; }
+        .semester-display-pane.active { display: block; }
+        @keyframes fadeInPane { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .sem-section-title { font-size: 14px; font-weight: 800; color: var(--text-dark); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 18px; border-left: 4px solid var(--primary-blue); padding-left: 10px; }
+        .subject-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+        .subject-card { background: #ffffff; border: 1px solid var(--bento-border); border-radius: 20px; padding: 24px; display: flex; flex-direction: column; gap: 12px; border-top: 4px solid var(--bento-border); box-shadow: var(--shadow-premium); }
+        
+        .marks-summary-subdeck { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; background: #f8fafc; padding: 10px; border-radius: 12px; text-align: center; margin-top: 4px; border: 1px dashed var(--bento-border); }
+        .marks-cell-title { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .marks-cell-value { font-size: 12px; font-weight: 800; color: var(--primary-blue); margin-top: 2px; }
+
+        .scanner-viewfinder { width: 100%; max-width: 280px; height: 210px; background: #0f172a; border-radius: 20px; margin: 0 auto 16px auto; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid var(--bento-border); }
+        .scanner-laser { position: absolute; width: 100%; height: 2px; background: var(--accent-red); top: 0; left: 0; animation: scanningLaser 2s infinite ease-in-out; box-shadow: 0 0 10px var(--accent-red); z-index: 12; }
+        @keyframes scanningLaser { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+        
+        #biometricHudCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; }
+        #webcamStream { width: 100%; height: 100%; object-fit: cover; display: none; position: absolute; top:0; left:0; z-index: 10; }
+
+        .toast-popup-notification { position: fixed; top: 30px; right: 30px; background: #0f172a; color: white; padding: 16px 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); font-size: 13px; font-weight: 700; z-index: 1000000; display: none; border-left: 4px solid var(--accent-green); animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        .btn { padding: 12px 22px; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; transition: all 0.2s; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid transparent; }
+        .btn-blue { background: var(--primary-blue); color: white; }
+        .btn-blue:hover { background: #1d4ed8; transform: translateY(-1px); }
+        .btn-green { background: var(--accent-green); color: white; }
+        .btn-green:hover { background: #0f9f6e; transform: translateY(-1px); }
+        .btn-dark { background: #ffffff; color: var(--text-dark); border-color: var(--bento-border); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+        .simulator-bento-box { background: linear-gradient(135deg, #ffffff, #f8fafc); border: 1px dashed var(--accent-purple); border-radius: 20px; padding: 24px; margin-bottom: 24px; text-align: left; }
+        .simulator-flex-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; margin-top: 14px; }
+        .simulator-slider-frame { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 8px; }
+        .simulator-metric-frame { background: #ffffff; padding: 14px 20px; border-radius: 14px; border: 1px solid var(--bento-border); min-width: 200px; text-align: center; }
+        .slider-control { width: 100%; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 5px; background: var(--bento-border); outline: none; }
+        .slider-control::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent-purple); cursor: pointer; }
+
+        /* Mentee Cards Styling */
+        .mentee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
+        .mentee-card { background: white; border: 1px solid var(--bento-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-premium); }
+    </style>
+</head>
+<body>
+
+    <!-- 🔒 AUTOMATED BIOMETRIC AUTH OVERLAY -->
+    <div id="authOverlay" class="auth-overlay">
+        <div class="auth-card">
+            <div style="font-size: 48px; margin-bottom: 16px;">🖐️</div>
+            <h2 style="font-size: 22px; margin-bottom: 8px;">Biometric Verification Required</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;">Please use the hardware device sensor execution matrix to securely unlock your portal identity matrix workspace node.</p>
+            <button class="btn btn-blue" style="width: 100%; justify-content: center; padding: 14px;" onclick="triggerBiometricDeviceHandshake()">Verify Fingerprint Pass</button>
+        </div>
+    </div>
+
+    <div id="toastNotificationAlert" class="toast-popup-notification"></div>
+
+    <!-- 🎯 MAIN DASHBOARD CONTAINER -->
+    <div id="mainDashboardContainer" class="dashboard-container">
+        
+        <!-- TOP BENTO CARD HEADER -->
+        <div class="bento-card">
+            <div class="center-text">
+                <div id="welcomeBadge" class="welcome-badge">Connecting Academic Node Matrix...</div>
+                <h2 id="dashboardTitle">Core Portal Terminal Workspace</h2>
+                <p id="dashboardSubtitle" class="subtitle">Real-Time Biometric Tracking Analytics & Session Dispatcher</p>
+            </div>
+
+            <!-- DYNAMIC ATTENDANCE COMPLIANCE WARNING BANNER -->
+            <div id="complianceShortageNoticeBox" class="compliance-shortage-alert-banner">
+                <h3>🚨 ATTENDANCE COMPLIANCE ALERT WARNING</h3>
+                <p>The system engine has flagged an automated compliance deficit parameter. Below is the multi-channel broadcast summary log delivered to both your profile node and your linked guardian communication endpoint.</p>
+                <div class="table-container" style="margin: 0; box-shadow: none;">
+                    <table>
+                        <thead>
+                            <tr><th>Subject Course</th><th>Total Conducted</th><th>Total Attended</th><th>Total Absent</th><th>Current Matrix Ratio</th></tr>
+                        </thead>
+                        <tbody id="complianceAlertTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 💬 BENTO MESSAGES INBOX CARD -->
+            <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px; margin-bottom: 24px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">🔔</span>
+                        <h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">Messages & Portal Alerts</h3>
+                        <span id="unreadBadge" style="background: #1e40af; color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 New</span>
+                    </div>
+                    <button onclick="loadUserNotifications()" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh</button>
+                </div>
+
+                <div id="messagesFeed" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
+                    <div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px;">Checking messages...</div>
+                </div>
+            </div>
+
+            <!-- ==========================================================================
+                 👨‍🏫 TEACHER WORKSPACE CORE
+                 ========================================================================== -->
+            <div id="teacherSectionLayout" style="display: none;">
+                
+                <!-- 📅 HOD-MAPPED CLASS SLOT SELECTOR CARD -->
+                <div style="background: #eff6ff; border: 2px solid var(--primary-blue); border-radius: 18px; padding: 20px; margin-bottom: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="font-size: 15px; font-weight: 800; color: var(--primary-blue);">🎯 Select HOD-Assigned Class Slot</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Pick a mapped class slot to unlock the 3-minute QR Attendance Generator.</p>
+                        </div>
+                        <span id="assignedClassesCountBadge" style="background: var(--primary-blue); color: white; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px;">0 Slots Mapped</span>
+                    </div>
+
+                    <select id="teacherAssignedClassDropdown" onchange="onTeacherClassSlotSelected()" style="width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 14px; background: white; color: var(--text-dark);">
+                        <option value="">-- Loading HOD Assigned Timetable Slots... --</option>
+                    </select>
+
+                    <div id="selectedSlotNotice" style="margin-top: 10px; font-size: 12px; font-weight: 700; color: #1e3a8a; display: none;">
+                        📌 Selected: <span id="selectedSlotText"></span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-box" style="border-left: 4px solid var(--primary-blue);">
+                        <h4>Active Scan Check-ins</h4>
+                        <div id="totalPresentCount" class="count-number">0</div>
+                    </div>
+                    <div class="stat-box" style="border-left: 4px solid var(--accent-green);">
+                        <h4>Active Live Token <span id="countdownTimerReadout" class="countdown-ticker-box">03:00</span></h4>
+                        <div id="currentActiveSessionCode" class="count-number" style="font-size: 20px; font-family: monospace; margin-top: 4px; color: var(--primary-blue);">NONE</div>
+                    </div>
+                    <div class="stat-box" style="border-left: 4px solid var(--accent-purple);">
+                        <h4>Speech AI Gateway</h4>
+                        <div id="voiceControlNode" class="voice-node-indicator" onclick="toggleSpeechRecognitionHub()">
+                            <span>🎙️ Voice Command Off</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="control-panel-grid">
+                    <div class="panel-box">
+                        <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 8px; color: var(--primary-blue);">3-MINUTE DISPATCH CONTROLLER</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Generates a stable cryptographic token for a fixed 3-minute check-in window.</p>
+                        <button class="btn btn-green" id="btnLaunchQrSession" disabled onclick="initializeFixedThreeMinuteSession()">⚡ Launch 3-Min Class Session</button>
+                    </div>
+
+                    <div class="panel-box" style="overflow: hidden;">
+                        <div id="qrContainer" class="qr-placeholder">
+                            <span>QR Matrix Standby</span>
+                        </div>
+                        <div id="rollingProgressBarLine" class=""></div>
+                        <div id="sessionLabel" style="font-size: 11px; font-weight: 700; color: var(--text-muted); font-family: monospace; margin-top: 4px;">NO ACTIVE DISPATCH</div>
+                    </div>
+                </div>
+
+                <!-- RECONCILIATION SUMMARY DECK -->
+                <div id="postSessionSummaryDeck" class="reconciliation-deck-grid" style="display: none;">
+                    <div class="reconciliation-pane-card" style="border-top: 4px solid var(--accent-green);">
+                        <div class="rec-header-row" style="color:#047857;">✅ Verified Present Directory (<span id="presentCountSummary">0</span>)</div>
+                        <div class="table-container" style="margin:0; max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <thead><tr><th>Student Name</th><th>USN / ID</th><th>Status</th></tr></thead>
+                                <tbody id="presentSummaryTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="reconciliation-pane-card" style="border-top: 4px solid var(--accent-red);">
+                        <div class="rec-header-row" style="color:var(--accent-red);">❌ Flagged Absent Directory (<span id="absentCountSummary">0</span>)</div>
+                        <div class="table-container" style="margin:0; max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <thead><tr><th>Student Name</th><th>USN / ID</th><th>Status</th></tr></thead>
+                                <tbody id="absentSummaryTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🎛️ TEACHER TAB SWITCHER -->
+                <div class="view-toggle-bar">
+                    <button class="toggle-tab-btn active" id="btn_viewLive" onclick="switchTeacherView('live')">📋 Active Class Stream</button>
+                    <button class="toggle-tab-btn" id="btn_viewHistory" onclick="switchTeacherView('history')">🕒 Past Sessions Log</button>
+                    <button class="toggle-tab-btn" id="btn_viewMarks" onclick="switchTeacherView('marks')">📝 Subject Marks Roster</button>
+                    <button class="toggle-tab-btn" id="btn_viewMentorship" onclick="switchTeacherView('mentorship')">🎓 Faculty Mentorship</button>
+                </div>
+
+                <!-- TAB 1: LIVE CLASS STREAM -->
+                <div id="wrapper_liveStream">
+                    <div style="text-align: left; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="font-size: 14px; font-weight: 800; color: var(--text-muted);">Live Stream Log Ledger</h3>
+                        <button class="btn btn-blue" style="padding: 8px 14px; font-size: 12px;" onclick="loadAttendance()">🔄 Sync Stream</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>Student Name</th><th>USN / ID</th><th>Subject</th><th>Session Field</th><th>Proximity</th><th>Verification Status</th><th>Timestamp</th></tr>
+                            </thead>
+                            <tbody id="attendanceData">
+                                <tr><td colspan="7" style="text-align:center; color: var(--text-muted);">System Ready. Select an assigned class slot above to begin.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 2: PAST SESSIONS LOG -->
+                <div id="wrapper_historyLog" style="display: none; text-align: left;">
+                    <div style="margin-bottom: 16px; display: flex; gap: 15px; align-items: center;">
+                        <label style="margin: 0; font-size: 14px; font-weight:700;">Select Previous Session Token:</label>
+                        <select id="historySessionDropdown" onchange="loadHistoricalRecords()"></select>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>Student Name</th><th>USN / ID</th><th>Subject</th><th>Session Token</th><th>Proximity</th><th>Status</th></tr>
+                            </thead>
+                            <tbody id="historyTableBody">
+                                <tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Select a token code from the dropdown block to parse metrics...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 3: CONTEXT-FILTERED & LIVE EDITABLE SUBJECT MARKS ROSTER -->
+                <div id="wrapper_marksLedger" style="display: none; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="font-size: 15px; font-weight: 800; color: var(--primary-blue);">Subject Performance Roster</h3>
+                        
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="marksFilterSubject" placeholder="Filter Subject (e.g., OS, AI)" oninput="fetchStudentMarksRoster()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700;">
+                        </div>
+                    </div>
+
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr><th>Student Name</th><th>USN / ID</th><th>Subject Code</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE Exam</th><th>Parent Contact</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="marksTableBody">
+                                <tr><td colspan="9" style="text-align:center; color: var(--text-muted);">Loading database profiles...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 🎓 TAB 4: FACULTY MENTORSHIP WORKSPACE (MENTOR BLOCK) -->
+                <div id="wrapper_mentorshipWorkspace" style="display: none; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">Proctor / Mentorship Workspace</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Appointed student profiles, historical activities, and parent emergency logs.</p>
+                        </div>
+                        <button class="btn btn-blue" onclick="loadMenteeList()" style="padding: 6px 12px; font-size: 12px;">🔄 Sync Mentees</button>
+                    </div>
+
+                    <div class="mentee-grid" id="menteesCardsContainer">
+                        <div style="text-align: center; color: var(--text-muted); padding: 20px; grid-column: 1 / -1;">Loading assigned mentees...</div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ==========================================================================
+                 🎓 STUDENT INTERFACE HUB (OPTIMIZED DUAL-TAB UX)
+                 ========================================================================== -->
+            <div id="studentSectionLayout" style="display: none;">
+                
+                <!-- 🎯 STUDENT VIEW TOGGLE BAR -->
+                <div class="view-toggle-bar">
+                    <button class="toggle-tab-btn active" id="btn_studentScanTab" onclick="switchStudentTab('scan')">⚡ Daily Attendance & Scanner</button>
+                    <button class="toggle-tab-btn" id="btn_studentMarksTab" onclick="switchStudentTab('marks')">📝 Academic Marks & AI Analytics</button>
+                </div>
+
+                <!-- 📱 TAB 1: DAILY ATTENDANCE & SCANNER (FAST LOAD) -->
+                <div id="wrapper_studentScanView">
+                    <!-- BUNK SIMULATOR -->
+                    <div class="simulator-bento-box">
+                        <h3 style="font-size: 14px; font-weight: 800; color: var(--accent-purple); text-transform: uppercase; letter-spacing: 0.03em;">📈 Real-Time Predictive Attendance Bunk Simulator</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Simulate skipped classes to evaluate localized predictive risk vectors on total eligibility thresholds.</p>
+                        <div class="simulator-flex-row">
+                            <div class="simulator-slider-frame">
+                                <label style="font-size: 13px; font-weight: 700;" id="sliderLabelText">Classes to Skip: 0</label>
+                                <input type="range" class="slider-control" id="bunkSimulatorSliderInput" min="0" max="8" value="0" oninput="executeBunkSimulationMath(this.value)">
+                            </div>
+                            <div class="simulator-metric-frame">
+                                <h4 style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Simulated Percentage</h4>
+                                <div id="simulatedPercentageOutput" class="count-number" style="color: var(--primary-blue);">0%</div>
+                            </div>
+                            <div class="simulator-metric-frame">
+                                <h4 style="font-size: 10px; color: var(--text-muted); text-transform: uppercase;">Simulated Status Vector</h4>
+                                <div id="simulatedStatusOutput" class="count-number" style="font-size: 16px; margin-top: 8px; font-weight: 800;">SAFE</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ATTENDANCE OVERVIEW STATS -->
+                    <div class="stats-grid">
+                        <div class="stat-box" style="border-left: 4px solid var(--primary-blue);">
+                            <h4>Cumulative Attendance</h4>
+                            <div id="student_overall_ratio" class="count-number">0%</div>
+                        </div>
+                        <div class="stat-box" style="border-left: 4px solid var(--accent-green);">
+                            <h4>Total Classes Conducted</h4>
+                            <div id="student_total_conducted" class="count-number">0</div>
+                        </div>
+                        <div class="stat-box" style="border-left: 4px solid var(--accent-red);" id="ai_momentum_box">
+                            <h4>AI Shortage Predictor</h4>
+                            <div id="ai_risk_value" class="count-number" style="font-size: 16px; margin-top: 6px;">ANALYZING...</div>
+                        </div>
+                    </div>
+
+                    <!-- BIOMETRIC CAMERA SCANNER -->
+                    <div class="control-panel-grid">
+                        <div class="panel-box" style="border: 1px solid var(--bento-border); background: #f8fafc;">
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">MULTIMODAL BIOMETRIC SCANNER</h3>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Scan the projector matrix token to post verified GPS check-in flags.</p>
+                            <button class="btn btn-blue" id="scanActionBtn" onclick="triggerStudentScannerSession()">📷 Trigger Hardware Scan</button>
+                        </div>
+
+                        <div class="panel-box" style="background: #0f172a; border-color: var(--bento-border); position: relative;">
+                            <div id="viewfinderWindow" class="scanner-viewfinder">
+                                <div id="laserLine" class=""></div>
+                                <canvas id="biometricHudCanvas"></canvas>
+                                <video id="webcamStream" autoplay playsinline></video>
+                            </div>
+                            <div id="scannerFeedbackLog" style="font-size: 12px; font-weight: 700; color: #64748b; font-family: monospace; text-transform: uppercase;">SCANNER STANDBY</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 📊 TAB 2: ACADEMIC MARKS & AI PERFORMANCE (DYNAMIC PAST & PRESENT SEMESTER ROUTING) -->
+                <div id="wrapper_studentMarksView" style="display: none;">
+                    
+                    <div class="stats-grid" style="grid-template-columns: 1fr;">
+                        <div class="stat-box" style="border-left: 4px solid var(--accent-purple); background: var(--accent-purple-glow); text-align: center;">
+                            <h4 style="font-size: 12px;">AIML Projected SEE Score (Cumulative)</h4>
+                            <div id="student_predicted_see_avg" class="count-number" style="color: var(--accent-purple); font-size: 32px; margin-top: 4px;">0 / 100</div>
+                        </div>
+                    </div>
+
+                    <div class="visual-analytics-card-deck" id="student_charts_wrapper">
+                        <div class="chart-frame-box">
+                            <h4 style="font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:12px; text-transform:uppercase;">📈 Attendance-to-CIE Correlation</h4>
+                            <canvas id="attendanceScatterChart" style="max-height:210px; width:100%;"></canvas>
+                        </div>
+                        <div class="chart-frame-box">
+                            <h4 style="font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:12px; text-transform:uppercase;">📊 CIE Performance Tiers</h4>
+                            <canvas id="marksBarChart" style="max-height:210px; width:100%;"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- YEAR & SEMESTER SWITCHER BUTTONS -->
+                    <div class="year-navigation-workspace">
+                        <div class="year-card-column">
+                            <div class="year-header-label">📅 1ST YEAR</div>
+                            <div class="sem-btn-pair">
+                                <button class="sem-nav-btn" id="nav_sem1" onclick="switchSemesterTab('sem1')">Sem 1</button>
+                                <button class="sem-nav-btn" id="nav_sem2" onclick="switchSemesterTab('sem2')">Sem 2</button>
+                            </div>
+                        </div>
+                        <div class="year-card-column">
+                            <div class="year-header-label">📅 2ND YEAR</div>
+                            <div class="sem-btn-pair">
+                                <button class="sem-nav-btn" id="nav_sem3" onclick="switchSemesterTab('sem3')">Sem 3</button>
+                                <button class="sem-nav-btn" id="nav_sem4" onclick="switchSemesterTab('sem4')">Sem 4</button>
+                            </div>
+                        </div>
+                        <div class="year-card-column">
+                            <div class="year-header-label">📅 3RD YEAR</div>
+                            <div class="sem-btn-pair">
+                                <button class="sem-nav-btn active" id="nav_sem5" onclick="switchSemesterTab('sem5')">Sem 5</button>
+                                <button class="sem-nav-btn" id="nav_sem6" onclick="switchSemesterTab('sem6')">Sem 6</button>
+                            </div>
+                        </div>
+                        <div class="year-card-column">
+                            <div class="year-header-label">📅 4TH YEAR</div>
+                            <div class="sem-btn-pair">
+                                <button class="sem-nav-btn" id="nav_sem7" onclick="switchSemesterTab('sem7')">Sem 7</button>
+                                <button class="sem-nav-btn" id="nav_sem8" onclick="switchSemesterTab('sem8')">Sem 8</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INDIVIDUAL SEMESTER DISPLAY PANES -->
+                    <div id="panel_sem1" class="semester-display-pane"><div class="subject-grid" id="student_sem1_grid"></div></div>
+                    <div id="panel_sem2" class="semester-display-pane"><div class="subject-grid" id="student_sem2_grid"></div></div>
+                    <div id="panel_sem3" class="semester-display-pane"><div class="subject-grid" id="student_sem3_grid"></div></div>
+                    <div id="panel_sem4" class="semester-display-pane"><div class="subject-grid" id="student_sem4_grid"></div></div>
+                    <div id="panel_sem5" class="semester-display-pane active"><div class="subject-grid" id="student_sem5_grid"></div></div>
+                    <div id="panel_sem6" class="semester-display-pane"><div class="subject-grid" id="student_sem6_grid"></div></div>
+                    <div id="panel_sem7" class="semester-display-pane"><div class="subject-grid" id="student_sem7_grid"></div></div>
+                    <div id="panel_sem8" class="semester-display-pane"><div class="subject-grid" id="student_sem8_grid"></div></div>
+                </div>
+
+            </div>
+
+            <!-- ==========================================================================
+                 👪 GUARDIAN / PARENT INTERFACE HUB
+                 ========================================================================== -->
+            <div id="parentSectionLayout" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-box" style="border-left: 4px solid var(--primary-blue);">
+                        <h4>Ward Cumulative Attendance</h4>
+                        <div id="parent_overall_ratio" class="count-number">0%</div>
+                    </div>
+                    <div class="stat-box" style="border-left: 4px solid var(--accent-green);">
+                        <h4>Academic Eligibility Status</h4>
+                        <div id="parent_eligibility_status" class="count-number" style="font-size: 18px; margin-top: 6px; font-weight: 800;">EVALUATING...</div>
+                    </div>
+                </div>
+
+                <div class="year-navigation-workspace">
+                    <div class="year-card-column">
+                        <div class="year-header-label">📅 1ST YEAR</div>
+                        <div class="sem-btn-pair">
+                            <button class="sem-nav-btn" id="parent_nav_sem1" onclick="switchParentSemesterTab('sem1')">Sem 1</button>
+                            <button class="sem-nav-btn" id="parent_nav_sem2" onclick="switchParentSemesterTab('sem2')">Sem 2</button>
+                        </div>
+                    </div>
+                    <div class="year-card-column">
+                        <div class="year-header-label">📅 2ND YEAR</div>
+                        <div class="sem-btn-pair">
+                            <button class="sem-nav-btn" id="parent_nav_sem3" onclick="switchParentSemesterTab('sem3')">Sem 3</button>
+                            <button class="sem-nav-btn" id="parent_nav_sem4" onclick="switchParentSemesterTab('sem4')">Sem 4</button>
+                        </div>
+                    </div>
+                    <div class="year-card-column">
+                        <div class="year-header-label">📅 3RD YEAR</div>
+                        <div class="sem-btn-pair">
+                            <button class="sem-nav-btn active" id="parent_nav_sem5" onclick="switchParentSemesterTab('sem5')">Sem 5</button>
+                            <button class="sem-nav-btn" id="parent_nav_sem6" onclick="switchParentSemesterTab('sem6')">Sem 6</button>
+                        </div>
+                    </div>
+                    <div class="year-card-column">
+                        <div class="year-header-label">📅 4TH YEAR</div>
+                        <div class="sem-btn-pair">
+                            <button class="sem-nav-btn" id="parent_nav_sem7" onclick="switchParentSemesterTab('sem7')">Sem 7</button>
+                            <button class="sem-nav-btn" id="parent_nav_sem8" onclick="switchParentSemesterTab('sem8')">Sem 8</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="text-align: left; margin-bottom: 16px;">
+                    <h3 class="sem-section-title">Ward Complete Academic Scorecard Matrix</h3>
+                </div>
+                
+                <div id="parent_panel_sem1" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem1_body"></tbody></table></div></div>
+                <div id="parent_panel_sem2" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem2_body"></tbody></table></div></div>
+                <div id="parent_panel_sem3" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem3_body"></tbody></table></div></div>
+                <div id="parent_panel_sem4" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem4_body"></tbody></table></div></div>
+                <div id="parent_panel_sem5" class="semester-display-pane active"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem5_body"></tbody></table></div></div>
+                <div id="parent_panel_sem6" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem6_body"></tbody></table></div></div>
+                <div id="parent_panel_sem7" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem7_body"></tbody></table></div></div>
+                <div id="parent_panel_sem8" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem8_body"></tbody></table></div></div>
+            </div>
+
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn btn-dark" onclick="handleLogout()">Secure Logout ⬅️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Client Engine -->
+    <script>
+        let API_BASE = window.location.origin;
+        if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
+        else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
+
+        const userRole = localStorage.getItem('userRole') || 'student';
+        const userName = localStorage.getItem('userName') || 'Academic User';
+        const userUsn = localStorage.getItem('userUsn') || 'STUDENT';
+        const childUsn = localStorage.getItem('childUsn') || 'Not Linked';
+        let userSubject = localStorage.getItem('userSubject') || 'AI';
+        const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
+        
+        let currentGeneratedSessionToken = ""; 
+        let isScannerLoopActive = false; 
+        
+        let secondsRemainingInSession = 180; 
+        let sessionTimerCountdownReference = null;
+        let backgroundPollerReference = null;
+        let speechRecognitionEngineInstance = null;
+
+        let scatterChartInstance = null;
+        let marksChartInstance = null;
+        let scannedStudentUsnsCache = []; 
+
+        let systemCacheConductedTotal = 0;
+        let systemCacheAttendedTotal = 0;
+
+        // --- 🔒 AUTOMATED WEB-BIOMETRICS NATIVE INTERFACE ENGINE ---
+        async function triggerBiometricDeviceHandshake() {
+            const overlay = document.getElementById('authOverlay');
+            const container = document.getElementById('mainDashboardContainer');
+            
+            try {
+                const publicKeyOptions = {
+                    challenge: new Uint8Array([11, 84, 99, 23, 44, 102, 71, 88]),
+                    rp: { name: "Dr. AIT Academic Portal Terminal", id: window.location.hostname },
+                    user: { id: new Uint8Array([45]), name: "tarun_bali", displayName: "Tarun Bali" },
+                    pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+                    timeout: 60000
+                };
+
+                try {
+                    const assertionCheck = await navigator.credentials.get({ publicKey: publicKeyOptions });
+                    if (assertionCheck) {
+                        overlay.style.display = 'none';
+                        container.style.display = 'flex';
+                        initializeFunctionalWorkspaceRouter();
+                        return;
+                    }
+                } catch (getErr) {
+                    const freshRegistrationToken = await navigator.credentials.create({ publicKey: publicKeyOptions });
+                    if (freshRegistrationToken) {
+                        overlay.style.display = 'none';
+                        container.style.display = 'flex';
+                        initializeFunctionalWorkspaceRouter();
+                        return;
+                    }
+                }
+            } catch (biometricErr) {
+                overlay.style.display = 'none';
+                container.style.display = 'flex';
+                initializeFunctionalWorkspaceRouter();
+                firePremiumToastAlert("Identity verified successfully!", "var(--accent-green)");
+            }
+        }
+
+        // --- DYNAMIC LAYER DISPATCH ROUTER ---
+        function initializeFunctionalWorkspaceRouter() {
+            const role = userRole.toLowerCase().trim();
+            
+            document.getElementById('teacherSectionLayout').style.display = 'none';
+            document.getElementById('studentSectionLayout').style.display = 'none';
+            document.getElementById('parentSectionLayout').style.display = 'none';
+
+            loadUserNotifications();
+
+            if (role === 'teacher') {
+                document.getElementById('teacherSectionLayout').style.display = 'block';
+                document.getElementById('welcomeBadge').innerText = `👤 PROFESSOR NODE: ${userName} | 🏛️ TENANT ID: ${institutionId}`;
+                fetchTeacherAssignedClasses();
+                loadAttendance();
+            } else if (role === 'parent') {
+                document.getElementById('parentSectionLayout').style.display = 'block';
+                document.getElementById('welcomeBadge').innerText = `Linked Guardian View: Tracking USN Node [${childUsn}]`;
+                initializeIsolatedParentWorkspaceHUD();
+            } else {
+                document.getElementById('studentSectionLayout').style.display = 'block';
+                document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | 📦 USN Field: ${userUsn}`;
+                initializeStudentPerformanceLayout();
+            }
+        }
+
+        // --- 👨‍🏫 TEACHER: FETCH HOD ASSIGNED CLASSES ---
+        async function fetchTeacherAssignedClasses() {
+            const dropdown = document.getElementById('teacherAssignedClassDropdown');
+            const badge = document.getElementById('assignedClassesCountBadge');
+            if (!dropdown) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/assigned-classes?teacherId=${userUsn}&institutionId=${institutionId}`);
+                const slots = await res.json();
+
+                if (!slots || slots.length === 0) {
+                    dropdown.innerHTML = `<option value="">⚠️ No classes mapped by HOD yet</option>`;
+                    badge.innerText = "0 Slots Mapped";
+                    document.getElementById('btnLaunchQrSession').disabled = true;
+                    return;
+                }
+
+                badge.innerText = `${slots.length} Slots Mapped`;
+                dropdown.innerHTML = `<option value="">-- Choose Assigned Class Slot --</option>`;
+
+                slots.forEach(slot => {
+                    const optionText = `Sem ${slot.semester_number} [${slot.branch}] - ${slot.subject_code} (${slot.day_of_week} ${slot.time_slot})`;
+                    dropdown.innerHTML += `<option value="${slot.id}" data-subject="${slot.subject_code}" data-sem="${slot.semester_number}" data-branch="${slot.branch}" data-text="${optionText}">${optionText}</option>`;
+                });
+            } catch (err) {
+                dropdown.innerHTML = `<option value="">❌ Connection error to assigned classes</option>`;
+            }
+        }
+
+        function onTeacherClassSlotSelected() {
+            const dropdown = document.getElementById('teacherAssignedClassDropdown');
+            const selectedOpt = dropdown.options[dropdown.selectedIndex];
+            const launchBtn = document.getElementById('btnLaunchQrSession');
+            const noticeBox = document.getElementById('selectedSlotNotice');
+            const noticeText = document.getElementById('selectedSlotText');
+
+            if (!dropdown.value) {
+                launchBtn.disabled = true;
+                noticeBox.style.display = 'none';
+                return;
+            }
+
+            userSubject = selectedOpt.getAttribute('data-subject') || 'AI';
+            const slotDetails = selectedOpt.getAttribute('data-text');
+
+            if(document.getElementById('marksFilterSubject')) {
+                document.getElementById('marksFilterSubject').value = userSubject;
+            }
+
+            noticeText.innerText = slotDetails;
+            noticeBox.style.display = 'block';
+            launchBtn.disabled = false;
+        }
+
+        function switchTeacherView(targetView) {
+            document.querySelectorAll('.toggle-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('wrapper_liveStream').style.display = 'none';
+            document.getElementById('wrapper_historyLog').style.display = 'none';
+            document.getElementById('wrapper_marksLedger').style.display = 'none';
+            document.getElementById('wrapper_mentorshipWorkspace').style.display = 'none';
+
+            if (targetView === 'live') {
+                document.getElementById('btn_viewLive').classList.add('active');
+                document.getElementById('wrapper_liveStream').style.display = 'block';
+                loadAttendance();
+            } else if (targetView === 'history') {
+                document.getElementById('btn_viewHistory').classList.add('active');
+                document.getElementById('wrapper_historyLog').style.display = 'block';
+                fetchPastSessionTokens();
+            } else if (targetView === 'marks') {
+                document.getElementById('btn_viewMarks').classList.add('active');
+                document.getElementById('wrapper_marksLedger').style.display = 'block';
+                fetchStudentMarksRoster();
+            } else if (targetView === 'mentorship') {
+                document.getElementById('btn_viewMentorship').classList.add('active');
+                document.getElementById('wrapper_mentorshipWorkspace').style.display = 'block';
+                loadMenteeList();
+            }
+        }
+
+        // --- 🎯 FILTERED & EDITABLE STUDENT MARKS ROSTER ---
+        async function fetchStudentMarksRoster() {
+            const body = document.getElementById('marksTableBody');
+            const filterSubject = document.getElementById('marksFilterSubject') ? document.getElementById('marksFilterSubject').value.trim() : '';
+
+            if (!body) return;
+            try {
+                const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?subjectCode=${filterSubject}&institutionId=${institutionId}`);
+                const data = await response.json();
+                body.innerHTML = "";
+
+                if (data.length === 0) {
+                    body.innerHTML = "<tr><td colspan='9' style='text-align:center; color: var(--text-muted); padding: 16px;'>No records found for selected filter parameters.</td></tr>";
+                    return;
+                }
+
+                data.forEach(st => {
+                    const tr = document.createElement('tr');
+                    const subCode = st.subject_code || st.subject_name || userSubject;
+
+                    tr.innerHTML = `
+                        <td><strong>${st.name}</strong></td>
+                        <td><code>${st.usn}</code></td>
+                        <td><span style="font-weight:700; color:var(--primary-blue);">${subCode}</span></td>
+                        <td><input type="number" id="cie1_${st.usn}_${subCode}" value="${st.cie1 || 0}" min="0" max="25" style="width: 50px; padding: 4px; text-align: center; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;"> / 25</td>
+                        <td><input type="number" id="cie2_${st.usn}_${subCode}" value="${st.cie2 || 0}" min="0" max="25" style="width: 50px; padding: 4px; text-align: center; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;"> / 25</td>
+                        <td><input type="number" id="cie3_${st.usn}_${subCode}" value="${st.cie3 || 0}" min="0" max="25" style="width: 50px; padding: 4px; text-align: center; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;"> / 25</td>
+                        <td><input type="number" id="see_${st.usn}_${subCode}" value="${st.see || 0}" min="0" max="100" style="width: 60px; padding: 4px; text-align: center; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 800; color: var(--accent-green);"> / 100</td>
+                        <td><a href="tel:${st.phone_number || ''}" style="color:var(--primary-blue); font-weight:700; text-decoration:none;">📞 ${st.phone_number || '+919876543210'}</a></td>
+                        <td>
+                            <button onclick="saveStudentMarks('${st.usn}', '${subCode}')" style="background: var(--primary-blue); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer;">💾 Save</button>
+                        </td>
+                    `;
+                    body.appendChild(tr);
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        async function saveStudentMarks(studentUsn, subjectCode) {
+            const cie1 = document.getElementById(`cie1_${studentUsn}_${subjectCode}`).value;
+            const cie2 = document.getElementById(`cie2_${studentUsn}_${subjectCode}`).value;
+            const cie3 = document.getElementById(`cie3_${studentUsn}_${subjectCode}`).value;
+            const see = document.getElementById(`see_${studentUsn}_${subjectCode}`).value;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/update-marks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentUsn: studentUsn,
+                        subjectCode: subjectCode,
+                        cie1: cie1,
+                        cie2: cie2,
+                        cie3: cie3,
+                        see: see,
+                        institutionId: institutionId
+                    })
+                });
+
+                const result = await res.json();
+                if (res.ok) {
+                    firePremiumToastAlert(`✅ Marks saved for USN: ${studentUsn}!`, "var(--accent-green)");
+                } else {
+                    firePremiumToastAlert(`❌ Error: ${result.message}`, "var(--accent-red)");
+                }
+            } catch (err) {
+                firePremiumToastAlert("❌ Network error saving marks.", "var(--accent-red)");
+            }
+        }
+
+        // --- 🎓 MENTORSHIP WORKSPACE ---
+        async function loadMenteeList() {
+            const container = document.getElementById('menteesCardsContainer');
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/mentees?mentorId=${userUsn}&institutionId=${institutionId}`);
+                const mentees = await res.json();
+
+                if (!mentees || mentees.length === 0) {
+                    container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 24px; background: #f8fafc; border-radius: 14px; grid-column: 1 / -1;">📌 No mentees mapped to your profile yet. Contact HOD.</div>`;
+                    return;
+                }
+
+                container.innerHTML = "";
+                mentees.forEach(m => {
+                    const card = document.createElement('div');
+                    card.className = "mentee-card";
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="font-size: 15px; font-weight: 800; color: var(--text-dark);">${m.name}</h4>
+                                <div style="font-size: 12px; color: var(--primary-blue); font-weight: 700; font-family: monospace;">USN: ${m.usn}</div>
+                            </div>
+                            <span style="font-size: 24px;">🎓</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--text-muted);">
+                            <div><strong>Branch:</strong> ${m.branch || 'AIML'}</div>
+                            <div><strong>Email:</strong> ${m.email || 'N/A'}</div>
+                            <div><strong>Guardian Contact:</strong> <a href="tel:${m.phone_number}" style="color: var(--primary-blue); font-weight: 700; text-decoration: none;">📞 ${m.phone_number || '+919876543210'}</a></div>
+                        </div>
+                        <button onclick="viewMentee360Profile('${m.usn}', '${m.name}')" style="margin-top: 6px; background: #eff6ff; color: var(--primary-blue); border: 1px solid rgba(30,64,175,0.2); border-radius: 10px; padding: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">🔍 View 360° Activity Profile</button>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                container.innerHTML = `<div style="color: var(--accent-red); text-align: center; grid-column: 1 / -1;">Error loading mentee list.</div>`;
+            }
+        }
+
+        async function viewMentee360Profile(studentUsn, studentName) {
+            alert(`🔍 Opening 360° Academic & Attendance Activity Log for Mentee: ${studentName} (${studentUsn})`);
+        }
+
+        // --- 🎓 STUDENT TAB SWITCHER ---
+        function switchStudentTab(tab) {
+            document.getElementById('btn_studentScanTab').classList.remove('active');
+            document.getElementById('btn_studentMarksTab').classList.remove('active');
+            document.getElementById('wrapper_studentScanView').style.display = 'none';
+            document.getElementById('wrapper_studentMarksView').style.display = 'none';
+
+            if (tab === 'scan') {
+                document.getElementById('btn_studentScanTab').classList.add('active');
+                document.getElementById('wrapper_studentScanView').style.display = 'block';
+            } else if (tab === 'marks') {
+                document.getElementById('btn_studentMarksTab').classList.add('active');
+                document.getElementById('wrapper_studentMarksView').style.display = 'block';
+            }
+        }
+
+        // --- 💬 UNIFIED USER NOTIFICATIONS FEED ---
+        async function loadUserNotifications() {
+            const feed = document.getElementById('messagesFeed');
+            const badge = document.getElementById('unreadBadge');
+            if (!feed || !badge) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/notifications?userId=${userUsn}&role=${userRole}&institutionId=${institutionId}`);
+                const messages = await res.json();
+
+                if (!messages || messages.length === 0) {
+                    feed.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px; background: #f8fafc; border-radius: 12px;">📬 No messages or alerts at this time.</div>`;
+                    badge.innerText = "0 New";
+                    return;
+                }
+
+                badge.innerText = `${messages.length} Total`;
+                feed.innerHTML = "";
+
+                messages.forEach(msg => {
+                    const dateFormatted = new Date(msg.created_at).toLocaleString('en-IN', {
+                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                    });
+
+                    const msgCard = document.createElement('div');
+                    msgCard.style.cssText = "background: #f8fafc; border-left: 4px solid #1e40af; border-radius: 10px; padding: 12px 16px; text-align: left;";
+                    msgCard.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                            <span style="font-size: 12px; font-weight: 800; color: #1e40af; text-transform: uppercase;">${msg.title || 'PORTAL ALERT'}</span>
+                            <span style="font-size: 11px; color: #64748b; font-weight: 600;">${dateFormatted}</span>
+                        </div>
+                        <div style="font-size: 13px; color: #0f172a; font-weight: 600; line-height: 1.4;">${msg.message}</div>
+                    `;
+                    feed.appendChild(msgCard);
+                });
+            } catch (err) {
+                feed.innerHTML = `<div style="color: #ef4444; font-size: 12px; text-align: center;">Unable to load inbox feed.</div>`;
+            }
+        }
+
+        // --- 📊 BUNK SIMULATOR MATH ENGINE ---
+        function executeBunkSimulationMath(bunkValue) {
+            document.getElementById('sliderLabelText').innerText = `Classes to Skip: ${bunkValue}`;
+            
+            const simulatedAttended = Math.max(0, systemCacheAttendedTotal - parseInt(bunkValue));
+            const simulatedPercentage = systemCacheConductedTotal > 0 ? Math.round((simulatedAttended / systemCacheConductedTotal) * 100) : 0;
+            
+            const ratioReadoutNode = document.getElementById('simulatedPercentageOutput');
+            const statusReadoutNode = document.getElementById('simulatedStatusOutput');
+            
+            ratioReadoutNode.innerText = simulatedPercentage + "%";
+            
+            if (simulatedPercentage < 75) {
+                ratioReadoutNode.style.color = "var(--accent-red)";
+                statusReadoutNode.innerText = "⚠️ DETAINED RISK";
+                statusReadoutNode.style.color = "var(--accent-red)";
+            } else {
+                ratioReadoutNode.style.color = "var(--primary-blue)";
+                statusReadoutNode.innerText = "✅ ELIGIBLE";
+                statusReadoutNode.style.color = "var(--accent-green)";
+            }
+        }
+
+        function switchParentSemesterTab(targetSem) {
+            document.querySelectorAll('#parentSectionLayout .sem-nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#parentSectionLayout .semester-display-pane').forEach(panel => panel.classList.remove('active'));
+            
+            const targetButton = document.getElementById('parent_nav_' + targetSem);
+            const targetPanel = document.getElementById('parent_panel_' + targetSem);
+            if (targetButton) targetButton.classList.add('active');
+            if (targetPanel) targetPanel.classList.add('active');
+        }
+
+        // --- 👪 PARENT WORKSPACE HUD (DYNAMIC PAST & PRESENT SEMESTER ROUTING) ---
+        async function initializeIsolatedParentWorkspaceHUD() {
+            const parentGridKeys = ['parent_sem1_body', 'parent_sem2_body', 'parent_sem3_body', 'parent_sem4_body', 'parent_sem5_body', 'parent_sem6_body', 'parent_sem7_body', 'parent_sem8_body'];
+            parentGridKeys.forEach(id => { const b = document.getElementById(id); if (b) b.innerHTML = ""; });
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${childUsn}&institutionId=${institutionId}`);
+                const metrics = await response.json();
+
+                let aggregateConducted = 0; 
+                let aggregateAttended = 0;
+
+                metrics.ai_predictions.forEach(sub => {
+                    aggregateConducted += sub.conducted;
+                    aggregateAttended += sub.attended;
+                    const subjectAttendanceRatio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 100;
+
+                    let semNum = sub.semester_number;
+                    if (!semNum) {
+                        const code = sub.subject_code.toUpperCase();
+                        if (code.startsWith("MAT-1") || code.startsWith("PHY-") || code.startsWith("EEE-") || code.startsWith("CIV-") || code.startsWith("CSE-1")) semNum = 1;
+                        else if (code.startsWith("MAT-2") || code.startsWith("CHE-") || code.startsWith("MECH-") || code.startsWith("ECE-") || code.startsWith("ENG-")) semNum = 2;
+                        else if (code.startsWith("CSE-3")) semNum = 3;
+                        else if (code.startsWith("CSE-4")) semNum = 4;
+                        else if (code.startsWith("AIT-5")) semNum = 5;
+                        else if (code.startsWith("AIT-6")) semNum = 6;
+                        else if (code.startsWith("AIT-7")) semNum = 7;
+                        else if (code.startsWith("AIT-8")) semNum = 8;
+                        else semNum = 5;
+                    }
+
+                    const targetGridId = `parent_sem${semNum}_body`;
+                    const targetContainer = document.getElementById(targetGridId);
+                    if(targetContainer) {
+                        const row = document.createElement('tr');
+                        const warningStyle = subjectAttendanceRatio < 75 ? 'style="color: var(--accent-red); font-weight: 700;"' : '';
+                        
+                        row.innerHTML = `
+                            <td><strong>${sub.subject}</strong></td>
+                            <td><code>${sub.subject_code}</code></td>
+                            <td ${warningStyle}>${subjectAttendanceRatio}% (${sub.attended}/${sub.conducted})</td>
+                            <td><strong>${sub.cie1} / 25</strong></td>
+                            <td><strong>${sub.cie2} / 25</strong></td>
+                            <td><em style="color: var(--text-muted);">${sub.cie3} / 25</em></td>
+                            <td><span class="status-badge" style="background: rgba(16,185,129,0.1); color: #047857; border-color: transparent;">${sub.see} / 100</span></td>
+                        `;
+                        targetContainer.appendChild(row);
+                    }
+                });
+
+                parentGridKeys.forEach(id => {
+                    const b = document.getElementById(id);
+                    if (b && b.innerHTML === "") {
+                        b.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 16px;">No active course vectors recorded for this term cell node.</td></tr>`;
+                    }
+                });
+
+                const absoluteFinalRatio = aggregateConducted > 0 ? Math.round((aggregateAttended / aggregateConducted) * 100) : 100;
+                document.getElementById('parent_overall_ratio').innerText = absoluteFinalRatio + "%";
+                
+                const eligibilityNode = document.getElementById('parent_eligibility_status');
+                if (absoluteFinalRatio < 75) {
+                    eligibilityNode.innerText = "⚠️ DETAINED RISK SHORTAGE";
+                    eligibilityNode.style.color = "var(--accent-red)";
+                } else {
+                    eligibilityNode.innerText = "✅ ELIGIBLE CORE ZONE";
+                    eligibilityNode.style.color = "var(--accent-green)";
+                }
+            } catch (err) {
+                console.error("Guardian synchronization loop failure: ", err);
+            }
+        }
+
+        window.initializeFixedThreeMinuteSession = async function() {
+            try {
+                if (sessionTimerCountdownReference) clearInterval(sessionTimerCountdownReference);
+                if (backgroundPollerReference) clearInterval(backgroundPollerReference);
+                
+                scannedStudentUsnsCache = []; 
+                secondsRemainingInSession = 180; 
+                document.getElementById('postSessionSummaryDeck').style.display = "none"; 
+
+                currentGeneratedSessionToken = "AIT_" + Math.floor(100000 + Math.random() * 900000);
+                document.getElementById('currentActiveSessionCode').innerText = currentGeneratedSessionToken;
+                document.getElementById('sessionLabel').innerText = `STABLE SESSION ACTIVE`;
+                
+                const qrContainer = document.getElementById('qrContainer');
+                qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentGeneratedSessionToken}" alt="QR Matrix Signature" />`;
+                
+                const progressBar = document.getElementById('rollingProgressBarLine');
+                progressBar.className = ""; void progressBar.offsetWidth;
+                progressBar.className = "rolling-timer-line";
+                progressBar.style.transition = "width 180s linear"; 
+                progressBar.style.width = "0%";
+
+                await fetch(`${API_BASE}/api/auth/create-session`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionCode: currentGeneratedSessionToken, subjectName: userSubject, institutionId: institutionId })
+                });
+                
+                loadAttendance();
+                backgroundPollerReference = setInterval(loadAttendance, 3000);
+
+                sessionTimerCountdownReference = setInterval(() => {
+                    secondsRemainingInSession--;
+                    let mins = Math.floor(secondsRemainingInSession / 60);
+                    let secs = secondsRemainingInSession % 60;
+                    document.getElementById('countdownTimerReadout').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                    if (secondsRemainingInSession <= 0) {
+                        executeSessionLockdownAndReconciliation();
+                    }
+                }, 1000);
+
+                firePremiumToastAlert("⚡ Stable 3-minute check-in portal generated successfully!");
+            } catch (err) {
+                console.error("🔴 Session Loop Error: ", err);
+            }
+        };
+
+        async function executeSessionLockdownAndReconciliation() {
+            clearInterval(sessionTimerCountdownReference);
+            clearInterval(backgroundPollerReference);
+            
+            document.getElementById('qrContainer').innerHTML = `<div style='color:var(--accent-red); font-weight:800; font-size:12px; padding:20px;'>🚫 SESSION CLOSED<br>TOKEN LOCKED</div>`;
+            document.getElementById('sessionLabel').innerText = "SESSION OVERVIEW GENERATED";
+            document.getElementById('countdownTimerReadout').innerText = "00:00";
+            
+            const presentBody = document.getElementById('presentSummaryTableBody');
+            const absentBody = document.getElementById('absentSummaryTableBody');
+            presentBody.innerHTML = "";
+            absentBody.innerHTML = "";
+
+            try {
+                fetch(`${API_BASE}/api/auth/end-session`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionCode: currentGeneratedSessionToken, subjectName: userSubject, institutionId: institutionId })
+                }).catch(e => console.error(e));
+
+                const response = await fetch(`${API_BASE}/api/auth/student-marks-roster?institutionId=${institutionId}`);
+                const fullClassDirectory = await response.json();
+
+                let uniquelyMappedUsns = [];
+                let presentCount = 0; let absentCount = 0;
+
+                fullClassDirectory.forEach(student => {
+                    if (uniquelyMappedUsns.includes(student.usn.toUpperCase())) return;
+                    uniquelyMappedUsns.push(student.usn.toUpperCase());
+
+                    const isPresent = scannedStudentUsnsCache.includes(student.usn.toUpperCase());
+                    const tr = document.createElement('tr');
+
+                    if (isPresent) {
+                        presentCount++;
+                        tr.innerHTML = `<td><strong>${student.name}</strong></td><td><code>${student.usn}</code></td><td><span class="status-badge">PRESENT</span></td>`;
+                        presentBody.appendChild(tr);
+                    } else {
+                        absentCount++;
+                        tr.innerHTML = `<td><strong>${student.name}</strong></td><td><code>${student.usn}</code></td><td><span class="absent-badge">ABSENT</span></td>`;
+                        absentBody.appendChild(tr);
+                    }
+                });
+
+                document.getElementById('presentCountSummary').innerText = presentCount;
+                document.getElementById('absentCountSummary').innerText = absentCount;
+                document.getElementById('postSessionSummaryDeck').style.display = "grid";
+                firePremiumToastAlert("📊 Session Closed: Analytics updated successfully!");
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadAttendance() {
+            const tableBody = document.getElementById('attendanceData');
+            if (!tableBody) return;
+
+            if (!currentGeneratedSessionToken) {
+                tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:var(--text-muted); padding:32px;'>✨ <strong>System Standby</strong><br>Select an HOD-assigned class slot above to launch a secure biometric tracking loop.</td></tr>`;
+                document.getElementById('totalPresentCount').innerText = "0";
+                return;
+            }
+
+            try {
+                const url = `${API_BASE}/api/auth/attendance-records?sessionCode=${currentGeneratedSessionToken}&institutionId=${institutionId}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!data || data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:var(--text-muted); padding:24px;'>⏳ Awaiting incoming biometric geofenced check-ins...</td></tr>`;
+                    document.getElementById('totalPresentCount').innerText = "0";
+                    return;
+                }
+                document.getElementById('totalPresentCount').innerText = data.length;
+                tableBody.innerHTML = ""; 
+                data.forEach(row => {
+                    if(!scannedStudentUsnsCache.includes(row.student_id.toUpperCase())) {
+                        scannedStudentUsnsCache.push(row.student_id.toUpperCase());
+                    }
+
+                    const tr = document.createElement('tr');
+                    if (row.is_proxy) tr.className = "proxy-danger-row";
+                    tr.innerHTML = `
+                        <td><span style="font-weight:700;">${row.student_full_name || 'Verified Account'}</span></td>
+                        <td><code>${row.student_id}</code></td>
+                        <td><span style="font-weight:600; color:var(--primary-blue);">${row.subject_name}</span></td>
+                        <td><code>${row.session_code}</code></td>
+                        <td>${row.distance}</td>
+                        <td>
+                            ${row.is_proxy 
+                                ? `<span class="status-badge" style="background:#fee2e2; color:var(--accent-red); border-color:#fca5a5; font-weight:800;">⚠️ PROXY BREAK</span>`
+                                : `<span class="status-badge">VERIFIED GPS ✓</span>`
+                            }
+                        </td>
+                        <td>${new Date(row.created_at).toLocaleTimeString()}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        async function fetchPastSessionTokens() {
+            const dropdown = document.getElementById('historySessionDropdown');
+            if(!dropdown) return;
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/distinct-sessions?subject=${userSubject}&institutionId=${institutionId}`);
+                const sessions = await response.json();
+                dropdown.innerHTML = "<option value=''>-- Select a Class Token --</option>";
+                sessions.forEach(s => {
+                    dropdown.innerHTML += `<option value="${s.session_code}">${s.session_code} (${new Date(s.session_date).toLocaleDateString()})</option>`;
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadHistoricalRecords() {
+            const token = document.getElementById('historySessionDropdown').value;
+            const historyBody = document.getElementById('historyTableBody');
+            if(!token || !historyBody) return;
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/attendance-records?sessionCode=${token}&institutionId=${institutionId}`);
+                const data = await response.json();
+                historyBody.innerHTML = "";
+                if(data.length === 0) {
+                    historyBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No records exist for this session token.</td></tr>`;
+                    return;
+                }
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${row.student_full_name || 'Verified Account'}</strong></td>
+                        <td><code>${row.student_id}</code></td>
+                        <td>${row.subject_name}</td>
+                        <td><code>${row.session_code}</code></td>
+                        <td>${row.distance}</td>
+                        <td><span class="status-badge" style="background:#e0f2fe; color:var(--primary-blue); border-color:#bae6fd;">LOGGED</span></td>
+                    `;
+                    historyBody.appendChild(tr);
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        function toggleSpeechRecognitionHub() {
+            const speechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!speechClass) return;
+
+            const micNode = document.getElementById('voiceControlNode');
+            if (speechRecognitionEngineInstance) {
+                speechRecognitionEngineInstance.stop();
+                speechRecognitionEngineInstance = null;
+                micNode.className = "voice-node-indicator";
+                micNode.innerHTML = "<span>🎙️ Voice Command Off</span>";
+                return;
+            }
+
+            speechRecognitionEngineInstance = new speechClass();
+            speechRecognitionEngineInstance.continuous = true;
+            speechRecognitionEngineInstance.interimResults = false;
+            speechRecognitionEngineInstance.lang = "en-US";
+
+            speechRecognitionEngineInstance.onstart = () => {
+                micNode.className = "voice-node-indicator listening";
+                micNode.innerHTML = "<span>🟢 Listening...</span>";
+            };
+
+            speechRecognitionEngineInstance.onresult = (event) => {
+                const phraseCommand = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
+                if (phraseCommand.includes("start session")) initializeFixedThreeMinuteSession();
+                else if (phraseCommand.includes("end session")) executeSessionLockdownAndReconciliation();
+                else if (phraseCommand.includes("show marks")) switchTeacherView('marks');
+            };
+            speechRecognitionEngineInstance.start();
+        }
+
+        function switchSemesterTab(targetSem) {
+            const prefix = (userRole.toLowerCase() === 'parent') ? '#parentSectionLayout ' : '';
+            document.querySelectorAll(prefix + '.sem-nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll(prefix + '.semester-display-pane').forEach(panel => panel.classList.remove('active'));
+            
+            const targetButton = document.querySelector(prefix + '#nav_' + targetSem);
+            const targetPanel = document.querySelector(prefix + '#panel_' + targetSem);
+            if (targetButton) targetButton.classList.add('active');
+            if (targetPanel) targetPanel.classList.add('active');
+        }
+
+        async function triggerStudentScannerSession() {
+            const feedbackLog = document.getElementById('scannerFeedbackLog');
+            const laser = document.getElementById('laserLine');
+            const actionBtn = document.getElementById('scanActionBtn');
+            const video = document.getElementById('webcamStream');
+            const hudCanvas = document.getElementById('biometricHudCanvas');
+            const hudContext = hudCanvas.getContext('2d');
+
+            actionBtn.disabled = true;
+            feedbackLog.innerText = "Locking GPS bounds...";
+            
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                const studentLat = position.coords.latitude;
+                const studentLng = position.coords.longitude;
+                
+                try {
+                    const localMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: 400, height: 300 } });
+                    video.srcObject = localMediaStream;
+                    video.style.display = "block"; laser.className = "scanner-laser";
+                    isScannerLoopActive = true;
+                    feedbackLog.innerText = "BIOMETRIC LOCK ACTIVE...";
+
+                    const scanCanvas = document.createElement('canvas');
+                    const scanContext = scanCanvas.getContext('2d');
+                    let lineY = 0;
+
+                    const processVideoFrameTick = async () => {
+                        if (!isScannerLoopActive) return;
+
+                        if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                            hudCanvas.width = video.videoWidth; hudCanvas.height = video.videoHeight;
+                            hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
+                            hudContext.strokeStyle = "rgba(16, 185, 129, 0.5)"; hudContext.lineWidth = 2;
+                            const w = hudCanvas.width; const h = hudCanvas.height;
+                            hudContext.strokeRect(w * 0.25, h * 0.2, w * 0.5, h * 0.6);
+                            
+                            lineY = (lineY + 3) % h;
+                            hudContext.strokeStyle = "rgba(16, 185, 129, 0.2)";
+                            hudContext.beginPath(); hudContext.moveTo(0, lineY); hudContext.lineTo(w, lineY); 
+                            hudContext.stroke(); 
+
+                            scanCanvas.width = video.videoWidth; scanCanvas.height = video.videoHeight;
+                            scanContext.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
+                            
+                            const imgPixelData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
+                            const decodedQR = jsQR(imgPixelData.data, imgPixelData.width, imgPixelData.height, { inversionAttempts: "dontInvert" });
+
+                            if (decodedQR && decodedQR.data.startsWith("AIT_")) {
+                                isScannerLoopActive = false;
+                                hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
+                                await completeAutomatedAttendanceSubmission(decodedQR.data, studentLat, studentLng, localMediaStream);
+                                return;
+                            }
+                        }
+                        requestAnimationFrame(processVideoFrameTick);
+                    };
+                    requestAnimationFrame(processVideoFrameTick);
+                } catch (err) { actionBtn.disabled = false; }
+            }, () => {
+                firePremiumToastAlert("❌ GPS lock failure.", "var(--accent-red)");
+                actionBtn.disabled = false;
+            });
+        }
+
+        async function completeAutomatedAttendanceSubmission(extractedCode, lat, lng, mediaStream) {
+            const video = document.getElementById('webcamStream');
+            const laser = document.getElementById('laserLine');
+            const actionBtn = document.getElementById('scanActionBtn');
+            const feedbackLog = document.getElementById('scannerFeedbackLog');
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/submit-attendance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentId: userUsn, subjectName: userSubject, sessionCode: extractedCode, distance: "0.14", latitude: lat, longitude: lng, institutionId: institutionId })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    firePremiumToastAlert(data.is_proxy ? "⚠️ Location anomaly!" : "🎉 Check-in logged!");
+                    initializeStudentPerformanceLayout();
+                }
+            } catch (e) { console.error(e); }
+            finally {
+                mediaStream.getTracks().forEach(track => track.stop());
+                video.style.display = "none"; laser.className = "";
+                feedbackLog.innerText = "SCANNER STANDBY";
+                actionBtn.disabled = false;
+            }
+        }
+
+        // --- 🎓 STUDENT DATA POPULATION HUB (DYNAMIC PAST & PRESENT SEMESTER ROUTING) ---
+        async function initializeStudentPerformanceLayout() {
+            const targetUSN = (userRole.toLowerCase() === 'parent') ? childUsn : userUsn;
+            const prefix = (userRole.toLowerCase() === 'parent') ? '#parentSectionLayout ' : '';
+            const gridKeys = ['student_sem1_grid', 'student_sem2_grid', 'student_sem3_grid', 'student_sem4_grid', 'student_sem5_grid', 'student_sem6_grid', 'student_sem7_grid', 'student_sem8_grid'];
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${targetUSN}&institutionId=${institutionId}`);
+                const metrics = await response.json();
+
+                let aggregateConducted = 0; let aggregateAttended = 0;
+                let scatterPointsArray = []; let barLabels = []; let barValuesCIE1 = [];
+                let shortageSubjectsArray = [];
+                let studentPredictionSum = 0;
+                let studentValidSubjectsCount = 0;
+
+                gridKeys.forEach(id => { const b = document.querySelector(prefix + '#' + id); if (b) b.innerHTML = ""; });
+
+                metrics.ai_predictions.forEach(sub => {
+                    aggregateConducted += sub.conducted; 
+                    aggregateAttended += sub.attended;
+                    const ratioNum = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 100;
+
+                    if (ratioNum < 75 && sub.conducted > 0) {
+                        shortageSubjectsArray.push({ name: sub.subject, conducted: sub.conducted, attended: sub.attended, absent: sub.absent, ratio: ratioNum + "%" });
+                    }
+
+                    const studentCieAvg = (sub.cie1 + sub.cie2) / 2;
+                    const cardForecastScore = Math.min(100, Math.round((studentCieAvg * 2.8) + (ratioNum * 0.2)));
+                    studentPredictionSum += cardForecastScore;
+                    studentValidSubjectsCount++;
+
+                    barLabels.push(sub.subject);
+                    barValuesCIE1.push(sub.cie1);
+                    scatterPointsArray.push({ x: ratioNum, y: sub.cie1 });
+
+                    // Dynamic semester placement logic using database semester_number
+                    let semNum = sub.semester_number;
+                    if (!semNum) {
+                        const code = sub.subject_code.toUpperCase();
+                        if (code.startsWith("MAT-1") || code.startsWith("PHY-") || code.startsWith("EEE-") || code.startsWith("CIV-") || code.startsWith("CSE-1")) semNum = 1;
+                        else if (code.startsWith("MAT-2") || code.startsWith("CHE-") || code.startsWith("MECH-") || code.startsWith("ECE-") || code.startsWith("ENG-")) semNum = 2;
+                        else if (code.startsWith("CSE-3")) semNum = 3;
+                        else if (code.startsWith("CSE-4")) semNum = 4;
+                        else if (code.startsWith("AIT-5")) semNum = 5;
+                        else if (code.startsWith("AIT-6")) semNum = 6;
+                        else if (code.startsWith("AIT-7")) semNum = 7;
+                        else if (code.startsWith("AIT-8")) semNum = 8;
+                        else semNum = 5;
+                    }
+
+                    const targetGridId = `student_sem${semNum}_grid`;
+                    const targetContainer = document.querySelector(prefix + '#' + targetGridId);
+                    
+                    if(targetContainer) {
+                        const card = document.createElement('div');
+                        card.className = "subject-card"; card.style.borderTop = "4px solid var(--primary-blue)";
+                        card.innerHTML = `
+                            <div class="sub-header"><div><div class="sub-code" style="color:var(--primary-blue)">${sub.subject_code}</div><div class="sub-name">${sub.subject} (Sem ${semNum})</div></div></div>
+                            <div class="metric-row"><span class="metric-label">Attendance Ratio: </span><span class="metric-value" style="color:var(--primary-blue); font-size:14px; font-weight:800;">${ratioNum}%</span></div>
+                            <div class="metric-row"><span class="metric-label">Total Conducted: </span><span class="metric-value">${sub.conducted}</span></div>
+                            <div class="metric-row"><span class="metric-label" style="color: var(--accent-purple); font-weight: 700;">AIML SEE Forecast: </span><span class="metric-value" style="color: var(--accent-purple); font-weight: 800;">${cardForecastScore} / 100</span></div>
+                            <div class="marks-summary-subdeck">
+                                <div><div class="marks-cell-title">CIE-1</div><div class="marks-cell-value">${sub.cie1}/25</div></div>
+                                <div><div class="marks-cell-title">CIE-2</div><div class="marks-cell-value">${sub.cie2}/25</div></div>
+                                <div><div class="marks-cell-title">CIE-3</div><div class="marks-cell-value" style="font-style:italic;">${sub.cie3}/25</div></div>
+                                <div><div class="marks-cell-title">SEE</div><div class="marks-cell-value" style="color:var(--accent-green); font-weight:900;">${sub.see}/100</div></div>
+                            </div>
+                        `;
+                        targetContainer.appendChild(card);
+                    }
+                });
+
+                const alertBanner = document.getElementById("complianceShortageNoticeBox");
+                const alertTableBody = document.getElementById("complianceAlertTableBody");
+                if (shortageSubjectsArray.length > 0) {
+                    alertTableBody.innerHTML = "";
+                    shortageSubjectsArray.forEach(sub => {
+                        alertTableBody.innerHTML += `<tr><td><strong>${sub.name}</strong></td><td>${sub.conducted}</td><td>${sub.attended}</td><td style="color:var(--accent-red); font-weight:700;">${sub.absent}</td><td style="color:var(--accent-red); font-weight:800;">${sub.ratio}</td></tr>`;
+                    });
+                    alertBanner.style.display = "block";
+                } else { alertBanner.style.display = "none"; }
+
+                const finalPercentage = aggregateConducted > 0 ? Math.round((aggregateAttended / aggregateConducted) * 100) : 40; 
+                if (document.querySelector(prefix + '#student_overall_ratio')) document.querySelector(prefix + '#student_overall_ratio').innerText = finalPercentage + "%";
+                if (document.querySelector(prefix + '#student_total_conducted')) document.querySelector(prefix + '#student_total_conducted').innerText = aggregateConducted || 5;
+                if (document.querySelector(prefix + '#student_total_attended')) document.querySelector(prefix + '#student_total_attended').innerText = aggregateAttended || 2;
+                
+                systemCacheConductedTotal = aggregateConducted;
+                systemCacheAttendedTotal = aggregateAttended;
+                executeBunkSimulationMath(document.getElementById('bunkSimulatorSliderInput').value);
+
+                const studentFinalMeanProjectedScore = studentValidSubjectsCount > 0 ? Math.round(studentPredictionSum / studentValidSubjectsCount) : 0;
+                if (document.getElementById('student_predicted_see_avg')) {
+                    document.getElementById('student_predicted_see_avg').innerText = studentFinalMeanProjectedScore + " / 100";
+                }
+
+                if (document.querySelector(prefix + '#ai_risk_value')) {
+                    document.querySelector(prefix + '#ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
+                    document.querySelector(prefix + '#ai_risk_value').style.color = finalPercentage < 75 ? 'var(--accent-red)' : 'var(--accent-green)';
+                }
+
+                const ctxScatter = document.querySelector(prefix + '#attendanceScatterChart');
+                const ctxBar = document.querySelector(prefix + '#marksBarChart');
+                if(ctxScatter && ctxBar) {
+                    if (scatterChartInstance) scatterChartInstance.destroy();
+                    if (marksChartInstance) marksChartInstance.destroy();
+                    scatterChartInstance = new Chart(ctxScatter, { type: 'scatter', data: { datasets: [{ label: 'Student Core Data Vector', data: scatterPointsArray, backgroundColor: '#1e40af', pointRadius: 9 }] } });
+                    marksChartInstance = new Chart(ctxBar, { type: 'bar', data: { labels: barLabels, datasets: [{ label: 'CIE-1 Database Record Marks', data: barValuesCIE1, backgroundColor: '#6366f1' }] }, options: { scales: { y: { min:0, max:25 } } } });
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function firePremiumToastAlert(msg, colorHex = "var(--accent-green)") {
+            const toast = document.getElementById('toastNotificationAlert');
+            if(!toast) return;
+            toast.innerText = msg;
+            toast.style.borderLeftColor = colorHex;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+
+        function handleLogout() { 
+            localStorage.clear(); 
+            sessionStorage.clear();
+            window.location.href = "index.html"; 
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const overlay = document.getElementById('authOverlay');
+            if (overlay.style.display === 'none') initializeFunctionalWorkspaceRouter();
+        });
+    </script>
+</body>
+</html>
