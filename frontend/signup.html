@@ -366,7 +366,7 @@
             const branch = document.getElementById('branch').value;
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/signup`, {
+                const response = await fetch('https://dr-ait-portal-backend.onrender.com/api/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ usn, email, password, role, name, childUsn, subjectName, branch })

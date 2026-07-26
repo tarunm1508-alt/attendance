@@ -215,12 +215,12 @@ app.use((err, req, res, next) => {
 
 
 // ==========================================================================
-// 8. START SERVER
+// 8. START SERVER (FIXED FOR RENDER DYNAMIC PORT)
 // ==========================================================================
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log("==================================================");
-    console.log(`✅ SERVER RUNNING ON: http://localhost:${PORT}`);
+    console.log(`✅ SERVER RUNNING ON port ${PORT}`);
     console.log(`📡 ACTIVE ENDPOINTS: /api/auth, /api/qr, /api/marks, /api/parent, /api/hod, /api/teacher`);
     console.log(`👔 PORTALS READY: HOD, Teacher, Student, and Parent`);
     console.log("==================================================");
