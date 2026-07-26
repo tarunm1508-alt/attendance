@@ -4,10 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dr. Ambedkar Institute of Technology | Create Account</title>
+    <!-- Centralized configuration script -->
+    <script src="config.js"></script>
     <style>
         /* ==========================================================================
-           🎨 UNIFORM PREMIUM ACADEMIC LIGHT DESIGN SYSTEM 
-           ========================================================================== */
+            🎨 UNIFORM PREMIUM ACADEMIC LIGHT DESIGN SYSTEM 
+            ========================================================================== */
         :root {
             --bg-canvas: #f1f5f9;
             --surface-card: #ffffff;
@@ -288,10 +290,6 @@
     </div>
 
     <script>
-        let API_BASE = window.location.origin;
-        if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
-        else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
-
         function toggleRoleFields() {
             const role = document.getElementById('role').value;
             const nameLabel = document.getElementById('nameLabel');
@@ -366,7 +364,7 @@
             const branch = document.getElementById('branch').value;
 
             try {
-                const response = await fetch('https://dr-ait-portal-backend.onrender.com/api/signup', {
+                const response = await fetch(`${API_URL}/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ usn, email, password, role, name, childUsn, subjectName, branch })
@@ -401,7 +399,7 @@
                 }
 
                 const fakeBioId = "BIO_TOKEN_" + Math.random().toString(36).substr(2, 9).toUpperCase();
-                await fetch(`${API_BASE}/api/auth/verify-registration`, {
+                await fetch(`${API_URL}/auth/verify-registration`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: usn, id: fakeBioId })
