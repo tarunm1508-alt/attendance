@@ -364,6 +364,7 @@
             const branch = document.getElementById('branch').value;
 
             try {
+                // 1. Register user in database first
                 const response = await fetch(`${API_URL}/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -379,25 +380,34 @@
                     return;
                 }
 
+                // 2. Safe WebAuthn Biometric Check with a 4-second Timeout Race (Prevents UI Freezing)
                 if (window.PublicKeyCredential && window.isSecureContext) {
                     try {
                         const chal = new Uint8Array(32); window.crypto.getRandomValues(chal);
                         const uid = new Uint8Array(16); window.crypto.getRandomValues(uid);
-                        await navigator.credentials.create({
+                        
+                        const credentialPromise = navigator.credentials.create({
                             publicKey: {
                                 challenge: chal,
                                 rp: { name: "Academic Portal", id: window.location.hostname },
                                 user: { id: uid, name: usn, displayName: name },
                                 pubKeyCredParams: [{ type: "public-key", alg: -7 }],
                                 authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                                timeout: 10000
+                                timeout: 4000
                             }
                         });
+
+                        // Race it so it never hangs indefinitely if Windows Hello prompt is hidden/unconfigured
+                        await Promise.race([
+                            credentialPromise,
+                            new Promise((_, reject) => setTimeout(() => reject(new Error("Biometric prompt timeout")), 4000))
+                        ]);
                     } catch (err) { 
-                        console.warn("No native scanner asset located on device canvas. Bypassing hardware layer."); 
+                        console.warn("Hardware biometric layer bypassed or timed out. Continuing seamlessly."); 
                     }
                 }
 
+                // 3. Complete registration verification token
                 const fakeBioId = "BIO_TOKEN_" + Math.random().toString(36).substr(2, 9).toUpperCase();
                 await fetch(`${API_URL}/auth/verify-registration`, {
                     method: 'POST',
@@ -413,8 +423,9 @@
 
             } catch (err) {
                 document.getElementById('biometricAuthModal').style.display = 'none';
-                document.getElementById('alertBox').innerText = "Network Error: Server unreachable.";
-                document.getElementById('alertBox').style.display = 'block';
+                const alertBox = document.getElementById('alertBox');
+                alertBox.innerText = "Error: " + err.message;
+                alertBox.style.display = 'block';
             }
         }
 
