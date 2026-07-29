@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dr. Ambedkar Institute of Technology | Create Account</title>
-    <!-- Centralized configuration script -->
-    <script src="config.js"></script>
+    <title>Academic Biometric Management System | Create Account</title>
     <style>
         /* ==========================================================================
             🎨 UNIFORM PREMIUM ACADEMIC LIGHT DESIGN SYSTEM 
@@ -290,6 +288,14 @@
     </div>
 
     <script>
+        // Explicit configuration for backend connection
+        const API_URL = "https://dr-ait-portal-backend.onrender.com/api";
+
+        // Automatically trigger field setup on load to handle browser autofills correctly
+        window.onload = function() {
+            toggleRoleFields();
+        };
+
         function toggleRoleFields() {
             const role = document.getElementById('role').value;
             const nameLabel = document.getElementById('nameLabel');
@@ -397,7 +403,6 @@
                             }
                         });
 
-                        // Race it so it never hangs indefinitely if Windows Hello prompt is hidden/unconfigured
                         await Promise.race([
                             credentialPromise,
                             new Promise((_, reject) => setTimeout(() => reject(new Error("Biometric prompt timeout")), 4000))
@@ -429,7 +434,9 @@
             }
         }
 
-        function abortSession() { document.getElementById('biometricAuthModal').style.display = 'none'; }
+        function abortSession() { 
+            document.getElementById('biometricAuthModal').style.display = 'none'; 
+        }
     </script>
 </body>
 </html>

@@ -7,7 +7,14 @@ const app = express();
 // ==========================================================================
 // 1. MIDDLEWARE & STATIC FILE SERVING
 // ==========================================================================
-app.use(cors()); 
+// Robust CORS configuration supporting both web browsers and mobile WebView (Capacitor)
+app.use(cors({
+    origin: true,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json()); 
 
 // Serve static HTML/CSS/JS frontend files seamlessly
@@ -550,6 +557,46 @@ app.get('/api/auth/student-subject-metrics', async (req, res) => {
     } catch (err) {
         console.error("❌ Error fetching student metrics:", err.message);
         res.status(500).json({ error: err.message });
+    }
+});
+
+// 📍 GET: Fetch Parent Profile & Linked Student Name
+app.get('/api/parent/profile', async (req, res) => {
+    const { parentId, institutionId } = req.query;
+    const tenant = institutionId || 'DR_AIT';
+    
+    try {
+        const parentResult = await pool.query(
+            `SELECT name, child_usn FROM users WHERE (usn = $1 OR phone_number = $1) AND institution_id = $2`,
+            [parentId, tenant]
+        );
+
+        if (parentResult.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "Parent record not found." });
+        }
+
+        const parent = parentResult.rows[0];
+        let studentName = "Linked Ward";
+
+        if (parent.child_usn) {
+            const studentResult = await pool.query(
+                `SELECT name FROM users WHERE usn = $1 AND institution_id = $2`,
+                [parent.child_usn, tenant]
+            );
+            if (studentResult.rows.length > 0) {
+                studentName = studentResult.rows[0].name;
+            }
+        }
+
+        res.status(200).json({
+            success: true,
+            parentName: parent.name || "Guardian",
+            childUsn: parent.child_usn || "N/A",
+            studentName: studentName
+        });
+    } catch (err) {
+        console.error("❌ Error fetching parent profile:", err.message);
+        res.status(500).json({ success: false, error: "Failed to load parent profile." });
     }
 });
 

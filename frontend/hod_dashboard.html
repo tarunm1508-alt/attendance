@@ -65,6 +65,29 @@
 
         .btn-save { background: var(--accent-green); color: white; border: none; font-weight: 800; cursor: pointer; padding: 12px 24px; border-radius: 10px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
         .btn-save:hover { background: #059669; }
+
+        /* Sleek Floating Toast Popup Notification */
+        #customToastPopup {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #0f172a;
+            color: white;
+            padding: 14px 22px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 13px;
+            z-index: 10000;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #customToastPopup.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
@@ -124,6 +147,7 @@
                 <span style="font-size: 12px; color: var(--text-muted); font-style: italic;">
                     Example: Prefix '1DA24AI', Start '1', End '20' will appoint 1DA24AI001 to 1DA24AI020 to selected mentor.
                 </span>
+
                 <button onclick="submitBatchMentorshipAssignment()" style="background: var(--accent-purple); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">
                     🚀 Appoint Mentees to Faculty
                 </button>
@@ -138,7 +162,7 @@
                     <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Faculty Swap & Leave Approvals</h3>
                     <span id="swapBadge" style="background: var(--primary-blue); color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 Pending</span>
                 </div>
-                <button onclick="loadHodSwapRequests()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh</button>
+                <button onclick="manualRefreshSwaps()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh</button>
             </div>
 
             <div id="hodSwapRequestsFeed" style="display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto;">
@@ -154,7 +178,7 @@
                     <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Executive Messages & Activity Inbox</h3>
                     <span id="hodMessageBadge" style="background: var(--primary-blue); color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 New</span>
                 </div>
-                <button onclick="loadHodNotifications()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh Messages</button>
+                <button onclick="manualRefreshMessages()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh Messages</button>
             </div>
 
             <div id="hodMessagesFeed" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
@@ -238,7 +262,7 @@
 
         const userBranch = localStorage.getItem('userBranch') || 'AIML';
         const userName = localStorage.getItem('userName') || 'HOD Leader';
-        const userUsn = localStorage.getItem('userUsn') || '';
+        const userUsn = localStorage.getItem('userUsn') || 'HOD_ADMIN';
         const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
 
         let activeScheme = 'ODD';
@@ -273,7 +297,6 @@
                 const res = await fetch(`${API_BASE}/api/hod/teachers?branch=${userBranch}&institutionId=${institutionId}`);
                 teachersList = await res.json();
 
-                // Populate Mentor Selector Dropdown
                 const mentorSelect = document.getElementById('mentorSelectDropdown');
                 if (mentorSelect) {
                     mentorSelect.innerHTML = `<option value="">-- Select Teacher --</option>`;
@@ -315,14 +338,14 @@
 
                 const data = await res.json();
                 if (res.ok) {
-                    alert(`✅ ${data.message}`);
+                    showPopupNotification(`✅ ${data.message}`);
                     document.getElementById('usnStartInput').value = "";
                     document.getElementById('usnEndInput').value = "";
                 } else {
-                    alert(`❌ Error: ${data.message}`);
+                    showPopupNotification(`❌ Error: ${data.message}`, 'error');
                 }
             } catch (err) {
-                alert("❌ Network Error: Could not connect to backend server.");
+                showPopupNotification("❌ Network Error: Could not connect to backend server.", 'error');
             }
         }
 
@@ -385,6 +408,16 @@
             }
         }
 
+        async function manualRefreshSwaps() {
+            await loadHodSwapRequests();
+            showPopupNotification("🔄 Swap & leave requests refreshed successfully!");
+        }
+
+        async function manualRefreshMessages() {
+            await loadHodNotifications();
+            showPopupNotification("🔔 Messages inbox successfully updated!");
+        }
+
         async function respondToSwap(requestId, status) {
             try {
                 const res = await fetch(`${API_BASE}/api/hod/respond-swap`, {
@@ -394,11 +427,11 @@
                 });
 
                 if (res.ok) {
-                    alert(`Request ${status.toLowerCase()} successfully!`);
+                    showPopupNotification(`Request ${status.toLowerCase()} successfully!`);
                     loadHodSwapRequests();
                 }
             } catch (err) {
-                alert("Error communicating with server.");
+                showPopupNotification("Error communicating with server.", 'error');
             }
         }
 
@@ -412,7 +445,7 @@
 
                 if (!messages || messages.length === 0) {
                     feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px; background: #f8fafc; border-radius: 10px;">📬 No current messages or announcements.</div>`;
-                    badge.innerText = "0 New";
+                    badge.innerText = "0 Total";
                     return;
                 }
 
@@ -483,7 +516,7 @@
 
             let existingMap = {};
             try {
-                const res = await fetch(`${API_BASE}/api/hod/weekly-timetable?branch=${userBranch}&academicYear=${batchYear}&semesterNumber=${activeSemNumber}`);
+                const res = await fetch(`${API_BASE}/api/hod/weekly-timetable?branch=${userBranch}&academicYear=${batchYear}&semesterNumber=${activeSemNumber}&institutionId=${institutionId}`);
                 const data = await res.json();
                 data.forEach(item => {
                     existingMap[`${item.day_of_week}_${item.period_id}`] = item;
@@ -569,13 +602,13 @@
 
                 const result = await res.json();
                 if (res.ok) {
-                    alert(`✅ Semester ${activeSemNumber} Timetable saved successfully! App notifications sent to professors.`);
+                    showPopupNotification(`✅ Semester ${activeSemNumber} Timetable saved & dispatched!`);
                     await loadHodNotifications();
                 } else {
-                    alert("❌ Error: " + result.error);
+                    showPopupNotification("❌ Error: " + result.error, 'error');
                 }
             } catch (err) {
-                alert("❌ Network Error: Could not reach backend server.");
+                showPopupNotification("❌ Network Error: Could not reach backend server.", 'error');
             }
         }
 
@@ -583,6 +616,23 @@
             localStorage.clear(); 
             sessionStorage.clear();
             window.location.href = "index.html"; 
+        }
+
+        function showPopupNotification(message, type = 'success') {
+            let toast = document.getElementById('customToastPopup');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'customToastPopup';
+                document.body.appendChild(toast);
+            }
+            
+            toast.style.background = type === 'success' ? '#0f172a' : '#991b1b';
+            toast.innerText = message;
+            toast.classList.add('show');
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2500);
         }
     </script>
 </body>

@@ -6,8 +6,8 @@
     <title>Parent Portal | Academic Monitoring</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f2f5; --success: #27ae60; --dark: #333; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--dark); }
@@ -43,6 +43,15 @@
 
         .logout-btn { background: #e74c3c; color: white; padding: 14px; border: none; border-radius: 8px; cursor: pointer; margin-top: 25px; font-weight: bold; width: 100%; font-size: 15px; transition: 0.2s; }
         .logout-btn:hover { background: #c0392b; }
+
+        /* Sleek Floating Toast Popup Notification */
+        #customToastPopup {
+            position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: white;
+            padding: 14px 22px; border-radius: 14px; font-weight: 700; font-size: 13px; z-index: 10000;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(20px); opacity: 0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #customToastPopup.show { transform: translateY(0); opacity: 1; }
     </style>
 </head>
 <body>
@@ -51,7 +60,7 @@
     <div class="header-box">
         <span class="live-indicator">● LIVE TRACKING ACTIVE</span>
         <h1 style="margin:0; color:var(--primary); font-size: 28px;">👪 Parent Dashboard</h1>
-        <p style="margin:5px 0 0 0; color:#7f8c8d;">Logged in as: <span id="parentName" style="font-weight:bold; color:#333;"></span></p>
+        <p style="margin:5px 0 0 0; color:#7f8c8d;" id="guardianViewLabel">Logged in as: <span id="parentName" style="font-weight:bold; color:#333;"></span></p>
         
         <div class="student-profile-card">
             <div class="profile-meta-item"><strong>Child Name:</strong> <span id="childName">Loading...</span></div>
@@ -61,7 +70,23 @@
         </div>
     </div>
 
+    <!-- 🔔 Messages & Portal Alerts Box -->
+    <div style="background: white; border: 1px solid #e0e0e0; border-radius: 12px; padding: 20px; margin-bottom: 25px; box-shadow: 0 3px 6px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 20px;">🔔</span>
+                <h3 style="font-size: 15px; font-weight: 800; margin: 0; color: var(--primary);">Messages & Portal Alerts</h3>
+                <span id="parentMessageBadge" style="background: var(--accent); color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 New</span>
+            </div>
+            <button onclick="manualRefreshMessages()" style="background: #eef2f3; border: 1px solid #ccc; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh</button>
+        </div>
+        <div id="parentMessagesFeed" style="display: flex; flex-direction: column; gap: 8px; max-height: 160px; overflow-y: auto;">
+            <div style="text-align: center; color: #7f8c8d; font-size: 13px; padding: 10px;">No messages or alerts at this time.</div>
+        </div>
+    </div>
+
     <div id="academicSection">
+        <!-- YEAR 1 -->
         <div class="year-card">
             <div class="year-header" onclick="toggleYear('year1')">YEAR 1 (Semesters 1 & 2) <span>▼</span></div>
             <div id="year1" class="sem-content">
@@ -74,6 +99,7 @@
             </div>
         </div>
 
+        <!-- YEAR 2 -->
         <div class="year-card">
             <div class="year-header" onclick="toggleYear('year2')">YEAR 2 (Semesters 3 & 4) <span>▼</span></div>
             <div id="year2" class="sem-content">
@@ -86,6 +112,7 @@
             </div>
         </div>
 
+        <!-- YEAR 3 -->
         <div class="year-card">
             <div class="year-header" onclick="toggleYear('year3')">YEAR 3 (Semesters 5 & 6) <span>▼</span></div>
             <div id="year3" class="sem-content">
@@ -98,6 +125,7 @@
             </div>
         </div>
 
+        <!-- YEAR 4 -->
         <div class="year-card">
             <div class="year-header" onclick="toggleYear('year4')">YEAR 4 (Semesters 7 & 8) <span>▼</span></div>
             <div id="year4" class="sem-content">
@@ -118,8 +146,10 @@
     // ⚡ SYNCED TUNNEL URL ENDPOINT
     const BACKEND_URL = "https://d0mp6n0b-5000.inc1.devtunnels.ms";
 
-    const childSRN = localStorage.getItem("student_id");
+    const parentUsn = localStorage.getItem("parent_usn") || localStorage.getItem("user_usn") || localStorage.getItem("student_id");
     const parentName = localStorage.getItem("user_name");
+    let childSRN = localStorage.getItem("student_id");
+    const institutionId = localStorage.getItem("institutionId") || "DR_AIT";
     let activeTableId = null;
 
     if (!localStorage.getItem("role") || localStorage.getItem("role") !== 'parent') {
@@ -127,13 +157,11 @@
     }
 
     document.getElementById("parentName").innerText = parentName || "Parent";
-    document.getElementById("displaySRN").innerText = childSRN || "Not Linked";
 
     function toggleYear(id) {
         const el = document.getElementById(id);
         const isCurrentlyVisible = el.style.display === 'block';
         
-        // Hide all blocks and reset active row sub-grids cleanly
         document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
         document.querySelectorAll('.table-wrapper').forEach(t => t.style.display = 'none');
         document.querySelectorAll('.sem-btn').forEach(b => b.classList.remove('active'));
@@ -145,7 +173,6 @@
     function toggleTable(tableId, buttonId) {
         const targetTable = document.getElementById(tableId);
         
-        // 🎯 SMOOTH TOGGLE CORE LOGIC
         if (activeTableId === tableId) {
             targetTable.style.display = 'none';
             document.getElementById(buttonId).classList.remove('active');
@@ -161,22 +188,48 @@
         activeTableId = tableId;
     }
 
+    async function loadParentAndStudentProfile() {
+        try {
+            const profileRes = await fetch(`${BACKEND_URL}/api/parent/profile?parentId=${parentUsn}&institutionId=${institutionId}`);
+            const data = await profileRes.json();
+
+            if(data && data.success) {
+                document.getElementById("parentName").innerText = data.parentName || parentName || "Parent";
+                document.getElementById("childName").innerText = data.studentName || "Tarun Bali";
+                document.getElementById("displaySRN").innerText = data.childUsn || childSRN || "Not Linked";
+                childSRN = data.childUsn || childSRN;
+                localStorage.setItem("student_id", childSRN);
+            } else if (childSRN) {
+                const fallbackRes = await fetch(`${BACKEND_URL}/api/marks/student-profile/${childSRN}`);
+                const fallbackData = await fallbackRes.json();
+                if(fallbackData) {
+                    document.getElementById("childName").innerText = fallbackData.student_name || "Tarun Bali";
+                    document.getElementById("displaySRN").innerText = childSRN;
+                    document.getElementById("childBranch").innerText = fallbackData.branch || "AIML";
+                    document.getElementById("childClassSec").innerText = `${fallbackData.current_class || '2nd Year'} - ${fallbackData.section || 'A'}`;
+                }
+            }
+        } catch (e) { 
+            console.error("Error loading profile details:", e); 
+            document.getElementById("displaySRN").innerText = childSRN || "Not Linked";
+        }
+    }
+
     async function loadParentDashboardData() {
+        await loadParentAndStudentProfile();
         if (!childSRN || childSRN === "null") return;
 
         try {
-            // 🎯 FIXED DYNAMIC TUNNEL ENDPOINT IMPLEMENTATION
             const profileRes = await fetch(`${BACKEND_URL}/api/marks/student-profile/${childSRN}`);
             const data = await profileRes.json();
 
             if(data) {
-                document.getElementById("childName").innerText = data.student_name || "Tarun Bali";
+                document.getElementById("childName").innerText = data.student_name || document.getElementById("childName").innerText;
                 document.getElementById("childBranch").innerText = data.branch || "AIML";
                 document.getElementById("childClassSec").innerText = `${data.current_class || '2nd Year'} - ${data.section || 'A'}`;
             }
 
             if (data.academic) {
-                // Clear any leftover artifacts inside text row items
                 for(let i = 1; i <= 8; i++) {
                     const box = document.getElementById(`data-sem${i}`);
                     if(box) box.innerHTML = "";
@@ -210,13 +263,58 @@
         } catch (e) { console.error("Error setting up view layer dashboard map:", e); }
     }
 
+    async function loadParentNotifications() {
+        const feed = document.getElementById('parentMessagesFeed');
+        const badge = document.getElementById('parentMessageBadge');
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/notifications?userId=${parentUsn}&role=parent&institutionId=${institutionId}`);
+            const messages = await res.json();
+
+            if (!messages || messages.length === 0) {
+                feed.innerHTML = `<div style="text-align: center; color: #7f8c8d; font-size: 13px; padding: 10px;">📬 No current messages or alerts.</div>`;
+                badge.innerText = "0 New";
+                return;
+            }
+
+            badge.innerText = `${messages.length} New`;
+            feed.innerHTML = "";
+            messages.forEach(msg => {
+                const card = document.createElement('div');
+                card.style.cssText = "background: #f8fafc; border-left: 4px solid var(--accent); padding: 8px 12px; border-radius: 6px; font-size: 12px; text-align: left;";
+                card.innerHTML = `<strong>${msg.title || 'ALERT'}:</strong> ${msg.message}`;
+                feed.appendChild(card);
+            });
+        } catch (err) {
+            console.error("Notification load error:", err);
+        }
+    }
+
+    async function manualRefreshMessages() {
+        await loadParentNotifications();
+        showPopupNotification("🔄 Parent notifications and alerts refreshed!");
+    }
+
     function logout() { localStorage.clear(); window.location.href = "index.html"; }
+
+    function showPopupNotification(message, type = 'success') {
+        let toast = document.getElementById('customToastPopup');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'customToastPopup';
+            document.body.appendChild(toast);
+        }
+        toast.style.background = type === 'success' ? '#0f172a' : '#991b1b';
+        toast.innerText = message;
+        toast.classList.add('show');
+        setTimeout(() => { toast.classList.remove('show'); }, 2500);
+    }
     
     window.onload = function() {
-        // Enforce safe clean start bounds
         document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
         loadParentDashboardData();
+        loadParentNotifications();
     };
 </script>
+<div id="customToastPopup"></div>
 </body>
 </html>
