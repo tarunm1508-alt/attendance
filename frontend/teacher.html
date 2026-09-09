@@ -3,44 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Faculty Portal | Live Attendance</title>
+    <title>Faculty Portal | Academic Management</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f2f5; --success: #27ae60; --danger: #e74c3c; --dark: #333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--dark); text-align: center; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 35px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        :root { 
+            --primary: #1e40af; 
+            --primary-hover: #1d4ed8; 
+            --accent: #3b82f6; 
+            --bg: #f8fafc; 
+            --card-bg: #ffffff; 
+            --success: #10b981; 
+            --danger: #ef4444; 
+            --warning: #f59e0b; 
+            --dark: #0f172a; 
+            --muted: #64748b; 
+            --border: #e2e8f0; 
+        }
         
-        .header-box { background: #eef2f3; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: left; border-left: 6px solid var(--accent); position: relative; }
-        .user-info { font-size: 14px; color: #7f8c8d; margin-top: 5px; }
+        * { box-sizing: border-box; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background: var(--bg); margin: 0; padding: 24px; color: var(--dark); }
+        .container { max-width: 1050px; margin: 0 auto; background: var(--card-bg); padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.06); border: 1px solid var(--border); }
+        
+        .header-box { background: #f1f5f9; padding: 25px; border-radius: 14px; margin-bottom: 30px; text-align: left; border-left: 6px solid var(--primary); position: relative; }
+        .user-info { font-size: 14px; color: var(--muted); margin-top: 6px; font-weight: 500; }
 
-        .control-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px; text-align: left; }
-        .control-card { background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #e0e0e0; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
-        .control-card h4 { margin: 0 0 10px 0; color: var(--primary); }
-        
-        label { font-weight: bold; font-size: 13px; color: #555; display: block; margin-bottom: 5px; }
-        select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; outline: none; margin-bottom: 12px; }
-        
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
-        .btn-generate { background-color: var(--success); color: white; }
-        .btn-generate:hover { background-color: #219150; }
-        .btn-close { background-color: #f39c12; color: white; }
-        .btn-close:hover { background-color: #d35400; }
-        .btn-logout { background-color: var(--danger); color: white; margin-top: 25px; }
-        .btn-logout:hover { background-color: #c0392b; }
+        .section-title { font-size: 19px; font-weight: 800; color: var(--dark); margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; }
 
-        .qr-zone { display: none; margin: 20px 0; padding: 20px; background: #f9f9f9; border-radius: 10px; border: 2px dashed #ddd; }
-        #qrCanvas img { margin: 0 auto; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 6px; }
+        /* Control Cards */
+        .control-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 35px; text-align: left; }
+        .control-card { background: #ffffff; padding: 22px; border-radius: 14px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        .control-card h4 { margin: 0 0 12px 0; color: var(--dark); font-size: 16px; font-weight: 700; }
+        
+        label { font-weight: 700; font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+        select, input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; outline: none; margin-bottom: 14px; font-size: 14px; transition: all 0.2s; }
+        select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1); }
+        
+        .btn { width: 100%; padding: 13px; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
+        .btn-generate { background-color: var(--primary); color: white; }
+        .btn-generate:hover { background-color: var(--primary-hover); }
+        .btn-close { background-color: var(--warning); color: white; }
+        .btn-close:hover { background-color: #d97706; }
+        .btn-logout { background-color: #fef2f2; color: var(--danger); border: 1px solid #fecaca; margin-top: 35px; font-weight: 700; }
+        .btn-logout:hover { background-color: #fee2e2; }
 
-        .live-monitor-container { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e0e0e0; text-align: left; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
-        .live-monitor-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f4f2f5; padding-bottom: 15px; margin-bottom: 15px; }
+        .qr-zone { display: none; margin: 24px 0; padding: 24px; background: #f8fafc; border-radius: 14px; border: 2px dashed var(--border); text-align: center; }
+        #qrCanvas img { margin: 0 auto; display: block; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-radius: 10px; }
+
+        /* Marks Management Section */
+        .marks-section { background: #ffffff; padding: 28px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 35px; text-align: left; }
+        .search-bar-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
+        .search-bar-row .input-wrap { flex: 1; margin-bottom: 0; }
+        .search-bar-row .btn-search { width: auto; padding: 12px 24px; background: var(--dark); color: white; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; height: 45px; }
+
+        .student-banner { display: none; padding: 14px 18px; border-radius: 10px; background: #eff6ff; border: 1px solid #bfdbfe; margin-bottom: 20px; font-size: 14px; color: #1e3a8a; }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: #f8f9fa; padding: 12px; border: 1px solid #ddd; font-size: 13px; color: #444; text-align: left; }
-        td { padding: 12px; border: 1px solid #ddd; font-size: 14px; }
+        .marks-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .marks-table th { background: #f8fafc; padding: 12px; border: 1px solid var(--border); font-size: 12px; color: var(--muted); text-transform: uppercase; font-weight: 700; text-align: center; }
+        .marks-table td { padding: 12px; border: 1px solid var(--border); font-size: 14px; text-align: center; vertical-align: middle; }
+
+        .row-editable { background-color: #ffffff; }
+        .row-frozen { background-color: #f8fafc; }
         
+        .input-editable { width: 75px; padding: 8px; border: 1.5px solid var(--primary) !important; border-radius: 8px; text-align: center; font-weight: 700; margin-bottom: 0; background: #ffffff; color: var(--dark); }
+        .input-frozen { width: 75px; padding: 8px; border: 1px dashed #cbd5e1 !important; border-radius: 8px; text-align: center; font-weight: 500; margin-bottom: 0; background: #e2e8f0 !important; color: #94a3b8 !important; cursor: not-allowed; }
+
+        .badge-edit { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; background: #dbeafe; color: #1e40af; }
+        .badge-locked { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 600; background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+
+        .btn-save-row { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.15s; font-size: 12px; }
+        .btn-save-row:hover { background: var(--primary-hover); }
+        .btn-locked-row { background: #e2e8f0; color: #94a3b8; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: not-allowed; font-size: 12px; }
+
+        /* Attendance Live Feed */
+        .live-monitor-container { background: white; padding: 25px; border-radius: 14px; border: 1px solid var(--border); text-align: left; }
+        .live-monitor-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; margin-bottom: 15px; }
         .status-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; background: #e8f8f5; color: #117a65; }
     </style>
 </head>
@@ -48,81 +87,389 @@
 
 <div class="container">
     <div class="header-box">
-        <h1 style="margin:0; color:var(--primary); font-size: 28px;">💼 Faculty Dashboard</h1>
-        <div class="user-info">Logged in as: <span id="teacherName" style="font-weight:bold; color:#333;">Instructor</span></div>
+        <h1 style="margin:0; color:var(--primary); font-size: 26px;">💼 Faculty Management Portal</h1>
+        <div class="user-info">Logged in as: <span id="teacherName" style="font-weight:bold; color:var(--dark);">Instructor</span> | Assigned Subject: <span id="assignedSubjectBadge" style="color:var(--primary); font-weight:800;">Loading...</span></div>
     </div>
 
+    <!-- ===================================================================== -->
+    <!-- 🔔 MESSAGES & PORTAL ALERTS DESK                                     -->
+    <!-- ===================================================================== -->
+    <div class="marks-section" style="border-left: 5px solid var(--warning);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <div class="section-title" style="margin-bottom: 0;">🔔 Messages & Portal Alerts <span id="msgBadge" style="background:var(--primary); color:white; font-size:11px; padding:2px 8px; border-radius:10px;">0 Total</span></div>
+            <button class="btn" style="width: auto; padding: 6px 14px; font-size: 12px; background: #f1f5f9; color: var(--dark); border: 1px solid var(--border);" onclick="loadTeacherInboxMessages()">🔄 Refresh</button>
+        </div>
+        <div id="teacherMessagesFeed" style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;">
+            <div style="color: var(--muted); font-size: 13px; font-style: italic;">Loading notifications...</div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 💬 DIRECT MESSAGING & PORTAL COMMS DESK                               -->
+    <!-- ===================================================================== -->
+    <div class="marks-section" style="border-left: 5px solid var(--primary);">
+        <div class="section-title">💬 Direct Messaging & Portal Comms</div>
+        <p style="font-size: 13px; color: var(--muted); margin-top: 0; margin-bottom: 18px;">
+            Send direct messages or notes regarding class schedules, student queries, or leave requests to HOD or other portal administrators.
+        </p>
+        <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+            <input type="text" id="userDirectRecipient" placeholder="Recipient ID / HOD Admin USN (e.g., HOD_ADMIN)" style="margin-bottom:0;">
+        </div>
+        <div style="display: flex; gap: 12px;">
+            <input type="text" id="userDirectMsgText" placeholder="Type message for swap request, leave note, or inquiry..." style="margin-bottom:0;">
+            <button class="btn btn-generate" style="width: auto; padding: 12px 24px;" onclick="sendUserDirectMessage()">Send 🚀</button>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 📚 SECTION 1: MARKS EVALUATION (ASSIGNED SUBJECT ONLY + FROZEN OTHERS)-->
+    <!-- ===================================================================== -->
+    <div class="marks-section">
+        <div class="section-title">📝 Student Evaluation & Continuous Internal Marks</div>
+        <p style="font-size: 13px; color: var(--muted); margin-top: 0; margin-bottom: 18px;">
+            Enter student USN to view the academic mark sheet. <strong>You can enter marks only for your assigned subject module.</strong> All other subjects are locked in read-only mode.
+        </p>
+
+        <div class="search-bar-row">
+            <div class="input-wrap">
+                <label for="searchUsnInput">Target Student USN</label>
+                <input type="text" id="searchUsnInput" placeholder="Enter student USN (e.g., 1DA24AI099)" value="1DA24AI099" style="margin-bottom:0;">
+            </div>
+            <button class="btn-search" onclick="fetchStudentMarksMatrix()">Fetch Marks Matrix</button>
+        </div>
+
+        <div id="studentDetailBanner" class="student-banner"></div>
+
+        <div style="width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 12px;">
+            <table class="marks-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left; width: 28%;">Subject Module</th>
+                        <th style="width: 16%;">Access Control</th>
+                        <th style="width: 11%;">CIE 1 (30)</th>
+                        <th style="width: 11%;">CIE 2 (30)</th>
+                        <th style="width: 11%;">CIE 3 (30)</th>
+                        <th style="width: 11%;">SEE (100)</th>
+                        <th style="width: 12%;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="marksMatrixBody">
+                    <tr>
+                        <td colspan="7" style="padding: 24px; color: var(--muted); font-style: italic;">
+                            Enter a USN above and click "Fetch Marks Matrix" to inspect evaluation scores.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 📡 SECTION 2: ATTENDANCE QR GENERATOR & LIVE SCANS                     -->
+    <!-- ===================================================================== -->
+    <div class="section-title" style="text-align: left;">📡 Live Lecture Attendance System</div>
     <div class="control-panel">
         <div class="control-card">
             <h4>1. Open Class Session</h4>
             <label for="qrSubject">Select Subject Module:</label>
             <select id="qrSubject">
-                <option value="DBMS">DBMS</option>
-                <option value="AI">AI</option>
-                <option value="ADA">ADA</option>
-                <option value="MERN">MERN</option>
-                <option value="CDN">CDN</option>
+                <option value="AI">AI - Artificial Intelligence</option>
+                <option value="DBMS">DBMS - Database Management Systems</option>
+                <option value="ADA">ADA - Analysis & Design of Algorithms</option>
+                <option value="MERN">MERN - Full-Stack MERN Development</option>
+                <option value="CDN">CDN - Cloud & Content Delivery</option>
             </select>
-            <button class="btn btn-generate" onclick="generateAttendanceQR()">Generate QR Code</button>
+            <button class="btn btn-generate" onclick="generateAttendanceQR()">Generate Dynamic QR</button>
         </div>
 
         <div class="control-card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-                <h4>2. Active Session Management</h4>
-                <p style="font-size: 13px; color:#7f8c8d; margin-top:0;">Closing a session updates the total classes column for all students enrolled in this module.</p>
+                <h4>2. Close Lecture Session</h4>
+                <p style="font-size: 13px; color: var(--muted); margin-top:0;">Closing updates the conducted hours count and finalizes attendance ratios for this session.</p>
             </div>
             <button class="btn btn-close" onclick="closeAttendanceSession()">End Class Session</button>
         </div>
     </div>
 
     <div id="qrDisplayBox" class="qr-zone">
-        <h4 style="margin-top:0; color: var(--primary);">🎯 Active QR Code for <span id="activeQrSubject" style="color:var(--accent);"></span></h4>
+        <h4 style="margin-top:0; color: var(--dark);">🎯 Active Session QR Code: <span id="activeQrSubject" style="color:var(--primary);"></span></h4>
         <div id="qrCanvas"></div>
-        <p style="font-size:12px; color:#e67e22; font-weight:bold; margin-bottom:0; margin-top:10px;">⚠️ Leave this box visible on the projector screen for students to scan.</p>
+        <p style="font-size:12px; color:var(--warning); font-weight:bold; margin-bottom:0; margin-top:12px;">⚠️ Keep this QR Code visible on the projector screen for students to scan.</p>
     </div>
 
     <div class="live-monitor-container">
         <div class="live-monitor-header">
-            <h3 style="color: var(--primary); margin: 0;">📡 Live Attendance Feed</h3>
-            <div style="font-weight: bold; font-size: 14px; background: #eef2f3; padding: 6px 15px; border-radius: 20px;">
-                Total Scanned: <span id="scanCount" style="color: var(--success); font-size:16px;">0</span>
+            <h3 style="color: var(--dark); margin: 0; font-size: 17px; font-weight: 800;">Real-Time Attendance Feed</h3>
+            <div style="font-weight: 700; font-size: 13px; background: #f1f5f9; padding: 6px 16px; border-radius: 20px;">
+                Verified Scans: <span id="scanCount" style="color: var(--success); font-size:16px;">0</span>
             </div>
         </div>
 
-       <div style="width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff; box-sizing: border-box; margin-top: 15px;">
-            <table style="width: 100%; border-collapse: collapse; margin: 0; padding: 0; min-width: 600px; table-layout: fixed;">
+        <div style="width: 100%; overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); background: #ffffff;">
+            <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
                 <thead>
                     <tr style="background: #f8fafc;">
-                        <th style="padding: 12px 10px; width: 25%; text-align: center; font-size: 13px; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0;">USN</th>
-                        <th style="padding: 12px 10px; width: 35%; text-align: center; font-size: 13px; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0;">Student Name</th>
-                        <th style="padding: 12px 10px; width: 25%; text-align: center; font-size: 13px; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0;">Total Subject Attendance</th>
-                        <th style="padding: 12px 10px; width: 15%; text-align: center; font-size: 13px; color: #475569; font-weight: 700; border-bottom: 2px solid #e2e8f0;">Status</th>
+                        <th style="padding: 12px 10px; width: 25%; text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; border-bottom: 2px solid var(--border);">USN</th>
+                        <th style="padding: 12px 10px; width: 35%; text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; border-bottom: 2px solid var(--border);">Student Name</th>
+                        <th style="padding: 12px 10px; width: 25%; text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; border-bottom: 2px solid var(--border);">Attendance Metric</th>
+                        <th style="padding: 12px 10px; width: 15%; text-align: center; font-size: 12px; color: var(--muted); font-weight: 700; border-bottom: 2px solid var(--border);">Status</th>
                     </tr>
                 </thead>
                 <tbody id="liveScanTableBody">
                     <tr>
-                        <td colspan="4" style="padding: 20px; text-align: center; color: #7f8c8d; font-style: italic;">Awaiting incoming stream synchronization passes...</td>
+                        <td colspan="4" style="padding: 20px; text-align: center; color: var(--muted); font-style: italic;">No active session stream running.</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    <button class="btn btn-logout" onclick="logoutTeacher()">Secure Portal Logout</button>
+    </div>
+
+    <button class="btn btn-logout" onclick="logoutTeacher()">Sign Out From Portal</button>
 </div>
 
 <script>
-    const teacherName = localStorage.getItem("user_name");
-    let trackerInterval = null;
+    // 🌐 Dynamic API Base (Ensures functionality across Render, Localhost 5000/5501, and Mobile APK)
+    let API_BASE = "https://dr-ait-portal-backend.onrender.com";
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        if (window.location.port === "5501" || window.location.origin.includes("-5501.")) {
+            API_BASE = "http://localhost:5000";
+        } else if (window.location.port === "5000") {
+            API_BASE = window.location.origin;
+        } else {
+            API_BASE = "http://localhost:5000";
+        }
+    }
 
-    if (!localStorage.getItem("role") || localStorage.getItem("role") !== 'teacher') {
+    // Role Verification & Session Extraction
+    const activeRole = localStorage.getItem("userRole") || localStorage.getItem("role");
+    if (!activeRole || activeRole !== 'teacher') {
         window.location.href = 'login.html?role=teacher';
     }
-    document.getElementById("teacherName").innerText = teacherName || "Faculty Member";
 
+    const teacherName = localStorage.getItem("userName") || localStorage.getItem("user_name") || "Faculty Member";
+    const teacherUsn = localStorage.getItem("userUsn") || localStorage.getItem("usn") || localStorage.getItem("teacherId") || "";
+    let teacherAssignedSubject = (localStorage.getItem("userSubject") || "").trim();
+    const institutionId = localStorage.getItem("institutionId") || "DR_AIT";
+
+    document.getElementById("teacherName").innerText = teacherName;
+    document.getElementById("assignedSubjectBadge").innerText = teacherAssignedSubject || "AI (Default)";
+
+    // Set select box default to teacher's assigned module
+    if (teacherAssignedSubject) {
+        const qrSelect = document.getElementById("qrSubject");
+        for (let i = 0; i < qrSelect.options.length; i++) {
+            if (qrSelect.options[i].value.toUpperCase() === teacherAssignedSubject.toUpperCase()) {
+                qrSelect.selectedIndex = i;
+                break;
+            }
+        }
+    }
+
+    let trackerInterval = null;
+
+    // Load default student & notifications on entry
+    window.onload = () => {
+        fetchStudentMarksMatrix();
+        loadTeacherInboxMessages();
+    };
+
+    // =========================================================================
+    // 🔔 TEACHER NOTIFICATIONS INBOX LOADER
+    // =========================================================================
+    async function loadTeacherInboxMessages() {
+        const feed = document.getElementById('teacherMessagesFeed');
+        const badge = document.getElementById('msgBadge');
+        if (!feed) return;
+
+        feed.innerHTML = `<div style="color: var(--muted); font-size: 13px; font-style: italic;">Refreshing inbox...</div>`;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/notifications?userId=${encodeURIComponent(teacherUsn)}&role=teacher&institutionId=${encodeURIComponent(institutionId)}`);
+            const messages = await res.json();
+
+            if (!messages || messages.length === 0) {
+                feed.innerHTML = `<div style="color: var(--muted); font-size: 13px; padding: 10px; background: #f8fafc; border-radius: 8px;">📬 No current messages or announcements.</div>`;
+                if (badge) badge.innerText = "0 Total";
+                return;
+            }
+
+            if (badge) badge.innerText = `${messages.length} Total`;
+            feed.innerHTML = "";
+
+            messages.forEach(msg => {
+                const dateFormatted = msg.created_at ? new Date(msg.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+                feed.innerHTML += `
+                    <div style="background: #f8fafc; border-left: 4px solid var(--primary); border-radius: 8px; padding: 10px 14px; text-align: left; font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                            <strong style="color: var(--primary); text-transform: uppercase; font-size: 11px;">${msg.title || 'PORTAL ALERT'}</strong>
+                            <span style="font-size: 10px; color: var(--muted);">${dateFormatted}</span>
+                        </div>
+                        <div style="color: var(--dark); font-weight: 500;">${msg.message}</div>
+                    </div>
+                `;
+            });
+        } catch (err) {
+            feed.innerHTML = `<div style="color: var(--danger); font-size: 12px; text-align: center;">Unable to load messages feed.</div>`;
+        }
+    }
+
+    // =========================================================================
+    // 💬 DIRECT MESSAGING HANDLERS
+    // =========================================================================
+    async function sendUserDirectMessage() {
+        const recipientId = document.getElementById('userDirectRecipient').value.trim().toUpperCase();
+        const messageText = document.getElementById('userDirectMsgText').value.trim();
+
+        if (!recipientId || !messageText) {
+            alert("⚠️ Please specify a recipient and message content.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/messages/send`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    senderId: teacherUsn || 'TEACHER',
+                    senderName: teacherName,
+                    senderRole: 'teacher',
+                    recipientId: recipientId,
+                    messageText: messageText,
+                    institutionId: institutionId
+                })
+            });
+
+            if (res.ok) {
+                alert("✅ Message sent successfully!");
+                document.getElementById('userDirectMsgText').value = "";
+                document.getElementById('userDirectRecipient').value = "";
+            } else {
+                alert("❌ Failed to dispatch message.");
+            }
+        } catch (err) {
+            alert("❌ Network error connecting to message gateway.");
+        }
+    }
+
+    // =========================================================================
+    // 📝 MARKS MATRIX CONTROLLER (FETCH, RENDER, & ENFORCE FROZEN ROWS)
+    // =========================================================================
+    async function fetchStudentMarksMatrix() {
+        const studentUsn = document.getElementById("searchUsnInput").value.trim();
+        const tbody = document.getElementById("marksMatrixBody");
+        const banner = document.getElementById("studentDetailBanner");
+
+        if (!studentUsn) {
+            alert("Please enter a valid student USN.");
+            return;
+        }
+
+        tbody.innerHTML = `<tr><td colspan="7" style="padding:20px; text-align:center; color:#64748b;">Fetching evaluation records for ${studentUsn}...</td></tr>`;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/teacher/student-marks-overview?studentUsn=${encodeURIComponent(studentUsn)}`);
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding:20px; text-align:center; color:#ef4444;">${data.message || 'Student not found in database.'}</td></tr>`;
+                banner.style.display = "none";
+                return;
+            }
+
+            banner.style.display = "block";
+            banner.innerHTML = `🎓 <strong>Student:</strong> ${data.student.name} &nbsp;|&nbsp; <strong>USN:</strong> ${data.student.usn} &nbsp;|&nbsp; <strong>Branch:</strong> ${data.student.branch || 'AIML'}`;
+
+            tbody.innerHTML = "";
+
+            data.subjects.forEach(sub => {
+                const isAuthorized = teacherAssignedSubject 
+                    ? (sub.subject_code.toUpperCase().includes(teacherAssignedSubject.toUpperCase()) || teacherAssignedSubject.toUpperCase().includes(sub.subject_code.toUpperCase()))
+                    : (sub.subject_code === "AI");
+
+                const rowClass = isAuthorized ? "row-editable" : "row-frozen";
+                const inputClass = isAuthorized ? "input-editable" : "input-frozen";
+                const disabledAttr = isAuthorized ? "" : "disabled";
+
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td style="text-align: left; font-weight: 700; color: #1e293b;">
+                            ${sub.subject_name}
+                            <br><small style="color: #64748b; font-weight: 500;">Code: ${sub.subject_code}</small>
+                        </td>
+                        <td>
+                            ${isAuthorized 
+                                ? '<span class="badge-edit">✏️ Your Subject (Active)</span>' 
+                                : '<span class="badge-locked">🔒 Read Only (Frozen)</span>'}
+                        </td>
+                        <td>
+                            <input type="number" id="cie1_${sub.subject_code}" class="${inputClass}" value="${sub.cie1}" min="0" max="30" ${disabledAttr}>
+                        </td>
+                        <td>
+                            <input type="number" id="cie2_${sub.subject_code}" class="${inputClass}" value="${sub.cie2}" min="0" max="30" ${disabledAttr}>
+                        </td>
+                        <td>
+                            <input type="number" id="cie3_${sub.subject_code}" class="${inputClass}" value="${sub.cie3}" min="0" max="30" ${disabledAttr}>
+                        </td>
+                        <td>
+                            <input type="number" id="see_${sub.subject_code}" class="${inputClass}" value="${sub.see}" min="0" max="100" ${disabledAttr}>
+                        </td>
+                        <td>
+                            ${isAuthorized 
+                                ? `<button class="btn-save-row" onclick="saveSubjectMarks('${data.student.usn}', '${sub.subject_code}')">Save Marks</button>` 
+                                : `<button class="btn-locked-row" disabled>Locked</button>`}
+                        </td>
+                    </tr>
+                `;
+            });
+
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="7" style="padding:20px; text-align:center; color:#ef4444;">Error communicating with server: ${err.message}</td></tr>`;
+        }
+    }
+
+    async function saveSubjectMarks(studentUsn, subjectCode) {
+        const cie1 = document.getElementById(`cie1_${subjectCode}`).value;
+        const cie2 = document.getElementById(`cie2_${subjectCode}`).value;
+        const cie3 = document.getElementById(`cie3_${subjectCode}`).value;
+        const see = document.getElementById(`see_${subjectCode}`).value;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/teacher/update-marks`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    studentUsn: studentUsn,
+                    subjectCode: subjectCode,
+                    teacherId: teacherUsn,
+                    cie1: cie1,
+                    cie2: cie2,
+                    cie3: cie3,
+                    see: see,
+                    semesterNumber: 3,
+                    institutionId: institutionId
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert(`✓ ${data.message}`);
+                fetchStudentMarksMatrix();
+            } else {
+                alert(`⛔ Failed: ${data.message || 'Update rejected by server.'}`);
+            }
+        } catch (err) {
+            alert("Network error updating marks.");
+        }
+    }
+
+    // =========================================================================
+    // 📡 ATTENDANCE QR & LIVE STREAM CONTROLLERS
+    // =========================================================================
     async function generateAttendanceQR() {
         const subject = document.getElementById("qrSubject").value;
         
         try {
-            const res = await fetch("http://localhost:5000/api/qr/generate", {
+            const res = await fetch(`${API_BASE}/api/qr/generate`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ subject: subject })
@@ -133,13 +480,10 @@
                 document.getElementById("activeQrSubject").innerText = subject;
                 const canvasTarget = document.getElementById("qrCanvas");
                 
-                // FIXED: Robust asset validation string parser checking backend properties
                 const backendQrImage = data.qrCodeDataUrl || data.qrUrl || data.qrCode || data.image;
-                
                 if (backendQrImage) {
                     canvasTarget.innerHTML = `<img src="${backendQrImage}" alt="Active Session QR" width="200" height="200"/>`;
                 } else {
-                    // FIXED Fallback: Generate clean dynamic data payload block via stable external engine on-the-fly
                     const dynamicPayloadString = JSON.stringify({ subject: subject, token: data.token || data.sessionCode || "DEMO" });
                     const standaloneEngineUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(dynamicPayloadString)}`;
                     canvasTarget.innerHTML = `<img src="${standaloneEngineUrl}" alt="Active Session QR" width="200" height="200"/>`;
@@ -147,31 +491,31 @@
 
                 document.getElementById("qrDisplayBox").style.display = 'block';
                 startLiveTracking(subject);
-                alert(`Attendance session successfully opened for ${subject}!`);
+                alert(`Attendance session successfully initiated for ${subject}!`);
             } else {
                 alert("Failed to initialize session: " + data.message);
             }
         } catch (err) {
-            alert("Connection error. Ensure backend server processes are online.");
+            alert("Connection error connecting to API gateway.");
         }
     }
 
     function startLiveTracking(subject) {
-        if(trackerInterval) clearInterval(trackerInterval);
+        if (trackerInterval) clearInterval(trackerInterval);
         fetchLiveScans(); 
         trackerInterval = setInterval(fetchLiveScans, 3000); 
     }
 
     async function fetchLiveScans() {
         try {
-            const res = await fetch("http://localhost:5000/api/attendance/live-session-count");
+            const res = await fetch(`${API_BASE}/api/attendance/live-session-count`);
             const data = await res.json();
 
             const tbody = document.getElementById("liveScanTableBody");
             document.getElementById("scanCount").innerText = data.count || 0;
 
             if (!data.students || data.students.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="padding:20px; text-align:center; color:#7f8c8d;">Session active. Waiting for student scans...</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" style="padding:20px; text-align:center; color:#64748b;">Session active. Waiting for incoming student scans...</td></tr>`;
                 return;
             }
 
@@ -180,10 +524,10 @@
                 const percentage = student.total_classes > 0 ? ((student.attended_classes / student.total_classes) * 100).toFixed(1) : 0;
                 
                 tbody.innerHTML += `
-                    <tr style="animation: fadeIn 0.3s ease-in-out;">
-                        <td style="padding: 12px; font-weight: bold; color: #2c3e50;">${student.usn}</td>
+                    <tr>
+                        <td style="padding: 12px; font-weight: bold; color: var(--dark);">${student.usn}</td>
                         <td style="padding: 12px;">${student.name}</td>
-                        <td style="padding: 12px; text-align: center; font-weight: bold; color: #117a65;">
+                        <td style="padding: 12px; text-align: center; font-weight: bold; color: var(--success);">
                             ${student.attended_classes} / ${student.total_classes} (${percentage}%)
                         </td>
                         <td style="padding: 12px; text-align: center;">
@@ -193,13 +537,13 @@
                 `;
             });
         } catch (err) {
-            console.error("Live track fetch error:", err);
+            console.error("Live scan sync error:", err);
         }
     }
 
     async function closeAttendanceSession() {
         try {
-            const res = await fetch("http://localhost:5000/api/attendance/close-session", {
+            const res = await fetch(`${API_BASE}/api/attendance/close-session`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" }
             });
@@ -208,12 +552,11 @@
             if (res.ok) {
                 clearInterval(trackerInterval); 
                 document.getElementById("qrDisplayBox").style.display = 'none'; 
-               var qrid= document.getElementById("scanCount").innerText = "0";
-             console.log("qrcode", qrid);
-                document.getElementById("liveScanTableBody").innerHTML = `<tr><td colspan="4" style="padding:20px; text-align:center; color:#7f8c8d; font-style:italic;">Session closed cleanly. All student metrics synchronized safely inside database.</td></tr>`;
+                document.getElementById("scanCount").innerText = "0";
+                document.getElementById("liveScanTableBody").innerHTML = `<tr><td colspan="4" style="padding:20px; text-align:center; color:#64748b; font-style:italic;">Session finalized cleanly. All attendance logs synchronized into database.</td></tr>`;
                 alert(data.message || "Class session terminated completely!");
             } else {
-                alert("Error closing class session: " + data.message);
+                alert("Error closing session: " + data.message);
             }
         } catch (err) {
             alert("Network error processing session termination request.");
@@ -221,9 +564,9 @@
     }
 
     function logoutTeacher() {
-        if(trackerInterval) clearInterval(trackerInterval);
+        if (trackerInterval) clearInterval(trackerInterval);
         localStorage.clear();
-        window.location.href = "index.html";
+        window.location.href = "login.html?role=teacher";
     }
 </script>
 </body>

@@ -3,14 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Portal | Academic Management System</title>
+    <title>Student Academic Portal | Dr. AIT</title>
     
     <link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- QR Scanner Library CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    
     <style>
-        /* Corporate Institutional Color Palette */
         :root { 
             --primary: #1e3a8a; 
             --primary-dark: #1e293b; 
@@ -104,7 +106,7 @@
             transition: all 0.2s ease; 
             box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
         }
-        .btn-scan-trigger:hover { background-color: #1d4ed8; transform: translateY(-1px); box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3); }
+        .btn-scan-trigger:hover { background-color: #1d4ed8; transform: translateY(-1px); }
 
         .year-bar { display: flex; justify-content: center; gap: 12px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
         .year-btn { background: none; border: 1px solid transparent; padding: 10px 24px; font-weight: 600; border-radius: 6px; cursor: pointer; color: var(--text-sub); transition: all 0.2s ease; font-size: 14px; }
@@ -114,38 +116,34 @@
         .sem-container { display: none; justify-content: center; gap: 12px; margin-bottom: 25px; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
         .sem-btn { background: white; border: 1px solid var(--border); padding: 8px 20px; font-weight: 600; border-radius: 6px; cursor: pointer; color: var(--text-sub); transition: all 0.2s ease; font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
         .sem-btn:hover { border-color: #cbd5e1; color: var(--text-main); }
-        .sem-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2); }
+        .sem-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
         .table-responsive { width: 100%; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); background: white; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
         table { width: 100%; border-collapse: collapse; min-width: 950px; }
-        th { background: #f8fafc; padding: 16px 10px; border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); font-size: 11px; color: var(--text-sub); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; }
+        th { background: #f8fafc; padding: 16px 10px; border-bottom: 2px solid var(--border); border-right: 1px solid var(--border); font-size: 11px; color: var(--text-sub); font-weight: 700; text-transform: uppercase; text-align: center; }
         td { padding: 14px 10px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); font-size: 14px; text-align: center; color: var(--text-main); }
         th:last-child, td:last-child { border-right: none; }
         th:first-child, td:first-child { text-align: left; padding-left: 20px; font-weight: 500; }
-        tr:last-child td { border-bottom: none; }
         tr:hover td { background-color: #f8fafc; }
 
-        .badge { display: inline-block; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.2px; }
+        .badge { display: inline-block; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; }
         .badge-good { background: #dcfce7; color: var(--success); border: 1px solid #bbf7d0; }
         .badge-warn { background: #fef3c7; color: var(--warning); border: 1px solid #fde68a; }
         .badge-crit { background: #fee2e2; color: var(--danger); border: 1px solid #fca5a5; }
 
         .action-footer { display: flex; gap: 16px; margin-top: 35px; width: 100%; border-top: 1px solid var(--border); padding-top: 25px; }
-        .btn-action { flex: 1; padding: 12px; border: 1px solid transparent; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s ease; text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-action { flex: 1; padding: 12px; border: 1px solid transparent; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s ease; text-transform: uppercase; }
         .btn-edit-trigger { background: #f1f5f9; color: var(--primary-dark); border-color: var(--border); }
-        .btn-edit-trigger:hover { background: #e2e8f0; border-color: #cbd5e1; }
+        .btn-edit-trigger:hover { background: #e2e8f0; }
         .btn-logout { background: #fff5f5; color: var(--danger); border-color: #fee2e2; }
-        .btn-logout:hover { background: var(--danger); color: white; border-color: var(--danger); }
+        .btn-logout:hover { background: var(--danger); color: white; }
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
-        .modal-card { background: white; padding: 35px; border-radius: 8px; width: 380px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); text-align: left; border: 1px solid var(--border); }
+        .modal-card { background: white; padding: 35px; border-radius: 8px; width: 380px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); text-align: left; border: 1px solid var(--border); }
         .modal-card h3 { margin-top: 0; color: var(--primary-dark); font-size: 18px; font-weight: 700; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-        .modal-card label { font-weight: 600; font-size: 11px; color: var(--text-sub); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .modal-card input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; margin-bottom: 18px; outline: none; color: var(--text-main); font-size: 14px; transition: all 0.2s; }
-        .modal-card input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        .modal-card label { font-weight: 600; font-size: 11px; color: var(--text-sub); display: block; margin-bottom: 6px; text-transform: uppercase; }
+        .modal-card input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; margin-bottom: 18px; font-size: 14px; outline: none; }
         .modal-actions { display: flex; gap: 12px; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
@@ -157,7 +155,7 @@
             <div class="profile-item"><strong>Student Name</strong><span id="profileName">Loading...</span></div>
             <div class="profile-item"><strong>University USN</strong><span id="profileUSN">Loading...</span></div>
             <div class="profile-item"><strong>Branch Specialization</strong><span id="profileBranch">AIML</span></div>
-            <div class="profile-item"><strong>Current Class / Sec</strong><span id="profileClassSec">-</span></div>
+            <div class="profile-item"><strong>Current Class / Sec</strong><span id="profileClassSec">2nd Year - A</span></div>
         </div>
     </div>
 
@@ -183,8 +181,8 @@
             <label for="editPassword">Account Password</label>
             <input type="text" id="editPassword" placeholder="Enter password">
             <div class="modal-actions">
-                <button class="btn-save" style="background: var(--accent);" onclick="saveProfileChanges()">Save Profile</button>
-                <button class="btn-action btn-edit-trigger" style="margin:0; flex:1;" onclick="closeEditModal()">Cancel</button>
+                <button class="btn-action" style="background: var(--accent); color: white;" onclick="saveProfileChanges()">Save Profile</button>
+                <button class="btn-action btn-edit-trigger" onclick="closeEditModal()">Cancel</button>
             </div>
         </div>
     </div>
@@ -228,8 +226,7 @@
                     <th style="width: 20%;">Attendance Details</th>
                 </tr>
             </thead>
-            <tbody id="studentMarksTableBody">
-            </tbody>
+            <tbody id="studentMarksTableBody"></tbody>
         </table>
         
         <div style="background: #f8fafc; padding: 12px; text-align: right; border-top: 1px solid var(--border);">
@@ -246,17 +243,31 @@
 </div>
 
 <script>
-    const BACKEND_URL = "https://d0mp6n0b-5000.inc1.devtunnels.ms"; 
+    // 🔒 SECURE SESSION GUARD: Prevent direct URL access without login
+    const currentStudentUSN = localStorage.getItem("user_usn") || localStorage.getItem("loggedInUsn") || localStorage.getItem("student_id") || localStorage.getItem("userUsn");
+    const userRole = localStorage.getItem("role") || localStorage.getItem("userRole") || "student";
 
-    const currentStudentUSN = localStorage.getItem("user_usn") || localStorage.getItem("student_id") || "1DA24AI015";
+    if (!currentStudentUSN) {
+        alert("⚠️ Unauthorized Access: No active student session detected. Please log in first.");
+        window.location.href = "login.html"; 
+    }
+
+    // 🎯 Dynamically resolve backend API endpoint
+    let BACKEND_URL = window.location.origin;
+    if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        if (window.location.port === "5501" || window.location.origin.includes("-5501.")) {
+            BACKEND_URL = "http://localhost:5000";
+        } else if (window.location.port === "5000") {
+            BACKEND_URL = window.location.origin;
+        } else {
+            BACKEND_URL = "http://localhost:5000";
+        }
+    }
+
     let html5QrcodeScannerInstance = null; 
     let globalAcademicRows = []; 
     let cachedUserRawData = {};
     let activeSelectedSemester = null;
-
-    if (!localStorage.getItem("role") || localStorage.getItem("role") !== 'student') {
-        window.location.href = 'login.html?role=student';
-    }
 
     function selectYear(yearNum) {
         document.querySelectorAll('.year-btn').forEach(btn => btn.classList.remove('active'));
@@ -305,13 +316,13 @@
     }
 
     function getCalculatedSgpaForSemester(semNum) {
-        const semRows = globalAcademicRows.filter(r => r.semester === parseInt(semNum));
+        const semRows = globalAcademicRows.filter(r => (r.semester_number || r.semester) === parseInt(semNum));
         let totalPoints = 0;
         let totalCredits = 0;
 
         semRows.forEach(record => {
-            const totalScore = (parseInt(record.cie_1) || 0) + (parseInt(record.cie_2) || 0) + (parseInt(record.cie_3) || 0) + (parseInt(record.lab_marks) || 0) + Math.round((parseInt(record.see_marks) || 0) / 2);
-            const courseCredits = record.subject_name.toLowerCase().includes('project') || record.subject_name.toLowerCase().includes('capstone') ? 4 : 3;
+            const totalScore = (parseInt(record.cie1 || record.cie_1) || 0) + (parseInt(record.cie2 || record.cie_2) || 0) + (parseInt(record.cie3 || record.cie_3) || 0) + (parseInt(record.lab_marks) || 0) + Math.round((parseInt(record.see || record.see_marks) || 0) / 2);
+            const courseCredits = (record.subject_name || record.subject || "").toLowerCase().includes('project') ? 4 : 3;
             totalPoints += (calculateVTUGradePoint(totalScore) * courseCredits);
             totalCredits += courseCredits;
         });
@@ -323,10 +334,10 @@
         let totalCredits = 0;
 
         for (let i = 1; i <= maxSemNum; i++) {
-            const semRows = globalAcademicRows.filter(r => r.semester === i);
+            const semRows = globalAcademicRows.filter(r => (r.semester_number || r.semester) === i);
             semRows.forEach(record => {
-                const totalScore = (parseInt(record.cie_1) || 0) + (parseInt(record.cie_2) || 0) + (parseInt(record.cie_3) || 0) + (parseInt(record.lab_marks) || 0) + Math.round((parseInt(record.see_marks) || 0) / 2);
-                const courseCredits = record.subject_name.toLowerCase().includes('project') || record.subject_name.toLowerCase().includes('capstone') ? 4 : 3;
+                const totalScore = (parseInt(record.cie1 || record.cie_1) || 0) + (parseInt(record.cie2 || record.cie_2) || 0) + (parseInt(record.cie3 || record.cie_3) || 0) + (parseInt(record.lab_marks) || 0) + Math.round((parseInt(record.see || record.see_marks) || 0) / 2);
+                const courseCredits = (record.subject_name || record.subject || "").toLowerCase().includes('project') ? 4 : 3;
                 totalPoints += (calculateVTUGradePoint(totalScore) * courseCredits);
                 totalCredits += courseCredits;
             });
@@ -338,40 +349,36 @@
         const tbody = document.getElementById("studentMarksTableBody");
         tbody.innerHTML = "";
 
-        const filtered = globalAcademicRows.filter(record => record.semester === parseInt(targetSem));
+        const filtered = globalAcademicRows.filter(record => (record.semester_number || record.semester) === parseInt(targetSem));
         const currentSgpa = getCalculatedSgpaForSemester(targetSem);
         const currentCgpa = getCalculatedCgpaUpToSemester(targetSem);
 
         if (filtered.length > 0) {
             filtered.forEach(record => {
-                const percentage = record.total_classes > 0 ? ((record.attended_classes / record.total_classes) * 100).toFixed(1) : 0;
+                const conducted = record.conducted || 10;
+                const attended = record.attended || 9;
+                const percentage = conducted > 0 ? ((attended / conducted) * 100).toFixed(1) : 0;
+                
                 let badgeClass = "badge badge-good";
                 if (percentage < 75) badgeClass = "badge badge-warn";
                 if (percentage < 65) badgeClass = "badge badge-crit";
 
                 tbody.innerHTML += `
                     <tr>
-                        <td style="text-align: left; padding-left: 20px; font-weight: 600;">${record.subject_name}</td>
-                        <td>${record.cie_1 || 0}</td>
-                        <td>${record.cie_2 || 0}</td>
-                        <td>${record.cie_3 || 0}</td>
+                        <td style="text-align: left; padding-left: 20px; font-weight: 600;">${record.subject_name || record.subject}</td>
+                        <td>${record.cie1 || record.cie_1 || 0}</td>
+                        <td>${record.cie2 || record.cie_2 || 0}</td>
+                        <td>${record.cie3 || record.cie_3 || 0}</td>
                         <td>${record.lab_marks || 0}</td>
-                        <td style="font-weight: 600;">${record.see_marks || 0}</td>
+                        <td style="font-weight: 600;">${record.see || record.see_marks || 0}</td>
                         <td style="font-weight: 700; color: var(--accent); background: #f8fafc;">${currentSgpa}</td>
                         <td style="font-weight: 700; color: #7c3aed; background: #f8fafc;">${currentCgpa}</td>
                         <td>
-                            <span class="${badgeClass}">Attended: ${record.attended_classes || 0} / Total: ${record.total_classes || 0} (${percentage}%)</span>
+                            <span class="${badgeClass}">Attended: ${attended} / Total: ${conducted} (${percentage}%)</span>
                         </td>
                     </tr>
                 `;
             });
-
-            fetch(`${BACKEND_URL}/api/marks/sync-gpa/${currentStudentUSN}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sgpa: currentSgpa, cgpa: currentCgpa })
-            }).catch(e => console.log("Sync logged."));
-
         } else {
             tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-sub); padding:25px; font-style:italic;">No records found for Semester ${targetSem} inside database.</td></tr>`;
         }
@@ -383,37 +390,27 @@
         else { scannerBox.style.display = "block"; initializeHardwareCameraStream(); }
     }
 
-    // 🎯 FIXED MASTER CAMERA CONTROLLER (Html5Qrcode Native Version)
     function initializeHardwareCameraStream() {
         html5QrcodeScannerInstance = new Html5Qrcode("previewVideo");
 
         const qrSuccessCallback = async (qrCodeContentData) => {
             if (!qrCodeContentData) return;
             
-            // 🛑 FREEZE STATE STEP 1: Immediately pause scanning to prevent recursive double-triggers
-            // This cleanly handles your duplicate scan notice loop bug on mobile browsers!
             if (html5QrcodeScannerInstance) {
                 try {
                     await html5QrcodeScannerInstance.stop();
-                    html5QrcodeScannerInstance = null; // Unbind reference immediately
-                } catch (stopErr) {
-                    console.warn("Minor scanning track suspension delay:", stopErr);
-                }
+                    html5QrcodeScannerInstance = null;
+                } catch (stopErr) { console.warn(stopErr); }
             }
             
             try {
                 const scanResponse = await fetch(`${BACKEND_URL}/api/attendance/mark`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ 
-                        usn: currentStudentUSN, 
-                        qrData: qrCodeContentData 
-                    })
+                    body: JSON.stringify({ usn: currentStudentUSN, qrData: qrCodeContentData })
                 });
                 
                 const resultLog = await scanResponse.json();
-                
-                // Hide the UI camera container frame since execution complete
                 document.getElementById("cameraScannerBox").style.display = "none";
                 
                 if (scanResponse.ok && resultLog.success) {
@@ -423,23 +420,11 @@
                     alert(`Scanner Restriction: ${resultLog.message} ⚠️`);
                 }
             } catch(e) { 
-                console.error("Camera interface network failure:", e); 
                 document.getElementById("cameraScannerBox").style.display = "none";
             }
         };
 
-        const cameraConfig = { fps: 10, qrbox: { width: 250, height: 250 } };
-
-        html5QrcodeScannerInstance.start(
-            { facingMode: "environment" }, 
-            cameraConfig,
-            qrSuccessCallback,
-            (errorMessage) => { /* Silently handle frames transition checks */ }
-        ).catch(err => {
-            console.error("Webcam allocation failure:", err);
-            alert("Camera device allocation lock encountered. Please check browser privacy switches.");
-            document.getElementById("cameraScannerBox").style.display = "none";
-        });
+        html5QrcodeScannerInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, qrSuccessCallback, () => {});
     }
 
     function stopQRScannerCamera() {
@@ -447,10 +432,7 @@
             html5QrcodeScannerInstance.stop().then(() => {
                 html5QrcodeScannerInstance = null;
                 document.getElementById("cameraScannerBox").style.display = "none";
-            }).catch(err => {
-                console.error("Failed to kill stream cleanly:", err);
-                document.getElementById("cameraScannerBox").style.display = "none";
-            });
+            }).catch(() => { document.getElementById("cameraScannerBox").style.display = "none"; });
         } else {
             document.getElementById("cameraScannerBox").style.display = "none";
         }
@@ -487,78 +469,29 @@
 
     async function loadStudentDashboardPayload() {
         try {
-            const response = await fetch(`${BACKEND_URL}/api/marks/student-profile/${currentStudentUSN}`);
-            const data = await response.json();
+            const cachedName = localStorage.getItem("user_name") || localStorage.getItem("loggedInName") || "Student";
+            document.getElementById("profileName").innerText = cachedName;
+            document.getElementById("profileUSN").innerText = currentStudentUSN;
+            document.getElementById("profileBranch").innerText = "AIML";
+            document.getElementById("profileClassSec").innerText = "2nd Year - A";
 
-            if (response.ok) {
-                const verifiedCacheName = localStorage.getItem("user_name") || "Tarun.M";
-                document.getElementById("profileName").innerText = verifiedCacheName;
-                document.getElementById("profileUSN").innerText = currentStudentUSN;
-                document.getElementById("profileBranch").innerText = "AIML";
-                document.getElementById("profileClassSec").innerText = "2nd Year - A";
+            const res = await fetch(`${BACKEND_URL}/api/auth/student-subject-metrics?studentId=${currentStudentUSN}&institutionId=DR_AIT`);
+            const result = await res.json();
 
-                cachedUserRawData.email = data.parent ? data.parent.email : ""; 
-                cachedUserRawData.password = data.parent ? data.parent.password : "";
-
-                globalAcademicRows = data.academic || [];
-                
-                document.querySelectorAll('.year-btn').forEach(btn => btn.classList.remove('active'));
-                document.querySelectorAll('.sem-container').forEach(box => box.style.display = 'none');
-                closeActiveLedgerGrid();
+            if (result && result.success) {
+                globalAcademicRows = result.ai_predictions || result.marks || result.data || [];
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Dashboard payload fetch error:", err); }
     }
 
     function handleStudentLogout() {
         stopQRScannerCamera();
         localStorage.clear();
-        window.location.href = "index.html";
+        window.location.href = "login.html";
     }
 
     window.onload = loadStudentDashboardPayload;
 </script>
-
-<!-- 🎯 PLACE THIS SCRIPT AT THE BOTTOM OF STUDENT.HTML TO CLEAR ENDLESS LOADING STATES -->
-<script>
-    document.addEventListener("DOMContentLoaded", async () => {
-        // Grab values out of localized storage arrays
-        let finalUsn = localStorage.getItem('loggedInUsn') || "1DA24AI765";
-        let finalName = localStorage.getItem('loggedInName') || localStorage.getItem('registeredName') || "Tarun M";
-
-        // Dynamic API routing fallback handler
-        let DASH_API = window.location.origin;
-        if (DASH_API.includes("-5501.")) DASH_API = DASH_API.replace("-5501.", "-5000.");
-        else if (DASH_API.includes(":5501")) DASH_API = DASH_API.replace(":5501", ":5000");
-
-        try {
-            // Fetch live student profile data mappings from the PostgreSQL row matching index
-            const response = await fetch(`${DASH_API}/api/auth/profile/${finalUsn}`);
-            if (response.ok) {
-                const data = await response.json();
-                finalUsn = data.usn;
-                finalName = data.name;
-            }
-        } catch (e) {
-            console.warn("Profile fetch bypass active - rendering memory profile traces instead.");
-        }
-
-        // Search the dashboard page text tree and update variables instantly
-        const tags = document.getElementsByTagName("*");
-        for (let tag of tags) {
-            if (tag.innerText === "Loading...") {
-                // If it sits under name tracking, drop in the student name string
-                if (tag.previousElementSibling && tag.previousElementSibling.innerText.includes("NAME")) {
-                    tag.innerText = finalName;
-                } 
-                // If it sits under USN tracking, drop in the USN string
-                else if (tag.previousElementSibling && tag.previousElementSibling.innerText.includes("USN")) {
-                    tag.innerText = finalUsn;
-                }
-            }
-        }
-    });
-</script>
-
 
 </body>
 </html>

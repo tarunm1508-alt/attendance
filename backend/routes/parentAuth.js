@@ -3,20 +3,18 @@ const router = express.Router();
 const pool = require("../db");
 
 router.post("/login", async (req, res) => {
-    // 1. Check if your frontend is sending 'username' or 'usn'
-    // I am using 'username' here to match your previous parentAuth snippet
-    const { username, password } = req.body;
+    const { username, password, student_usn } = req.body;
 
     try {
-        console.log("Login attempt for:", username);
+        console.log("Login attempt for parent:", username);
 
-        // 2. Query the 'users' table exactly as it appears in your pgAdmin
+        // Query the 'users' table for the parent account
         const result = await pool.query(
-            "SELECT * FROM users WHERE usn = $1 AND role = 'parent'",
+            "SELECT * FROM users WHERE UPPER(usn) = UPPER($1) AND LOWER(TRIM(role)) = 'parent'",
             [username]
         );
 
-        // 3. If no user found
+        // If no user found
         if (result.rows.length === 0) {
             console.log("Parent not found in database");
             return res.status(401).json({ success: false, message: "Invalid Parent Credentials" });
@@ -24,18 +22,29 @@ router.post("/login", async (req, res) => {
 
         const parent = result.rows[0];
 
-        // 4. Match password
+        // Match password
         if (parent.password !== password) {
             console.log("Password mismatch for parent");
             return res.status(401).json({ success: false, message: "Invalid Parent Credentials" });
         }
 
-        // 5. Success - Send back the data including the child link
+        // Validate that the student USN entered on the screen matches the linked ward
+        if (student_usn && parent.child_usn) {
+            if (parent.child_usn.trim().toUpperCase() !== student_usn.trim().toUpperCase()) {
+                console.log("Student USN mismatch for parent");
+                return res.status(401).json({ 
+                    success: false, 
+                    message: "⚠️ Incorrect student USN. This USN does not match your registered ward." 
+                });
+            }
+        }
+
+        // Success - Send back the data including the child link
         console.log("Login successful for:", parent.name);
         res.json({
             success: true,
             user_name: parent.name,
-            student_id: parent.child_usn // Ensure you ran the ALTER TABLE command in pgAdmin
+            student_id: parent.child_usn 
         });
 
     } catch (err) {
@@ -44,5 +53,4 @@ router.post("/login", async (req, res) => {
     }
 });
 
-module.exports = router;
 module.exports = router;

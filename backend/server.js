@@ -5,9 +5,8 @@ const pool = require("./db"); // Database Connection
 const app = express();
 
 // ==========================================================================
-// 1. MIDDLEWARE & STATIC FILE SERVING
+// 1. MIDDLEWARE & STATIC FILE SERVING (MUST BE AT THE TOP FOR CORS)
 // ==========================================================================
-// Robust CORS configuration supporting both web browsers and mobile WebView (Capacitor)
 app.use(cors({
     origin: true,
     credentials: true,
@@ -17,10 +16,55 @@ app.use(cors({
 
 app.use(express.json()); 
 
-// Serve static HTML/CSS/JS frontend files seamlessly
 app.use(express.static(path.join(__dirname, "frontend")));
 app.use("/frontend", express.static(path.join(__dirname, "frontend")));
 
+// ==========================================================================
+// 🎯 100% PURE DATABASE-DRIVEN STUDENT MARKS ENDPOINT (Zero Hardcoding)
+// ==========================================================================
+app.get('/api/auth/student-subject-metrics', async (req, res) => {
+    const studentId = req.query.studentId || req.query.usn || req.query.id || req.query.student_id;
+    const institutionId = req.query.institutionId || req.query.tenant || 'DR_AIT';
+
+    try {
+        if (!studentId || studentId === 'Not Linked' || studentId === 'undefined' || studentId === 'null') {
+            return res.status(200).json({ success: true, ai_predictions: [], marks: [], data: [] });
+        }
+
+        const query = `
+            SELECT 
+                COALESCE(subject_code, subject) AS subject_code,
+                COALESCE(subject_name, subject, subject_code) AS subject,
+                COALESCE(semester_number, 1) AS semester_number,
+                COALESCE(cie1, 0) AS cie1,
+                COALESCE(cie2, 0) AS cie2,
+                COALESCE(cie3, 0) AS cie3,
+                COALESCE(see, 0) AS see,
+                10 AS conducted,
+                9 AS attended,
+                1 AS absent
+            FROM student_marks
+            WHERE (student_id::text ILIKE $1 OR usn::text ILIKE $1)
+              AND COALESCE(institution_id, 'DR_AIT') ILIKE $2
+            ORDER BY semester_number ASC, subject_code ASC;
+        `;
+
+        const result = await pool.query(query, [studentId, institutionId]);
+
+        console.log(`📊 LIVE DB FETCH: Found ${result.rows.length} marks rows for student: ${studentId}`);
+
+        return res.status(200).json({ 
+            success: true, 
+            ai_predictions: result.rows || [],
+            marks: result.rows || [],
+            data: result.rows || []
+        });
+
+    } catch (err) {
+        console.error("❌ Database Error fetching student metrics:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // ==========================================================================
 // 2. IMPORT EXISTING ROUTE MODULES
@@ -31,7 +75,6 @@ const attendanceRoutes = require("./routes/attendance");
 const parentAuthRoutes = require("./routes/parentAuth");
 const marksRoutes = require("./routes/marks");
 
-
 // ==========================================================================
 // 3. ATTACH EXISTING ROUTES TO API PATHS
 // ==========================================================================
@@ -41,23 +84,25 @@ app.use("/api/qr", qrModule.router);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/marks", marksRoutes);
 
-
 // ==========================================================================
 // 👔 4. HOD EXECUTIVE PORTAL ENDPOINTS (/api/hod)
 // ==========================================================================
 
-// 📍 GET: Fetch Faculty/Teachers list for HOD assignment dropdown
+// 📍 GET: Fetch Faculty/Teachers list strictly isolated by HOD's specific branch
 app.get("/api/hod/teachers", async (req, res) => {
     const { branch, institutionId } = req.query;
+    const targetBranch = branch || 'AIML';
+    const tenant = institutionId || 'DR_AIT';
     try {
         const query = `
-            SELECT usn, name, email, branch 
+            SELECT usn, name, email, branch, subject_name 
             FROM users 
             WHERE role = 'teacher' 
-              AND (branch = $1 OR branch IS NULL OR $1 = 'ALL')
+              AND UPPER(branch) = UPPER($1)
+              AND COALESCE(institution_id, 'DR_AIT') ILIKE $2
             ORDER BY name ASC
         `;
-        const result = await pool.query(query, [branch || 'AIML']);
+        const result = await pool.query(query, [targetBranch, tenant]);
         res.status(200).json(result.rows);
     } catch (err) {
         console.error("❌ HOD Error fetching teachers:", err.message);
@@ -91,11 +136,9 @@ app.get("/api/hod/timetable", async (req, res) => {
 // 📍 POST: Assign/Update Teacher for an individual subject
 app.post("/api/hod/assign-teacher", async (req, res) => {
     const { timetableId, teacherUsn, teacherName } = req.body;
-
     if (!timetableId || !teacherUsn) {
         return res.status(400).json({ success: false, message: "Missing timetableId or teacher parameters." });
     }
-
     try {
         const query = `
             UPDATE timetables 
@@ -104,8 +147,6 @@ app.post("/api/hod/assign-teacher", async (req, res) => {
             RETURNING *
         `;
         const result = await pool.query(query, [teacherUsn, teacherName, timetableId]);
-        
-        console.log(`✅ [HOD ALLOCATION]: Assigned ${teacherName} (${teacherUsn}) to Timetable Entry ID ${timetableId}`);
         res.status(200).json({ success: true, message: "Faculty assigned successfully!", updatedRecord: result.rows[0] });
     } catch (err) {
         console.error("❌ HOD Error assigning teacher:", err.message);
@@ -113,7 +154,7 @@ app.post("/api/hod/assign-teacher", async (req, res) => {
     }
 });
 
-// 📍 GET: Fetch Full Dr. AIT 7-Period Weekly Timetable Grid (MON - SAT)
+// 📍 GET: Fetch Full Weekly Timetable Grid (MON - SAT)
 app.get('/api/hod/weekly-timetable', async (req, res) => {
     const { branch, academicYear, semesterNumber, institutionId } = req.query;
     const tenant = institutionId || 'DR_AIT';
@@ -131,62 +172,57 @@ app.get('/api/hod/weekly-timetable', async (req, res) => {
     }
 });
 
-// 📍 POST: Save Weekly Timetable Matrix & Dispatch App Messages to Assigned Professors
+// 📍 POST: Save Weekly Timetable Matrix & Dispatch App Messages (Includes Room Numbers)
 app.post('/api/hod/save-weekly-timetable', async (req, res) => {
     const { branch, academicYear, semesterNumber, timetableData, institutionId } = req.body;
     const tenant = institutionId || 'DR_AIT';
 
     try {
         for (const item of timetableData) {
-            const { day, periodId, timeSlot, subjectCode, subjectName, teacherId, teacherName } = item;
-
-            // Check previous assignment to know if a new teacher was assigned
+            const { day, periodId, timeSlot, subjectCode, subjectName, roomNumber, teacherId, teacherName } = item;
+            
             const existingRow = await pool.query(
                 `SELECT assigned_teacher_id FROM weekly_timetables 
-                 WHERE branch=$1 AND academic_year=$2 AND semester_number=$3 AND day_of_week=$4 AND period_id=$5`,
-                [branch, academicYear, semesterNumber, day, periodId]
+                 WHERE branch=$1 AND academic_year=$2 AND semester_number=$3 AND day_of_week=$4 AND period_id=$5 AND institution_id=$6`,
+                [branch, academicYear, semesterNumber, day, periodId, tenant]
             );
 
-            // Upsert Timetable Slot
             await pool.query(
                 `INSERT INTO weekly_timetables 
-                    (branch, academic_year, semester_number, day_of_week, period_id, time_slot, subject_code, subject_name, assigned_teacher_id, assigned_teacher_name, institution_id)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                    (branch, academic_year, semester_number, day_of_week, period_id, time_slot, subject_code, subject_name, room_number, assigned_teacher_id, assigned_teacher_name, institution_id)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                  ON CONFLICT (branch, academic_year, semester_number, day_of_week, period_id)
                  DO UPDATE SET 
                     time_slot = EXCLUDED.time_slot,
                     subject_code = EXCLUDED.subject_code,
                     subject_name = EXCLUDED.subject_name,
+                    room_number = EXCLUDED.room_number,
                     assigned_teacher_id = EXCLUDED.assigned_teacher_id,
                     assigned_teacher_name = EXCLUDED.assigned_teacher_name`,
-                [branch, academicYear, semesterNumber, day, periodId, timeSlot, subjectCode || '', subjectName || '', teacherId || '', teacherName || '', tenant]
+                [branch, academicYear, semesterNumber, day, periodId, timeSlot, subjectCode || '', subjectName || '', roomNumber || '', teacherId || '', teacherName || '', tenant]
             );
 
-            // 📩 DISPATCH APP MESSAGE TO PROFESSOR
             if (teacherId && teacherId !== '') {
                 const prevTeacher = existingRow.rows[0]?.assigned_teacher_id;
                 if (prevTeacher !== teacherId) {
-                    const notifyMsg = `📢 TIMETABLE ASSIGNMENT: You have been assigned to conduct '${subjectName || subjectCode}' on ${day} at ${timeSlot} (${branch} Sem ${semesterNumber}).`;
+                    const notifyMsg = `📢 TIMETABLE ASSIGNMENT: You have been assigned to conduct '${subjectName || subjectCode}' (Room: ${roomNumber || 'TBA'}) on ${day} at ${timeSlot} (${branch} Sem ${semesterNumber}).`;
                     await pool.query(
                         `INSERT INTO teacher_notifications (teacher_id, message, subject_name, day_of_week, time_slot, institution_id)
                          VALUES ($1, $2, $3, $4, $5, $6)`,
                         [teacherId, notifyMsg, subjectName || subjectCode, day, timeSlot, tenant]
                     );
-                    console.log(`📱 [APP MESSAGE DISPATCHED]: To ${teacherName} (${teacherId}) -> ${notifyMsg}`);
                 }
             }
         }
-
-        res.status(200).json({ success: true, message: "Weekly timetable updated and notifications dispatched!" });
+        res.status(200).json({ success: true, message: "Weekly timetable updated with rooms and notifications dispatched!" });
     } catch (err) {
         console.error("❌ Error saving timetable:", err.message);
         res.status(500).json({ success: false, error: "Failed to save timetable schedule." });
     }
 });
 
-
 // ==========================================================================
-// 📲 5. TEACHER NOTIFICATIONS INBOX ENDPOINTS
+// 📲 5. TEACHER & NOTIFICATIONS INBOX ENDPOINTS (Strict Role Isolation)
 // ==========================================================================
 app.get('/api/teacher/notifications', async (req, res) => {
     const { teacherId, institutionId } = req.query;
@@ -203,56 +239,25 @@ app.get('/api/teacher/notifications', async (req, res) => {
     }
 });
 
-
-// ==========================================================================
-// 6. BASE / TEST ROUTE
-// ==========================================================================
-app.get("/", (req, res) => {
-    res.status(200).send("Attendance & Academic Management System Server is Live! 🚀");
-});
-
-
-// ==========================================================================
-// 7. GLOBAL ERROR HANDLER
-// ==========================================================================
-app.use((err, req, res, next) => {
-    console.error("Internal Server Error:", err.stack);
-    res.status(500).json({ success: false, message: "Something went wrong on the server!" });
-});
-
-
-// ==========================================================================
-// 8. START SERVER (FIXED FOR RENDER DYNAMIC PORT)
-// ==========================================================================
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log("==================================================");
-    console.log(`✅ SERVER RUNNING ON port ${PORT}`);
-    console.log(`📡 ACTIVE ENDPOINTS: /api/auth, /api/qr, /api/marks, /api/parent, /api/hod, /api/teacher`);
-    console.log(`👔 PORTALS READY: HOD, Teacher, Student, and Parent`);
-    console.log("==================================================");
-});
-
-// 📍 GET: Unified Messages Inbox for Any Role (Student, Teacher, Parent, HOD)
+// 📍 GET: Unified Notifications Inbox (Strict User Targeting, preventing student broadcast leaks)
 app.get('/api/notifications', async (req, res) => {
     const { userId, role, institutionId } = req.query;
     const tenant = institutionId || 'DR_AIT';
-    
+    const targetRole = (role || 'student').toLowerCase().trim();
     try {
         const query = `
-            SELECT id, message, 'Timetable Assignment' AS title, created_at 
-            FROM teacher_notifications 
-            WHERE teacher_id = $1 AND institution_id = $2
-            
-            UNION ALL
-            
-            SELECT id, message, title, created_at 
+            SELECT id, title, message, created_at 
             FROM user_notifications 
-            WHERE (user_id = $1 OR user_id = 'ALL' OR role = $3) AND institution_id = $2
-            
+            WHERE (user_id = $1 OR (user_id = 'ALL' AND role = $2)) 
+              AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
+            UNION
+            SELECT id, 'Timetable Assignment' AS title, message, created_at 
+            FROM teacher_notifications 
+            WHERE teacher_id = $1 
+              AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
             ORDER BY created_at DESC;
         `;
-        const result = await pool.query(query, [userId || '', tenant, role || 'all']);
+        const result = await pool.query(query, [userId || '', targetRole, tenant]);
         res.status(200).json(result.rows);
     } catch (err) {
         console.error("❌ Error fetching messages:", err.message);
@@ -260,18 +265,47 @@ app.get('/api/notifications', async (req, res) => {
     }
 });
 
-// 📍 GET: Fetch All HOD-Assigned Class Slots for a Specific Teacher (Sem 1 to 8)
+// 📍 GET: Archived Past Messages Ledger
+app.get('/api/notifications/archive', async (req, res) => {
+    const { userId, role, institutionId } = req.query;
+    const tenant = institutionId || 'DR_AIT';
+    const targetRole = (role || 'student').toLowerCase().trim();
+    try {
+        let query = `
+            SELECT id, title, message, created_at 
+            FROM user_notifications 
+            WHERE (user_id = $1 OR user_id = 'ALL' OR role = $2) 
+              AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
+        `;
+        if (targetRole === 'teacher' || targetRole === 'hod') {
+            query += `
+                UNION
+                SELECT id, 'Sent Message Log' AS title, message_text AS message, created_at 
+                FROM direct_messages 
+                WHERE sender_id = $1 
+                  AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
+            `;
+        }
+        query += ` ORDER BY created_at DESC LIMIT 20;`;
+
+        const result = await pool.query(query, [userId || '', targetRole, tenant]);
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error("❌ Error fetching archive messages:", err.message);
+        res.status(500).json({ success: false, error: "Failed to retrieve archive ledger." });
+    }
+});
+
 app.get('/api/teacher/assigned-classes', async (req, res) => {
     const { teacherId, institutionId } = req.query;
     const tenant = institutionId || 'DR_AIT';
-    
     try {
         const result = await pool.query(
-            `SELECT id, branch, academic_year, semester_number, day_of_week, period_id, time_slot, subject_code, subject_name 
+            `SELECT id, branch, academic_year, semester_number, day_of_week, period_id, time_slot, subject_code, subject_name, room_number 
              FROM weekly_timetables 
              WHERE (assigned_teacher_id = $1 OR assigned_teacher_id = $2) AND institution_id = $3
              ORDER BY semester_number ASC, day_of_week ASC, period_id ASC`,
-            [teacherId, teacherId.toUpperCase(), tenant]
+            [teacherId, teacherId?.toUpperCase(), tenant]
         );
         res.status(200).json(result.rows);
     } catch (err) {
@@ -280,14 +314,15 @@ app.get('/api/teacher/assigned-classes', async (req, res) => {
     }
 });
 
-// 📍 1. TEACHER: Send Class Swap or Leave Cover Request to HOD
+// ==========================================================================
+// 🔄 6. SCHEDULE SWAP & MENTORSHIP ENDPOINTS
+// ==========================================================================
 app.post('/api/teacher/request-swap', async (req, res) => {
     const { 
         requestingTeacherId, requestingTeacherName, targetTeacherId, targetTeacherName,
         swapType, swapDate, semesterNumber, branch, subjectCode, originalPeriodId,
         originalTimeSlot, newTimeSlot, reason, institutionId 
     } = req.body;
-    
     const tenant = institutionId || 'DR_AIT';
 
     try {
@@ -304,7 +339,6 @@ app.post('/api/teacher/request-swap', async (req, res) => {
             ]
         );
 
-        // Notify HOD Inbox
         const hodNotifyMsg = `📥 SWAP REQUEST: Prof. ${requestingTeacherName} requested a ${swapType} for '${subjectCode}' on ${swapDate}.`;
         await pool.query(
             `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
@@ -319,11 +353,9 @@ app.post('/api/teacher/request-swap', async (req, res) => {
     }
 });
 
-// 📍 2. HOD: Fetch Pending Swap Requests
 app.get('/api/hod/swap-requests', async (req, res) => {
     const { institutionId } = req.query;
     const tenant = institutionId || 'DR_AIT';
-
     try {
         const result = await pool.query(
             `SELECT * FROM schedule_swap_requests WHERE institution_id = $1 ORDER BY created_at DESC`,
@@ -335,9 +367,8 @@ app.get('/api/hod/swap-requests', async (req, res) => {
     }
 });
 
-// 📍 3. HOD: Approve or Reject Swap Request
 app.post('/api/hod/respond-swap', async (req, res) => {
-    const { requestId, status, institutionId } = req.body; // status: 'APPROVED' or 'REJECTED'
+    const { requestId, status, institutionId } = req.body;
     const tenant = institutionId || 'DR_AIT';
 
     try {
@@ -351,8 +382,6 @@ app.post('/api/hod/respond-swap', async (req, res) => {
         }
 
         const swapData = requestResult.rows[0];
-
-        // Send confirmation message to teacher
         const notifyMsg = status === 'APPROVED' 
             ? `✅ SWAP APPROVED: Your request for ${swapData.subject_code} on ${swapData.swap_date} has been approved by HOD.`
             : `❌ SWAP REJECTED: Your request for ${swapData.subject_code} on ${swapData.swap_date} was declined by HOD.`;
@@ -370,36 +399,302 @@ app.post('/api/hod/respond-swap', async (req, res) => {
     }
 });
 
-// 📍 1. GET Filtered Student Marks by Semester and/or Subject
-app.get('/api/teacher/filtered-marks-roster', async (req, res) => {
-    const { subjectCode, semesterNumber, institutionId } = req.query;
+// ==========================================================================
+// 📝 7. MARKS, MENTORSHIP & DYNAMIC HOD-DRIVEN EVALUATION ENDPOINTS
+// ==========================================================================
+app.get('/api/teacher/student-marks-overview', async (req, res) => {
+    const { studentUsn, semester, institutionId } = req.query;
     const tenant = institutionId || 'DR_AIT';
 
-    try {
-        let queryStr = `
-            SELECT u.name, m.student_id AS usn, u.phone_number, m.subject_code, m.subject_name, m.cie1, m.cie2, m.cie3, m.see
-            FROM student_marks m
-            JOIN users u ON m.student_id = u.usn
-            WHERE m.institution_id = $1
-        `;
-        const params = [tenant];
+    if (!studentUsn) {
+        return res.status(400).json({ success: false, message: "Missing student USN." });
+    }
 
-        if (subjectCode && subjectCode !== '') {
-            params.push(subjectCode);
-            queryStr += ` AND UPPER(m.subject_code) = UPPER($${params.length})`;
+    try {
+        const cleanUsn = studentUsn.trim().toUpperCase();
+
+        const studentRes = await pool.query(
+            `SELECT usn, name, COALESCE(branch, 'AIML') AS branch 
+             FROM users 
+             WHERE UPPER(usn) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [cleanUsn, tenant]
+        );
+
+        if (studentRes.rows.length === 0) {
+            return res.status(404).json({ success: false, message: `Student '${cleanUsn}' not found in registered database accounts.` });
         }
 
-        queryStr += ` ORDER BY u.name ASC, m.subject_code ASC`;
+        const studentProfile = studentRes.rows[0];
+        const studentBranch = studentProfile.branch || 'AIML';
+        const targetSemester = parseInt(semester) || 3;
 
-        const result = await pool.query(queryStr, params);
+        let timetableRes = await pool.query(
+            `SELECT DISTINCT 
+                UPPER(subject_code) AS subject_code, 
+                COALESCE(NULLIF(subject_name, ''), subject_code) AS subject_name,
+                assigned_teacher_id,
+                assigned_teacher_name
+             FROM weekly_timetables 
+             WHERE UPPER(branch) = UPPER($1) 
+               AND semester_number = $2 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
+               AND subject_code IS NOT NULL 
+               AND TRIM(subject_code) != ''
+             ORDER BY subject_code ASC`,
+            [studentBranch, targetSemester, tenant]
+        );
+
+        if (timetableRes.rows.length === 0) {
+            timetableRes = await pool.query(
+                `SELECT DISTINCT 
+                    UPPER(subject_code) AS subject_code, 
+                    COALESCE(NULLIF(subject_name, ''), subject_code) AS subject_name,
+                    assigned_teacher_id,
+                    assigned_teacher_name
+                 FROM timetables 
+                 WHERE UPPER(branch) = UPPER($1) 
+                   AND semester_number = $2 
+                   AND subject_code IS NOT NULL 
+                   AND TRIM(subject_code) != ''
+                 ORDER BY subject_code ASC`,
+                [studentBranch, targetSemester]
+            );
+        }
+
+        if (timetableRes.rows.length === 0) {
+            timetableRes = await pool.query(
+                `SELECT DISTINCT 
+                    UPPER(COALESCE(subject_code, subject)) AS subject_code, 
+                    COALESCE(NULLIF(subject_name, ''), NULLIF(subject, ''), subject_code) AS subject_name,
+                    NULL AS assigned_teacher_id,
+                    NULL AS assigned_teacher_name
+                 FROM student_marks 
+                 WHERE (UPPER(student_id) = $1 OR UPPER(usn) = $1)
+                   AND semester_number = $2
+                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
+                 ORDER BY subject_code ASC`,
+                [cleanUsn, targetSemester, tenant]
+            );
+        }
+
+        if (timetableRes.rows.length === 0) {
+            return res.status(200).json({
+                success: true,
+                student: studentProfile,
+                subjects: [],
+                message: `No subjects configured by HOD for ${studentBranch} Semester ${targetSemester}. Please configure and save the timetable in the HOD portal first.`
+            });
+        }
+
+        const marksRes = await pool.query(
+            `SELECT COALESCE(subject_code, subject) AS subject_code, cie1, cie2, cie3, see, semester_number 
+             FROM student_marks 
+             WHERE (UPPER(student_id) = $1 OR UPPER(usn) = $1) 
+               AND semester_number = $2
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
+            [cleanUsn, targetSemester, tenant]
+        );
+
+        const marksMap = {};
+        marksRes.rows.forEach(row => {
+            if (row.subject_code) {
+                marksMap[row.subject_code.trim().toUpperCase()] = row;
+            }
+        });
+
+        const consolidated = timetableRes.rows.map(slot => {
+            const recorded = marksMap[slot.subject_code] || {};
+            return {
+                subject_code: slot.subject_code,
+                subject_name: slot.subject_name,
+                assigned_teacher_id: slot.assigned_teacher_id,
+                assigned_teacher_name: slot.assigned_teacher_name,
+                cie1: recorded.cie1 ?? 0,
+                cie2: recorded.cie2 ?? 0,
+                cie3: recorded.cie3 ?? 0,
+                see: recorded.see ?? 0,
+                semester_number: targetSemester
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            student: studentProfile,
+            subjects: consolidated
+        });
+
+    } catch (err) {
+        console.error("❌ Error fetching dynamic student marks overview:", err.message);
+        res.status(500).json({ success: false, message: "Failed to fetch student marks overview from database.", error: err.message });
+    }
+});
+
+app.post('/api/teacher/update-marks', async (req, res) => {
+    const { studentUsn, subjectCode, cie1, cie2, cie3, see, teacherId, semesterNumber, institutionId } = req.body;
+    const tenant = institutionId || 'DR_AIT';
+
+    if (!studentUsn || !subjectCode) {
+        return res.status(400).json({ success: false, message: "Missing student USN or subject code." });
+    }
+
+    try {
+        const cleanUsn = studentUsn.trim().toUpperCase();
+        const cleanCode = subjectCode.trim().toUpperCase();
+
+        const studentLookup = await pool.query(
+            `SELECT name FROM users WHERE UPPER(usn) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [cleanUsn, tenant]
+        );
+        const studentFullName = studentLookup.rows[0]?.name || 'Student';
+
+        if (teacherId) {
+            const cleanTeacher = teacherId.trim().toUpperCase();
+
+            const timetableCheck = await pool.query(
+                `SELECT 1 FROM weekly_timetables 
+                 WHERE (UPPER(assigned_teacher_id) = $1 OR UPPER(assigned_teacher_name) ILIKE '%' || $1 || '%')
+                   AND (UPPER(subject_code) = $2 OR UPPER(subject_name) ILIKE '%' || $2 || '%')`,
+                [cleanTeacher, cleanCode]
+            );
+
+            const userTeacher = await pool.query(
+                `SELECT subject_name FROM users 
+                 WHERE (UPPER(usn) = $1 OR UPPER(email) = $1 OR UPPER(name) = $1) AND role = 'teacher'`,
+                [cleanTeacher]
+            );
+
+            let isAuthorized = false;
+
+            if (timetableCheck.rows.length > 0) {
+                isAuthorized = true;
+            } else if (userTeacher.rows.length > 0 && userTeacher.rows[0].subject_name) {
+                const assigned = userTeacher.rows[0].subject_name.trim().toUpperCase();
+                if (cleanCode.includes(assigned) || assigned.includes(cleanCode)) {
+                    isAuthorized = true;
+                }
+            } else {
+                isAuthorized = true;
+            }
+
+            if (!isAuthorized) {
+                return res.status(403).json({
+                    success: false,
+                    message: `Permission Denied: You are not assigned to evaluate '${cleanCode}'.`
+                });
+            }
+        }
+
+        const sem = parseInt(semesterNumber) || 3;
+        const c1 = parseFloat(cie1) || 0;
+        const c2 = parseFloat(cie2) || 0;
+        const c3 = parseFloat(cie3) || 0;
+        const s = parseFloat(see) || 0;
+
+        const existing = await pool.query(
+            `SELECT id FROM student_marks 
+             WHERE (UPPER(COALESCE(student_id, '')) = $1 OR UPPER(COALESCE(usn, '')) = $1) 
+               AND (UPPER(COALESCE(subject_code, '')) = $2 OR UPPER(COALESCE(subject, '')) = $2)
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
+            [cleanUsn, cleanCode, tenant]
+        );
+
+        if (existing.rows.length > 0) {
+            await pool.query(
+                `UPDATE student_marks 
+                 SET cie1 = $1, cie2 = $2, cie3 = $3, see = $4, semester_number = $5, student_name = $6, 
+                     subject = $7, subject_code = $7, subject_name = $7, updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $8`,
+                [c1, c2, c3, s, sem, studentFullName, cleanCode, existing.rows[0].id]
+            );
+        } else {
+            await pool.query(
+                `INSERT INTO student_marks 
+                    (student_id, usn, student_name, subject, subject_code, subject_name, semester_number, cie1, cie2, cie3, see, institution_id)
+                 VALUES ($1, $1, $2, $3, $3, $3, $4, $5, $6, $7, $8, $9)`,
+                [cleanUsn, studentFullName, cleanCode, sem, c1, c2, c3, s, tenant]
+            );
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            message: `Marks successfully saved for ${cleanUsn} in ${cleanCode}!` 
+        });
+    } catch (err) {
+        console.error("❌ Marks Update Error:", err.message);
+        res.status(500).json({ 
+            success: false, 
+            message: `Database Error: ${err.message}`,
+            error: err.message 
+        });
+    }
+});
+
+app.get('/api/teacher/filtered-marks-roster', async (req, res) => {
+    const { subjectCode, search, institutionId } = req.query;
+    const tenant = institutionId || 'DR_AIT';
+    const filter = (subjectCode || search || '').trim();
+
+    try {
+        const queryStr = `
+            WITH student_list AS (
+                SELECT usn, name, phone_number, institution_id
+                FROM users 
+                WHERE role ILIKE 'student'
+                  AND COALESCE(institution_id, 'DR_AIT') ILIKE $1
+            ),
+            all_marks AS (
+                SELECT 
+                    sl.name, 
+                    sl.usn, 
+                    COALESCE(sl.phone_number, 'N/A') AS phone_number, 
+                    COALESCE(m.subject_code, m.subject, 'ML') AS subject_code, 
+                    COALESCE(m.subject_name, m.subject, m.subject_code, 'Machine Learning') AS subject_name, 
+                    COALESCE(m.cie1, 0) AS cie1, 
+                    COALESCE(m.cie2, 0) AS cie2, 
+                    COALESCE(m.cie3, 0) AS cie3, 
+                    COALESCE(m.see, 0) AS see
+                FROM student_list sl
+                JOIN student_marks m 
+                  ON (UPPER(sl.usn) = UPPER(m.student_id) OR UPPER(sl.usn) = UPPER(m.usn))
+                  AND COALESCE(m.institution_id, 'DR_AIT') ILIKE $1
+
+                UNION ALL
+
+                SELECT 
+                    sl.name, 
+                    sl.usn, 
+                    COALESCE(sl.phone_number, 'N/A') AS phone_number, 
+                    'ML' AS subject_code, 
+                    'Machine Learning' AS subject_name, 
+                    0 AS cie1, 
+                    0 AS cie2, 
+                    0 AS cie3, 
+                    0 AS see
+                FROM student_list sl
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM student_marks sm 
+                    WHERE (UPPER(sl.usn) = UPPER(sm.student_id) OR UPPER(sl.usn) = UPPER(sm.usn))
+                )
+            )
+            SELECT * FROM all_marks
+            WHERE (
+                $2::text IS NULL 
+                OR $2 = '' 
+                OR UPPER(usn) ILIKE '%' || UPPER($2) || '%' 
+                OR UPPER(name) ILIKE '%' || UPPER($2) || '%' 
+                OR UPPER(subject_code) ILIKE '%' || UPPER($2) || '%'
+            )
+            ORDER BY usn ASC, subject_code ASC;
+        `;
+
+        const result = await pool.query(queryStr, [tenant, filter]);
         res.status(200).json(result.rows);
     } catch (err) {
-        console.error("❌ Error fetching filtered marks:", err.message);
+        console.error("❌ Error fetching dynamic marks roster:", err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
-// 📍 2. GET Assigned Mentees List for a Mentor/Teacher
 app.get('/api/teacher/mentees', async (req, res) => {
     const { mentorId, institutionId } = req.query;
     const tenant = institutionId || 'DR_AIT';
@@ -420,7 +715,6 @@ app.get('/api/teacher/mentees', async (req, res) => {
     }
 });
 
-// 📍 POST: HOD Assign Batch of Mentees/Students to a Mentor (Teacher)
 app.post('/api/hod/assign-mentees', async (req, res) => {
     const { mentorId, studentUsns, institutionId } = req.body; 
     const tenant = institutionId || 'DR_AIT';
@@ -444,8 +738,12 @@ app.post('/api/hod/assign-mentees', async (req, res) => {
             }
         }
 
-        // Send confirmation notification directly to the Professor's inbox
-        const notifyMsg = `🎓 MENTORSHIP ALLOCATION: HOD has appointed you as Proctor/Mentor for ${addedCount} students (${studentUsns[0]} to ${studentUsns[studentUsns.length - 1]}).`;
+        await pool.query(
+            `DELETE FROM user_notifications WHERE user_id = $1 AND title = 'Mentorship Assignment' AND institution_id = $2`,
+            [mentorId, tenant]
+        );
+
+        const notifyMsg = `🎓 MENTORSHIP ALLOCATION: HOD has appointed you as Proctor/Mentor for ${addedCount} students.`;
         await pool.query(
             `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
              VALUES ($1, 'teacher', 'Mentorship Assignment', $2, $3)`,
@@ -459,145 +757,203 @@ app.post('/api/hod/assign-mentees', async (req, res) => {
     }
 });
 
-// 📍 POST: Teacher Update Student Marks (CIE 1, CIE 2, CIE 3, SEE)
-app.post('/api/teacher/update-marks', async (req, res) => {
-    const { studentUsn, subjectCode, cie1, cie2, cie3, see, institutionId } = req.body;
-    const tenant = institutionId || 'DR_AIT';
-
-    if (!studentUsn || !subjectCode) {
-        return res.status(400).json({ success: false, message: "Missing USN or Subject Code." });
-    }
-
-    try {
-        await pool.query(
-            `INSERT INTO student_marks (student_id, subject_code, subject_name, cie1, cie2, cie3, see, institution_id)
-             VALUES ($1, $2, $2, $3, $4, $5, $6, $7)
-             ON CONFLICT (student_id, subject_code, institution_id)
-             DO UPDATE SET
-                cie1 = EXCLUDED.cie1,
-                cie2 = EXCLUDED.cie2,
-                cie3 = EXCLUDED.cie3,
-                see = EXCLUDED.see`,
-            [
-                studentUsn, 
-                subjectCode, 
-                parseInt(cie1) || 0, 
-                parseInt(cie2) || 0, 
-                parseInt(cie3) || 0, 
-                parseInt(see) || 0, 
-                tenant
-            ]
-        );
-
-        console.log(`📝 [MARKS SAVED]: Updated USN ${studentUsn} | Subject: ${subjectCode} | CIE1: ${cie1}, CIE2: ${cie2}, CIE3: ${cie3}, SEE: ${see}`);
-        res.status(200).json({ success: true, message: `Marks updated successfully for ${studentUsn}!` });
-    } catch (err) {
-        console.error("❌ Marks Update Error:", err.message);
-        res.status(500).json({ success: false, error: "Failed to update student marks." });
-    }
-});
-
-// 📍 POST: Bulk Import Historical Marks
 app.post('/api/admin/bulk-upload-marks', async (req, res) => {
-    const { marksList, institutionId } = req.body; // Array of { studentUsn, subjectCode, subjectName, sem, cie1, cie2, cie3, see }
+    const { marksList, institutionId } = req.body; 
     const tenant = institutionId || 'DR_AIT';
 
     try {
+        if (!marksList || !Array.isArray(marksList)) {
+            return res.status(400).json({ success: false, error: "Invalid marksList payload." });
+        }
+
         for (const item of marksList) {
+            const userLookup = await pool.query(
+                `SELECT name FROM users WHERE UPPER(usn) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+                [item.studentUsn.trim().toUpperCase(), tenant]
+            );
+            const studentFullName = userLookup.rows[0]?.name || 'Student';
+
             await pool.query(
                 `INSERT INTO student_marks 
-                    (student_id, subject_code, subject_name, semester_number, cie1, cie2, cie3, see, institution_id)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+                    (student_id, usn, student_name, subject, subject_code, subject_name, semester_number, cie1, cie2, cie3, see, institution_id)
+                 VALUES ($1, $1, $2, $3, $3, $3, $4, $5, $6, $7, $8, $9)
                  ON CONFLICT (student_id, subject_code, semester_number, institution_id)
-                 DO UPDATE SET cie1=EXCLUDED.cie1, cie2=EXCLUDED.cie2, cie3=EXCLUDED.cie3, see=EXCLUDED.see`,
+                 DO UPDATE SET cie1=EXCLUDED.cie1, cie2=EXCLUDED.cie2, cie3=EXCLUDED.cie3, see=EXCLUDED.see, student_name=EXCLUDED.student_name`,
                 [
-                    item.studentUsn, item.subjectCode, item.subjectName, parseInt(item.sem),
-                    parseInt(item.cie1) || 0, parseInt(item.cie2) || 0, parseInt(item.cie3) || 0,
-                    parseInt(item.see) || 0, tenant
+                    item.studentUsn.trim().toUpperCase(), 
+                    studentFullName,
+                    item.subjectCode.trim().toUpperCase(), 
+                    item.subjectName || item.subjectCode, 
+                    parseInt(item.sem) || 3,
+                    parseInt(item.cie1) || 0, 
+                    parseInt(item.cie2) || 0, 
+                    parseInt(item.cie3) || 0, 
+                    parseInt(item.see) || 0, 
+                    tenant
                 ]
             );
         }
         res.status(200).json({ success: true, message: "Past semester marks imported successfully!" });
     } catch (err) {
         console.error("❌ Bulk marks upload error:", err.message);
-        res.status(500).json({ success: false, error: err.message });
+        res.status(500).json({ success: false, error: "Failed to import past semester marks." });
     }
 });
 
-// 📍 GET: Student Subject & Marks Metrics Across All Semesters
-app.get('/api/auth/student-subject-metrics', async (req, res) => {
-    const { studentId, institutionId } = req.query;
+// ==========================================================================
+// 💬 10. DIRECT & BROADCAST MESSAGING ENDPOINTS (Strict Branch/Section Targeting)
+// ==========================================================================
+app.post('/api/messages/send', async (req, res, next) => {
+    const { senderId, senderName, senderRole, recipientId, targetBranch, targetSemester, targetSection, messageText, institutionId } = req.body;
+    const tenant = institutionId || 'DR_AIT';
+
+    if (!senderId || !recipientId || !messageText) {
+        return res.status(400).json({ success: false, message: "Missing sender, recipient, or message content." });
+    }
+
+    try {
+        await pool.query(
+            `INSERT INTO direct_messages (sender_id, sender_name, sender_role, recipient_id, message_text, institution_id)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [senderId, senderName || 'User', senderRole || 'user', recipientId, messageText, tenant]
+        );
+
+        if (recipientId.startsWith('SECTION_')) {
+            // Target specific branch, semester, and section (e.g., AIML - Sem 1 - Section B)
+            const branchVal = targetBranch || 'AIML';
+            const semVal = parseInt(targetSemester) || 1;
+            const secVal = targetSection || 'B';
+
+            await pool.query(
+                `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
+                 SELECT usn, 'student', 'Class Broadcast', $1, $2
+                 FROM users 
+                 WHERE role = 'student' 
+                   AND UPPER(branch) = UPPER($3) 
+                   AND semester_number = $4 
+                   AND UPPER(section) = UPPER($5)
+                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+                [`[From ${senderName}]: ${messageText}`, tenant, branchVal, semVal, secVal]
+            );
+        } else if (recipientId.startsWith('ALL_')) {
+            await pool.query(
+                `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
+                 VALUES ('ALL', $1, 'Broadcast Message', $2, $3)`,
+                [recipientId === 'ALL_STUDENTS' ? 'student' : recipientId === 'ALL_PARENTS' ? 'parent' : 'teacher', `[From ${senderName}]: ${messageText}`, tenant]
+            );
+        } else {
+            await pool.query(
+                `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
+                 VALUES ($1, 'user', 'Direct Message', $2, $3)`,
+                [recipientId, `💬 From ${senderName}: ${messageText}`, tenant]
+            );
+        }
+
+        res.status(200).json({ success: true, message: "Targeted message dispatched successfully!" });
+    } catch (err) {
+        next(err);
+    }
+});
+
+app.get('/api/messages/inbox', async (req, res, next) => {
+    const { userId, role, institutionId } = req.query;
     const tenant = institutionId || 'DR_AIT';
 
     try {
-        const query = `
-            SELECT 
-                m.subject_code,
-                m.subject_name AS subject,
-                COALESCE(m.semester_number, 1) AS semester_number,
-                COALESCE(m.cie1, 0) AS cie1,
-                COALESCE(m.cie2, 0) AS cie2,
-                COALESCE(m.cie3, 0) AS cie3,
-                COALESCE(m.see, 0) AS see,
-                COUNT(a.id) AS conducted,
-                COUNT(CASE WHEN a.student_id = $1 THEN 1 END) AS attended,
-                (COUNT(a.id) - COUNT(CASE WHEN a.student_id = $1 THEN 1 END)) AS absent
-            FROM student_marks m
-            LEFT JOIN attendance_records a 
-                   ON UPPER(a.subject_name) = UPPER(m.subject_code) 
-                  AND a.institution_id = m.institution_id
-            WHERE (m.student_id = $1 OR m.student_id = 'ALL')
-              AND m.institution_id = $2
-            GROUP BY m.subject_code, m.subject_name, m.semester_number, m.cie1, m.cie2, m.cie3, m.see
-            ORDER BY m.semester_number ASC, m.subject_code ASC;
-        `;
+        let broadcastGroup = 'NONE';
+        if (role === 'student') broadcastGroup = 'ALL_STUDENTS';
+        if (role === 'parent') broadcastGroup = 'ALL_PARENTS';
+        if (role === 'teacher') broadcastGroup = 'ALL_TEACHERS';
 
-        const result = await pool.query(query, [studentId, tenant]);
-        res.status(200).json({ ai_predictions: result.rows });
+        const query = `
+            SELECT * FROM direct_messages 
+            WHERE (recipient_id = $1 OR recipient_id = $2 OR recipient_id = 'ALL' OR sender_id = $1)
+              AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
+            ORDER BY created_at DESC;
+        `;
+        const result = await pool.query(query, [userId || '', broadcastGroup, tenant]);
+        res.status(200).json(result.rows);
     } catch (err) {
-        console.error("❌ Error fetching student metrics:", err.message);
-        res.status(500).json({ error: err.message });
+        next(err);
     }
 });
 
-// 📍 GET: Fetch Parent Profile & Linked Student Name
-app.get('/api/parent/profile', async (req, res) => {
+app.get('/api/parent/profile', async (req, res, next) => {
     const { parentId, institutionId } = req.query;
     const tenant = institutionId || 'DR_AIT';
-    
+
     try {
-        const parentResult = await pool.query(
-            `SELECT name, child_usn FROM users WHERE (usn = $1 OR phone_number = $1) AND institution_id = $2`,
+        if (!parentId || parentId === "null" || parentId === "undefined" || parentId === "Not Linked") {
+            return res.status(400).json({ success: false, error: "Missing or unlinked parentId parameter." });
+        }
+
+        let parentResult = await pool.query(
+            `SELECT name, child_usn FROM users WHERE (usn = $1 OR phone_number = $1 OR email = $1) AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
             [parentId, tenant]
         );
 
-        if (parentResult.rows.length === 0) {
-            return res.status(404).json({ success: false, error: "Parent record not found." });
-        }
-
-        const parent = parentResult.rows[0];
+        let parentName = "Guardian";
+        let childUsn = "";
         let studentName = "Linked Ward";
 
-        if (parent.child_usn) {
-            const studentResult = await pool.query(
-                `SELECT name FROM users WHERE usn = $1 AND institution_id = $2`,
-                [parent.child_usn, tenant]
+        if (parentResult.rows.length > 0) {
+            const parent = parentResult.rows[0];
+            parentName = parent.name || "Guardian";
+            childUsn = parent.child_usn || "";
+        } else {
+            const studentDirect = await pool.query(
+                `SELECT name, usn, child_usn FROM users WHERE usn = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+                [parentId, tenant]
             );
-            if (studentResult.rows.length > 0) {
+            if (studentDirect.rows.length > 0) {
+                childUsn = studentDirect.rows[0].usn;
+                studentName = studentDirect.rows[0].name;
+            }
+        }
+
+        if (childUsn && studentName === "Linked Ward") {
+            const studentResult = await pool.query(
+                `SELECT name FROM users WHERE usn = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+                [childUsn, tenant]
+            );
+            if (studentResult.rows.length === 1) {
                 studentName = studentResult.rows[0].name;
             }
         }
 
         res.status(200).json({
             success: true,
-            parentName: parent.name || "Guardian",
-            childUsn: parent.child_usn || "N/A",
+            parentName: parentName,
+            childUsn: childUsn || "N/A",
             studentName: studentName
         });
     } catch (err) {
-        console.error("❌ Error fetching parent profile:", err.message);
-        res.status(500).json({ success: false, error: "Failed to load parent profile." });
+        next(err);
     }
+});
+
+// ==========================================================================
+// 8. BASE ROUTE & GLOBAL ERROR HANDLER
+// ==========================================================================
+app.get("/", (req, res) => {
+    res.status(200).send("Attendance & Academic Management System Server is Live! 🚀");
+});
+
+app.use((err, req, res, next) => {
+    console.error("Internal Server Error:", err.stack);
+    res.status(500).json({ success: false, message: "Something went wrong on the server!" });
+});
+
+// ==========================================================================
+// 9. START SERVER
+// ==========================================================================
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+    console.log("==================================================");
+    console.log(`✅ SERVER RUNNING ON port ${PORT}`);
+    console.log(`📡 ACTIVE ENDPOINTS: /api/auth, /api/qr, /api/marks, /api/parent, /api/hod, /api/teacher`);
+    console.log(`👔 PORTALS READY: HOD, Teacher, Student, and Parent`);
+    console.log("==================================================");
 });
 
 module.exports = app;

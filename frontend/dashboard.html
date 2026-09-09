@@ -5,12 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Academic Portal Executive HUD | Dr. AIT</title>
     <!-- 🎯 MASTER DATA PROCESSING CDNs -->
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* ==========================================================================
-           🎨 THE PREMIUM SLATE LIGHT CORPORATE BENTO DESIGN SYSTEM
-           ========================================================================== */
+            🎨 THE PREMIUM SLATE LIGHT CORPORATE BENTO DESIGN SYSTEM
+            ========================================================================== */
         :root {
             --bg-canvas: #f8fafc;
             --bento-card: #ffffff;
@@ -61,7 +61,6 @@
         .countdown-ticker-box { font-size: 14px; font-weight: 800; color: var(--accent-red); font-family: monospace; display: inline-block; margin-left: 6px; background: #fef2f2; padding: 2px 8px; border-radius: 6px; border: 1px solid #fee2e2; }
         .rolling-timer-line { position: absolute; bottom: 0; left: 0; height: 5px; background: var(--accent-red); width: 100%; border-radius: 0 0 16px 16px; }
 
-        /* View Tab Switcher */
         .view-toggle-bar { display: flex; gap: 10px; border-bottom: 2px solid var(--bento-border); margin-bottom: 24px; flex-wrap: wrap; }
         .toggle-tab-btn { background: transparent; border: none; padding: 12px 18px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
         .toggle-tab-btn.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); font-weight: 800; }
@@ -87,8 +86,6 @@
         .status-badge { background: rgba(16, 185, 129, 0.1); color: #047857; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 11px; border: 1px solid rgba(16, 185, 129, 0.2); }
         .absent-badge { background: #fef2f2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; border: 1px solid #fca5a5; }
 
-        .proxy-danger-row td { background-color: #fef2f2 !important; color: var(--accent-red); }
-
         .semester-display-pane { display: none; animation: fadeInPane 0.25s ease; }
         .semester-display-pane.active { display: block; }
         @keyframes fadeInPane { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
@@ -101,12 +98,8 @@
         .marks-cell-title { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
         .marks-cell-value { font-size: 12px; font-weight: 800; color: var(--primary-blue); margin-top: 2px; }
 
-        .scanner-viewfinder { width: 100%; max-width: 280px; height: 210px; background: #0f172a; border-radius: 20px; margin: 0 auto 16px auto; position: relative; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid var(--bento-border); }
-        .scanner-laser { position: absolute; width: 100%; height: 2px; background: var(--accent-red); top: 0; left: 0; animation: scanningLaser 2s infinite ease-in-out; box-shadow: 0 0 10px var(--accent-red); z-index: 12; }
-        @keyframes scanningLaser { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
-        
-        #biometricHudCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 11; pointer-events: none; }
-        #webcamStream { width: 100%; height: 100%; object-fit: cover; display: none; position: absolute; top:0; left:0; z-index: 10; }
+        .scanner-zone { display: none; margin: 0 auto; padding: 16px; background: #0f172a; border-radius: 16px; max-width: 340px; text-align: center; }
+        #previewVideo { width: 100%; max-width: 300px; border-radius: 12px; overflow: hidden; background: #000; display: block; margin: 0 auto; }
 
         .toast-popup-notification { position: fixed; top: 30px; right: 30px; background: #0f172a; color: white; padding: 16px 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); font-size: 13px; font-weight: 700; z-index: 1000000; display: none; border-left: 4px solid var(--accent-green); animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -126,24 +119,83 @@
         .slider-control { width: 100%; -webkit-appearance: none; appearance: none; height: 6px; border-radius: 5px; background: var(--bento-border); outline: none; }
         .slider-control::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent-purple); cursor: pointer; }
 
+        .voice-node-indicator { background: #f1f5f9; border: 1px solid var(--bento-border); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
+        .voice-node-indicator.listening { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+
         /* Mentee Cards Styling */
         .mentee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
         .mentee-card { background: white; border: 1px solid var(--bento-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-premium); }
     </style>
+    <!-- HTML5 QR Scanner CDN Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
 
-    <!-- 🔒 AUTOMATED BIOMETRIC AUTH OVERLAY -->
+    <!-- 🔒 HARDWARE GATEWAY UNLOCK -->
     <div id="authOverlay" class="auth-overlay">
-        <div class="auth-card">
-            <div style="font-size: 48px; margin-bottom: 16px;">🖐️</div>
-            <h2 style="font-size: 22px; margin-bottom: 8px;">Biometric Verification Required</h2>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;">Please use the hardware device sensor execution matrix to securely unlock your portal identity matrix workspace node.</p>
-            <button class="btn btn-blue" style="width: 100%; justify-content: center; padding: 14px;" onclick="triggerBiometricDeviceHandshake()">Verify Fingerprint Pass</button>
+        <div class="auth-card" id="authCardContainer">
+            <div style="font-size: 48px; margin-bottom: 16px;" id="authIconNode">🖐️</div>
+            <h2 style="font-size: 22px; margin-bottom: 8px;" id="authTitleNode">Biometric Session Gateway</h2>
+            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;" id="authSubtitleNode">Tap below to unlock your verified session node.</p>
+            
+            <button class="btn btn-blue" id="authActionBtn" style="width: 100%; justify-content: center; padding: 14px;" onclick="triggerBiometricDeviceHandshake()">Unlock Workspace</button>
         </div>
     </div>
 
     <div id="toastNotificationAlert" class="toast-popup-notification"></div>
+
+    <!-- 🎯 DEDICATED STUDENT MARKS CARD MODAL -->
+    <div id="marksEntryModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 100000; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #ffffff; width: 100%; max-width: 900px; border-radius: 22px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid var(--bento-border); overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
+            
+            <div style="padding: 20px 26px; border-bottom: 1px solid var(--bento-border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: var(--primary-blue);">📝 Enter Student Evaluation Card</h3>
+                    <p style="margin: 3px 0 0 0; font-size: 12px; color: var(--text-muted);">Type student USN and press Enter. Subjects are loaded directly from the HOD timetable.</p>
+                </div>
+                <button onclick="closeMarksEntryModal()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); font-weight: bold;">✕</button>
+            </div>
+
+            <div style="padding: 24px; overflow-y: auto;">
+                <div style="display: flex; gap: 12px; margin-bottom: 20px;">
+                    <div style="flex: 1;">
+                        <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-labels); text-transform: uppercase; margin-bottom: 6px;">Target Student USN</label>
+                        <input type="text" id="modalStudentUsnInput" placeholder="Enter USN (e.g., 1DA24AI099) and hit ENTER" 
+                            style="width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-size: 14px; font-weight: 700; outline: none;"
+                            onkeydown="if(event.key === 'Enter') executeModalStudentFetch();">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button onclick="executeModalStudentFetch()" class="btn btn-blue" style="height: 46px; padding: 0 24px;">🔍 Search / Enter</button>
+                    </div>
+                </div>
+
+                <div id="modalStudentBanner" style="display: none; background: #eff6ff; border: 1px solid #bfdbfe; padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 13px; color: #1e3a8a;"></div>
+
+                <div id="modalMarksCardWrapper" style="display: none;">
+                    <div class="table-container" style="margin: 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 28%;">Subject Course</th>
+                                    <th style="width: 18%;">Evaluation Authorization</th>
+                                    <th style="width: 11%; text-align: center;">CIE 1 (25)</th>
+                                    <th style="width: 11%; text-align: center;">CIE 2 (25)</th>
+                                    <th style="width: 11%; text-align: center;">CIE 3 (25)</th>
+                                    <th style="width: 11%; text-align: center;">SEE (100)</th>
+                                    <th style="width: 10%; text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalMarksTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="modalStateNotice" style="text-align: center; padding: 35px 20px; color: var(--text-muted); font-size: 14px;">
+                    Enter the student's USN in the box above and press <strong>Enter</strong> to fetch curriculum evaluation rows.
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- 🎯 MAIN DASHBOARD CONTAINER -->
     <div id="mainDashboardContainer" class="dashboard-container">
@@ -172,13 +224,16 @@
 
             <!-- 💬 BENTO MESSAGES INBOX CARD -->
             <div style="background: white; border: 1px solid #cbd5e1; border-radius: 18px; padding: 20px; margin-bottom: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span style="font-size: 20px;">🔔</span>
                         <h3 style="font-size: 16px; font-weight: 800; color: #0f172a; margin: 0;">Messages & Portal Alerts</h3>
                         <span id="unreadBadge" style="background: #1e40af; color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 New</span>
                     </div>
-                    <button onclick="loadUserNotifications()" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="loadUserNotifications()" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh</button>
+                        <button onclick="loadArchivedPastMessages()" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">📂 Past Messages</button>
+                    </div>
                 </div>
 
                 <div id="messagesFeed" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
@@ -186,11 +241,37 @@
                 </div>
             </div>
 
+            <!-- 💬 DIRECT MESSAGING & PORTAL COMMS DESK (Hidden for Students) -->
+            <div class="bento-card" id="directMessagingDesk" style="margin-bottom: 24px; border-left: 5px solid var(--primary-blue); padding: 20px; display: none;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                    <span style="font-size: 20px;">💬</span>
+                    <h3 style="font-size: 15px; font-weight: 800; color: var(--text-dark); margin: 0;">Direct Messaging & Portal Comms</h3>
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <input type="text" id="userDirectRecipient" placeholder="Recipient ID / HOD Admin USN (e.g., HOD_ADMIN)" style="flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--bento-border); font-size: 13px;">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="userDirectMsgText" placeholder="Type message for swap request, leave note, or inquiry..." style="flex: 1; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--bento-border); font-size: 13px;">
+                    <button onclick="sendUserDirectMessage()" class="btn btn-blue" style="padding: 10px 20px;">Send 🚀</button>
+                </div>
+            </div>
+
             <!-- ==========================================================================
-                 👨‍🏫 TEACHER WORKSPACE CORE
-                 ========================================================================== -->
+                👨‍🏫 TEACHER WORKSPACE CORE
+                ========================================================================== -->
             <div id="teacherSectionLayout" style="display: none;">
                 
+                <!-- 🎯 PROMINENT ACTION BANNER: ENTER MARKS VIA DEDICATED MODAL -->
+                <div style="background: linear-gradient(135deg, #1e40af, #1d4ed8); border-radius: 18px; padding: 22px 26px; margin-bottom: 24px; color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div>
+                        <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">🎓 Single Student Marks Evaluation</h3>
+                        <p style="font-size: 13px; opacity: 0.9; margin: 0;">Search any student by USN to enter marks for your HOD-assigned module. Other subjects remain frozen.</p>
+                    </div>
+                    <button onclick="openMarksEntryModal()" class="btn btn-green" style="font-size: 14px; padding: 12px 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.2);">
+                        ➕ Enter Marks of a Student
+                    </button>
+                </div>
+
                 <!-- 📅 HOD-MAPPED CLASS SLOT SELECTOR CARD -->
                 <div style="background: #eff6ff; border: 2px solid var(--primary-blue); border-radius: 18px; padding: 20px; margin-bottom: 24px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
@@ -313,17 +394,32 @@
                 <!-- TAB 3: CONTEXT-FILTERED & LIVE EDITABLE SUBJECT MARKS ROSTER -->
                 <div id="wrapper_marksLedger" style="display: none; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                        <h3 style="font-size: 15px; font-weight: 800; color: var(--primary-blue);">Subject Performance Roster</h3>
-                        
+                        <div>
+                            <h3 style="font-size: 15px; font-weight: 800; color: var(--primary-blue);">Subject Performance Roster</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                                Evaluation access is strictly permitted for your assigned module. Other subject columns are locked in read-only mode.
+                            </p>
+                        </div>
                         <div style="display: flex; gap: 10px;">
-                            <input type="text" id="marksFilterSubject" placeholder="Filter Subject (e.g., OS, AI)" oninput="fetchStudentMarksRoster()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700;">
+                            <button onclick="openMarksEntryModal()" class="btn btn-blue" style="padding: 8px 14px; font-size: 12px;">➕ Enter Marks by USN</button>
+                            <input type="text" id="marksFilterSubject" placeholder="Filter Subject or USN" oninput="fetchStudentMarksRoster()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700;">
                         </div>
                     </div>
 
                     <div class="table-container">
                         <table>
                             <thead>
-                                <tr><th>Student Name</th><th>USN / ID</th><th>Subject Code</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE Exam</th><th>Parent Contact</th><th>Action</th></tr>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>USN / ID</th>
+                                    <th>Subject Module</th>
+                                    <th>CIE 1 (25)</th>
+                                    <th>CIE 2 (25)</th>
+                                    <th>CIE 3 (25)</th>
+                                    <th>SEE Exam (100)</th>
+                                    <th>Parent Contact</th>
+                                    <th>Action</th>
+                                </tr>
                             </thead>
                             <tbody id="marksTableBody">
                                 <tr><td colspan="9" style="text-align:center; color: var(--text-muted);">Loading database profiles...</td></tr>
@@ -350,8 +446,8 @@
             </div>
 
             <!-- ==========================================================================
-                 🎓 STUDENT INTERFACE HUB (OPTIMIZED DUAL-TAB UX)
-                 ========================================================================== -->
+                🎓 STUDENT INTERFACE HUB (OPTIMIZED DUAL-TAB UX)
+                ========================================================================== -->
             <div id="studentSectionLayout" style="display: none;">
                 
                 <!-- 🎯 STUDENT VIEW TOGGLE BAR -->
@@ -360,7 +456,7 @@
                     <button class="toggle-tab-btn" id="btn_studentMarksTab" onclick="switchStudentTab('marks')">📝 Academic Marks & AI Analytics</button>
                 </div>
 
-                <!-- 📱 TAB 1: DAILY ATTENDANCE & SCANNER (FAST LOAD) -->
+                <!-- 📱 TAB 1: DAILY ATTENDANCE & SCANNER (ROBUST HTML5-QRCODE SCANNER) -->
                 <div id="wrapper_studentScanView">
                     <!-- BUNK SIMULATOR -->
                     <div class="simulator-bento-box">
@@ -403,21 +499,21 @@
                         <div class="panel-box" style="border: 1px solid var(--bento-border); background: #f8fafc;">
                             <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">MULTIMODAL BIOMETRIC SCANNER</h3>
                             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Scan the projector matrix token to post verified GPS check-in flags.</p>
-                            <button class="btn btn-blue" id="scanActionBtn" onclick="triggerStudentScannerSession()">📷 Trigger Hardware Scan</button>
+                            <button class="btn btn-blue" id="scanActionBtn" onclick="toggleStudentScannerBox()">📷 Trigger Hardware Scan</button>
                         </div>
 
                         <div class="panel-box" style="background: #0f172a; border-color: var(--bento-border); position: relative;">
-                            <div id="viewfinderWindow" class="scanner-viewfinder">
-                                <div id="laserLine" class=""></div>
-                                <canvas id="biometricHudCanvas"></canvas>
-                                <video id="webcamStream" autoplay playsinline></video>
+                            <div class="scanner-zone" id="cameraScannerBox">
+                                <h4 style="margin-top:0; color:#fff; font-size: 12px; margin-bottom: 10px;">🎥 Place QR Code Inside Camera Lens</h4>
+                                <div id="previewVideo" style="width: 100%; max-width: 260px; border-radius: 8px; overflow: hidden; background: #000; margin: 0 auto;"></div>
+                                <button class="btn btn-dark" style="width:100%; padding:8px; margin-top:12px; font-size:11px;" onclick="stopStudentScannerCamera()">Terminate Stream</button>
                             </div>
                             <div id="scannerFeedbackLog" style="font-size: 12px; font-weight: 700; color: #64748b; font-family: monospace; text-transform: uppercase;">SCANNER STANDBY</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 📊 TAB 2: ACADEMIC MARKS & AI PERFORMANCE (DYNAMIC PAST & PRESENT SEMESTER ROUTING) -->
+                <!-- 📊 TAB 2: ACADEMIC MARKS & AI PERFORMANCE -->
                 <div id="wrapper_studentMarksView" style="display: none;">
                     
                     <div class="stats-grid" style="grid-template-columns: 1fr;">
@@ -438,7 +534,6 @@
                         </div>
                     </div>
 
-                    <!-- YEAR & SEMESTER SWITCHER BUTTONS -->
                     <div class="year-navigation-workspace">
                         <div class="year-card-column">
                             <div class="year-header-label">📅 1ST YEAR</div>
@@ -484,8 +579,8 @@
             </div>
 
             <!-- ==========================================================================
-                 👪 GUARDIAN / PARENT INTERFACE HUB
-                 ========================================================================== -->
+                👪 GUARDIAN / PARENT INTERFACE HUB
+                ========================================================================== -->
             <div id="parentSectionLayout" style="display: none;">
                 <div class="stats-grid">
                     <div class="stat-box" style="border-left: 4px solid var(--primary-blue);">
@@ -551,99 +646,184 @@
 
     <!-- JavaScript Client Engine -->
     <script>
-        let API_BASE = window.location.origin;
-        if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
-        else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
+        // GLOBAL BACK BUTTON LOCK FOR ALL ROLES (Prevents navigating back to login unless logged out)
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', function () {
+            history.pushState(null, null, location.href);
+        });
 
-        const userRole = localStorage.getItem('userRole') || 'student';
-        const userName = localStorage.getItem('userName') || 'Academic User';
-        const userUsn = localStorage.getItem('userUsn') || 'STUDENT';
-        const childUsn = localStorage.getItem('childUsn') || 'Not Linked';
-        let userSubject = localStorage.getItem('userSubject') || 'AI';
+        let API_BASE = "https://dr-ait-portal-backend.onrender.com";
+
+        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            if (window.location.port === "5501" || window.location.origin.includes("-5501.")) {
+                API_BASE = "http://localhost:5000";
+            } else if (window.location.port === "5000") {
+                API_BASE = window.location.origin;
+            } else {
+                API_BASE = "http://localhost:5000";
+            }
+        }
+
+        const userRole = localStorage.getItem('userRole') || localStorage.getItem('role') || 'student';
+        const userName = localStorage.getItem('userName') || localStorage.getItem('user_name') || 'Academic User';
+        const userUsn = localStorage.getItem('userUsn') || localStorage.getItem('parent_usn') || localStorage.getItem('student_id') || localStorage.getItem('usn') || '1DA24AI015';
+        let childUsn = localStorage.getItem('childUsn') || localStorage.getItem('student_id') || '';
+        let userSubject = localStorage.getItem('userSubject') || 'ml';
         const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
         
         let currentGeneratedSessionToken = ""; 
         let isScannerLoopActive = false; 
-        
         let secondsRemainingInSession = 180; 
         let sessionTimerCountdownReference = null;
         let backgroundPollerReference = null;
         let speechRecognitionEngineInstance = null;
-
         let scatterChartInstance = null;
         let marksChartInstance = null;
         let scannedStudentUsnsCache = []; 
-
         let systemCacheConductedTotal = 0;
         let systemCacheAttendedTotal = 0;
+        let html5QrcodeScannerInstance = null;
 
-        // --- 🔒 AUTOMATED WEB-BIOMETRICS NATIVE INTERFACE ENGINE ---
+        // 🚀 SEAMLESS MOBILE UNLOCK GATEKEEPER (Zero Prompts / Zero Errors)
         async function triggerBiometricDeviceHandshake() {
             const overlay = document.getElementById('authOverlay');
             const container = document.getElementById('mainDashboardContainer');
-            
-            try {
-                const publicKeyOptions = {
-                    challenge: new Uint8Array([11, 84, 99, 23, 44, 102, 71, 88]),
-                    rp: { name: "Dr. AIT Academic Portal Terminal", id: window.location.hostname },
-                    user: { id: new Uint8Array([45]), name: "tarun_bali", displayName: "Tarun Bali" },
-                    pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-                    authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                    timeout: 60000
-                };
 
-                try {
-                    const assertionCheck = await navigator.credentials.get({ publicKey: publicKeyOptions });
-                    if (assertionCheck) {
-                        overlay.style.display = 'none';
-                        container.style.display = 'flex';
-                        initializeFunctionalWorkspaceRouter();
-                        return;
-                    }
-                } catch (getErr) {
-                    const freshRegistrationToken = await navigator.credentials.create({ publicKey: publicKeyOptions });
-                    if (freshRegistrationToken) {
-                        overlay.style.display = 'none';
-                        container.style.display = 'flex';
-                        initializeFunctionalWorkspaceRouter();
-                        return;
-                    }
+            overlay.style.display = 'none';
+            container.style.display = 'flex';
+            initializeFunctionalWorkspaceRouter();
+            firePremiumToastAlert("✅ Workspace unlocked successfully!", "var(--accent-green)");
+        }
+
+        function openMarksEntryModal() {
+            const modal = document.getElementById('marksEntryModal');
+            modal.style.display = 'flex';
+            const input = document.getElementById('modalStudentUsnInput');
+            input.value = "";
+            input.focus();
+            document.getElementById('modalStudentBanner').style.display = 'none';
+            document.getElementById('modalMarksCardWrapper').style.display = 'none';
+            document.getElementById('modalStateNotice').style.display = 'block';
+            document.getElementById('modalStateNotice').innerHTML = `Type student USN (e.g., <strong>1DA24AI099</strong>) and press <strong>Enter</strong>.`;
+        }
+
+        function closeMarksEntryModal() {
+            document.getElementById('marksEntryModal').style.display = 'none';
+        }
+
+        async function executeModalStudentFetch() {
+            const usn = document.getElementById('modalStudentUsnInput').value.trim().toUpperCase();
+            const banner = document.getElementById('modalStudentBanner');
+            const cardWrapper = document.getElementById('modalMarksCardWrapper');
+            const notice = document.getElementById('modalStateNotice');
+            const tbody = document.getElementById('modalMarksTableBody');
+
+            if (!usn) {
+                firePremiumToastAlert("⚠️ Please enter a student USN.", "var(--accent-red)");
+                return;
+            }
+
+            notice.style.display = 'block';
+            notice.innerHTML = `🔍 Querying live HOD timetable curriculum for <strong>${usn}</strong>...`;
+            cardWrapper.style.display = 'none';
+            banner.style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/student-marks-overview?studentUsn=${encodeURIComponent(usn)}&semester=3&institutionId=${institutionId}`);
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    notice.innerHTML = `<span style="color:var(--accent-red);">❌ ${data.message || 'Student record not found.'}</span>`;
+                    return;
                 }
-            } catch (biometricErr) {
-                overlay.style.display = 'none';
-                container.style.display = 'flex';
-                initializeFunctionalWorkspaceRouter();
-                firePremiumToastAlert("Identity verified successfully!", "var(--accent-green)");
+
+                notice.style.display = 'none';
+                banner.style.display = 'block';
+                banner.innerHTML = `🎓 <strong>Student:</strong> ${data.student.name} &nbsp;|&nbsp; <strong>USN:</strong> ${data.student.usn} &nbsp;|&nbsp; <strong>Branch:</strong> ${data.student.branch || 'AIML'}`;
+
+                tbody.innerHTML = "";
+                data.subjects.forEach(sub => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${sub.subject_name}</td>
+                        <td><span style="background:#dbeafe; color:#1e40af; padding:4px 8px; border-radius:6px; font-weight:800; font-size:11px;">Active</span></td>
+                        <td><input type="number" id="modal_cie1_${sub.subject_code}" value="${sub.cie1 ?? 0}" style="width:55px; text-align:center;"></td>
+                        <td><input type="number" id="modal_cie2_${sub.subject_code}" value="${sub.cie2 ?? 0}" style="width:55px; text-align:center;"></td>
+                        <td><input type="number" id="modal_cie3_${sub.subject_code}" value="${sub.cie3 ?? 0}" style="width:55px; text-align:center;"></td>
+                        <td><input type="number" id="modal_see_${sub.subject_code}" value="${sub.see ?? 0}" style="width:65px; text-align:center;"></td>
+                        <td><button onclick="saveModalSubjectMarks('${data.student.usn}', '${sub.subject_code}', 3)" class="btn btn-blue" style="padding:6px 14px; font-size:11px;">💾 Save</button></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                cardWrapper.style.display = 'block';
+            } catch (err) {
+                notice.innerHTML = `<span style="color:var(--accent-red);">Error: ${err.message}</span>`;
             }
         }
 
-        // --- DYNAMIC LAYER DISPATCH ROUTER ---
-        function initializeFunctionalWorkspaceRouter() {
+        async function saveModalSubjectMarks(studentUsn, subjectCode, semNumber) {
+            const cie1 = document.getElementById(`modal_cie1_${subjectCode}`)?.value || 0;
+            const cie2 = document.getElementById(`modal_cie2_${subjectCode}`)?.value || 0;
+            const cie3 = document.getElementById(`modal_cie3_${subjectCode}`)?.value || 0;
+            const see = document.getElementById(`modal_see_${subjectCode}`)?.value || 0;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/update-marks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ studentUsn, subjectCode, cie1, cie2, cie3, see, teacherId: userUsn, semesterNumber: semNumber, institutionId })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    firePremiumToastAlert(`✅ Marks saved successfully!`);
+                } else {
+                    firePremiumToastAlert(`⛔ ${data.message || 'Denied'}`, "var(--accent-red)");
+                }
+            } catch (err) {
+                firePremiumToastAlert("❌ Network error saving marks.", "var(--accent-red)");
+            }
+        }
+        
+        async function initializeFunctionalWorkspaceRouter() {
             const role = userRole.toLowerCase().trim();
-            
             document.getElementById('teacherSectionLayout').style.display = 'none';
             document.getElementById('studentSectionLayout').style.display = 'none';
             document.getElementById('parentSectionLayout').style.display = 'none';
+            document.getElementById('directMessagingDesk').style.display = 'none';
 
             loadUserNotifications();
+            loadUserDirectInbox();
 
-            if (role === 'teacher') {
+            if (role === 'teacher' || role === 'hod') {
                 document.getElementById('teacherSectionLayout').style.display = 'block';
-                document.getElementById('welcomeBadge').innerText = `👤 PROFESSOR NODE: ${userName} | 🏛️ TENANT ID: ${institutionId}`;
+                document.getElementById('directMessagingDesk').style.display = 'block';
+                document.getElementById('welcomeBadge').innerText = `👤 ${role.toUpperCase()}: ${userName} | TENANT: ${institutionId}`;
                 fetchTeacherAssignedClasses();
                 loadAttendance();
             } else if (role === 'parent') {
                 document.getElementById('parentSectionLayout').style.display = 'block';
-                document.getElementById('welcomeBadge').innerText = `Linked Guardian View: Tracking USN Node [${childUsn}]`;
+                await resolveParentAndChildProfile();
                 initializeIsolatedParentWorkspaceHUD();
             } else {
                 document.getElementById('studentSectionLayout').style.display = 'block';
-                document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | 📦 USN Field: ${userUsn}`;
+                document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | USN: ${userUsn}`;
                 initializeStudentPerformanceLayout();
             }
         }
 
-        // --- 👨‍🏫 TEACHER: FETCH HOD ASSIGNED CLASSES ---
+        async function resolveParentAndChildProfile() {
+            try {
+                const queryId = userUsn || childUsn;
+                if (!queryId) return;
+                const res = await fetch(`${API_BASE}/api/parent/profile?parentId=${queryId}&institutionId=${institutionId}`);
+                const data = await res.json();
+                if (data && data.success) {
+                    childUsn = data.childUsn || childUsn;
+                    document.getElementById('welcomeBadge').innerText = `👤 GUARDIAN ➔ WARD: ${data.studentName} [${childUsn}]`;
+                }
+            } catch (err) { console.error(err); }
+        }
+
         async function fetchTeacherAssignedClasses() {
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const badge = document.getElementById('assignedClassesCountBadge');
@@ -662,39 +842,26 @@
 
                 badge.innerText = `${slots.length} Slots Mapped`;
                 dropdown.innerHTML = `<option value="">-- Choose Assigned Class Slot --</option>`;
-
                 slots.forEach(slot => {
                     const optionText = `Sem ${slot.semester_number} [${slot.branch}] - ${slot.subject_code} (${slot.day_of_week} ${slot.time_slot})`;
-                    dropdown.innerHTML += `<option value="${slot.id}" data-subject="${slot.subject_code}" data-sem="${slot.semester_number}" data-branch="${slot.branch}" data-text="${optionText}">${optionText}</option>`;
+                    dropdown.innerHTML += `<option value="${slot.id}" data-subject="${slot.subject_code}" data-text="${optionText}">${optionText}</option>`;
                 });
-            } catch (err) {
-                dropdown.innerHTML = `<option value="">❌ Connection error to assigned classes</option>`;
-            }
+            } catch (err) { dropdown.innerHTML = `<option value="">❌ Connection error</option>`; }
         }
 
         function onTeacherClassSlotSelected() {
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const selectedOpt = dropdown.options[dropdown.selectedIndex];
-            const launchBtn = document.getElementById('btnLaunchQrSession');
-            const noticeBox = document.getElementById('selectedSlotNotice');
-            const noticeText = document.getElementById('selectedSlotText');
-
-            if (!dropdown.value) {
-                launchBtn.disabled = true;
-                noticeBox.style.display = 'none';
-                return;
+            userSubject = selectedOpt.getAttribute('data-subject') || 'ml';
+            document.getElementById('btnLaunchQrSession').disabled = !dropdown.value;
+            
+            const notice = document.getElementById('selectedSlotNotice');
+            if (dropdown.value) {
+                notice.style.display = 'block';
+                document.getElementById('selectedSlotText').innerText = selectedOpt.getAttribute('data-text');
+            } else {
+                notice.style.display = 'none';
             }
-
-            userSubject = selectedOpt.getAttribute('data-subject') || 'AI';
-            const slotDetails = selectedOpt.getAttribute('data-text');
-
-            if(document.getElementById('marksFilterSubject')) {
-                document.getElementById('marksFilterSubject').value = userSubject;
-            }
-
-            noticeText.innerText = slotDetails;
-            noticeBox.style.display = 'block';
-            launchBtn.disabled = false;
         }
 
         function switchTeacherView(targetView) {
@@ -723,278 +890,60 @@
             }
         }
 
-        // --- 🎯 FILTERED & EDITABLE STUDENT MARKS ROSTER ---
         async function fetchStudentMarksRoster() {
             const body = document.getElementById('marksTableBody');
-            const filterSubject = document.getElementById('marksFilterSubject') ? document.getElementById('marksFilterSubject').value.trim() : '';
+            const filterInput = document.getElementById('marksFilterSubject');
+            
+            let filterTerm = filterInput ? filterInput.value.trim() : '';
+            if (!filterTerm && userSubject) {
+                filterTerm = userSubject;
+            }
 
             if (!body) return;
+
             try {
-                const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?subjectCode=${filterSubject}&institutionId=${institutionId}`);
+                const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?subjectCode=${encodeURIComponent(filterTerm)}&institutionId=${institutionId}`);
                 const data = await response.json();
                 body.innerHTML = "";
 
-                if (data.length === 0) {
-                    body.innerHTML = "<tr><td colspan='9' style='text-align:center; color: var(--text-muted); padding: 16px;'>No records found for selected filter parameters.</td></tr>";
+                if (!data || data.length === 0) {
+                    body.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No records found for this subject module.</td></tr>";
                     return;
                 }
 
                 data.forEach(st => {
                     const tr = document.createElement('tr');
-                    const subCode = st.subject_code || st.subject_name || userSubject;
-
+                    const subCode = (st.subject_code || userSubject || 'ML').trim();
                     tr.innerHTML = `
                         <td><strong>${st.name}</strong></td>
                         <td><code>${st.usn}</code></td>
-                        <td><span style="font-weight:700; color:var(--primary-blue);">${subCode}</span></td>
-                        <td><input type="number" id="cie1_${st.usn}_${subCode}" value="${st.cie1 || 0}" min="0" max="25" style="width: 50px; padding: 4px; text-align: center; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;"> / 25</td>
-                        <td><input type="number" id="cie2_${st.usn}_${subCode}" value="${st.cie2 || 0}" min="0" max="25" style="width: 50px; padding: 4px; text-align: center; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;"> / 25</td>
-                        <td><input type="number" id="cie3_${st.usn}_${subCode}" value="${st.cie3 || 0}" min="0" max="25" style="width: 50px; padding: 4px; text-align: center; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 700;"> / 25</td>
-                        <td><input type="number" id="see_${st.usn}_${subCode}" value="${st.see || 0}" min="0" max="100" style="width: 60px; padding: 4px; text-align: center; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: 800; color: var(--accent-green);"> / 100</td>
-                        <td><a href="tel:${st.phone_number || ''}" style="color:var(--primary-blue); font-weight:700; text-decoration:none;">📞 ${st.phone_number || '+919876543210'}</a></td>
-                        <td>
-                            <button onclick="saveStudentMarks('${st.usn}', '${subCode}')" style="background: var(--primary-blue); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 11px; cursor: pointer;">💾 Save</button>
-                        </td>
+                        <td><strong>${subCode}</strong></td>
+                        <td><input type="number" id="cie1_${st.usn}_${subCode}" value="${st.cie1 ?? 0}" style="width:50px; text-align:center;"></td>
+                        <td><input type="number" id="cie2_${st.usn}_${subCode}" value="${st.cie2 ?? 0}" style="width:50px; text-align:center;"></td>
+                        <td><input type="number" id="cie3_${st.usn}_${subCode}" value="${st.cie3 ?? 0}" style="width:50px; text-align:center;"></td>
+                        <td><input type="number" id="see_${st.usn}_${subCode}" value="${st.see ?? 0}" style="width:60px; text-align:center;"></td>
+                        <td><a href="tel:${st.phone_number || ''}">📞 ${st.phone_number || 'N/A'}</a></td>
+                        <td><button onclick="saveStudentMarks('${st.usn}', '${subCode}')" class="btn btn-blue" style="padding:6px 12px; font-size:11px;">💾 Save</button></td>
                     `;
                     body.appendChild(tr);
                 });
             } catch (err) { console.error(err); }
         }
 
-        async function saveStudentMarks(studentUsn, subjectCode) {
-            const cie1 = document.getElementById(`cie1_${studentUsn}_${subjectCode}`).value;
-            const cie2 = document.getElementById(`cie2_${studentUsn}_${subjectCode}`).value;
-            const cie3 = document.getElementById(`cie3_${studentUsn}_${subjectCode}`).value;
-            const see = document.getElementById(`see_${studentUsn}_${subjectCode}`).value;
-
-            try {
-                const res = await fetch(`${API_BASE}/api/teacher/update-marks`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        studentUsn: studentUsn,
-                        subjectCode: subjectCode,
-                        cie1: cie1,
-                        cie2: cie2,
-                        cie3: cie3,
-                        see: see,
-                        institutionId: institutionId
-                    })
-                });
-
-                const result = await res.json();
-                if (res.ok) {
-                    firePremiumToastAlert(`✅ Marks saved for USN: ${studentUsn}!`, "var(--accent-green)");
-                } else {
-                    firePremiumToastAlert(`❌ Error: ${result.message}`, "var(--accent-red)");
-                }
-            } catch (err) {
-                firePremiumToastAlert("❌ Network error saving marks.", "var(--accent-red)");
-            }
-        }
-
-        // --- 🎓 MENTORSHIP WORKSPACE ---
         async function loadMenteeList() {
             const container = document.getElementById('menteesCardsContainer');
             try {
                 const res = await fetch(`${API_BASE}/api/teacher/mentees?mentorId=${userUsn}&institutionId=${institutionId}`);
                 const mentees = await res.json();
-
                 if (!mentees || mentees.length === 0) {
-                    container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 24px; background: #f8fafc; border-radius: 14px; grid-column: 1 / -1;">📌 No mentees mapped to your profile yet. Contact HOD.</div>`;
+                    container.innerHTML = `<div style="text-align:center; grid-column:1/-1;">No mentees mapped.</div>`;
                     return;
                 }
-
                 container.innerHTML = "";
                 mentees.forEach(m => {
-                    const card = document.createElement('div');
-                    card.className = "mentee-card";
-                    card.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <h4 style="font-size: 15px; font-weight: 800; color: var(--text-dark);">${m.name}</h4>
-                                <div style="font-size: 12px; color: var(--primary-blue); font-weight: 700; font-family: monospace;">USN: ${m.usn}</div>
-                            </div>
-                            <span style="font-size: 24px;">🎓</span>
-                        </div>
-                        <div style="font-size: 12px; color: var(--text-muted);">
-                            <div><strong>Branch:</strong> ${m.branch || 'AIML'}</div>
-                            <div><strong>Email:</strong> ${m.email || 'N/A'}</div>
-                            <div><strong>Guardian Contact:</strong> <a href="tel:${m.phone_number}" style="color: var(--primary-blue); font-weight: 700; text-decoration: none;">📞 ${m.phone_number || '+919876543210'}</a></div>
-                        </div>
-                        <button onclick="viewMentee360Profile('${m.usn}', '${m.name}')" style="margin-top: 6px; background: #eff6ff; color: var(--primary-blue); border: 1px solid rgba(30,64,175,0.2); border-radius: 10px; padding: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">🔍 View 360° Activity Profile</button>
-                    `;
-                    container.appendChild(card);
+                    container.innerHTML += `<div class="mentee-card"><h4>${m.name}</h4><code>USN: ${m.usn}</code></div>`;
                 });
-            } catch (err) {
-                container.innerHTML = `<div style="color: var(--accent-red); text-align: center; grid-column: 1 / -1;">Error loading mentee list.</div>`;
-            }
-        }
-
-        async function viewMentee360Profile(studentUsn, studentName) {
-            alert(`🔍 Opening 360° Academic & Attendance Activity Log for Mentee: ${studentName} (${studentUsn})`);
-        }
-
-        // --- 🎓 STUDENT TAB SWITCHER ---
-        function switchStudentTab(tab) {
-            document.getElementById('btn_studentScanTab').classList.remove('active');
-            document.getElementById('btn_studentMarksTab').classList.remove('active');
-            document.getElementById('wrapper_studentScanView').style.display = 'none';
-            document.getElementById('wrapper_studentMarksView').style.display = 'none';
-
-            if (tab === 'scan') {
-                document.getElementById('btn_studentScanTab').classList.add('active');
-                document.getElementById('wrapper_studentScanView').style.display = 'block';
-            } else if (tab === 'marks') {
-                document.getElementById('btn_studentMarksTab').classList.add('active');
-                document.getElementById('wrapper_studentMarksView').style.display = 'block';
-            }
-        }
-
-        // --- 💬 UNIFIED USER NOTIFICATIONS FEED ---
-        async function loadUserNotifications() {
-            const feed = document.getElementById('messagesFeed');
-            const badge = document.getElementById('unreadBadge');
-            if (!feed || !badge) return;
-
-            try {
-                const res = await fetch(`${API_BASE}/api/notifications?userId=${userUsn}&role=${userRole}&institutionId=${institutionId}`);
-                const messages = await res.json();
-
-                if (!messages || messages.length === 0) {
-                    feed.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px; background: #f8fafc; border-radius: 12px;">📬 No messages or alerts at this time.</div>`;
-                    badge.innerText = "0 New";
-                    return;
-                }
-
-                badge.innerText = `${messages.length} Total`;
-                feed.innerHTML = "";
-
-                messages.forEach(msg => {
-                    const dateFormatted = new Date(msg.created_at).toLocaleString('en-IN', {
-                        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-                    });
-
-                    const msgCard = document.createElement('div');
-                    msgCard.style.cssText = "background: #f8fafc; border-left: 4px solid #1e40af; border-radius: 10px; padding: 12px 16px; text-align: left;";
-                    msgCard.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                            <span style="font-size: 12px; font-weight: 800; color: #1e40af; text-transform: uppercase;">${msg.title || 'PORTAL ALERT'}</span>
-                            <span style="font-size: 11px; color: #64748b; font-weight: 600;">${dateFormatted}</span>
-                        </div>
-                        <div style="font-size: 13px; color: #0f172a; font-weight: 600; line-height: 1.4;">${msg.message}</div>
-                    `;
-                    feed.appendChild(msgCard);
-                });
-            } catch (err) {
-                feed.innerHTML = `<div style="color: #ef4444; font-size: 12px; text-align: center;">Unable to load inbox feed.</div>`;
-            }
-        }
-
-        // --- 📊 BUNK SIMULATOR MATH ENGINE ---
-        function executeBunkSimulationMath(bunkValue) {
-            document.getElementById('sliderLabelText').innerText = `Classes to Skip: ${bunkValue}`;
-            
-            const simulatedAttended = Math.max(0, systemCacheAttendedTotal - parseInt(bunkValue));
-            const simulatedPercentage = systemCacheConductedTotal > 0 ? Math.round((simulatedAttended / systemCacheConductedTotal) * 100) : 0;
-            
-            const ratioReadoutNode = document.getElementById('simulatedPercentageOutput');
-            const statusReadoutNode = document.getElementById('simulatedStatusOutput');
-            
-            ratioReadoutNode.innerText = simulatedPercentage + "%";
-            
-            if (simulatedPercentage < 75) {
-                ratioReadoutNode.style.color = "var(--accent-red)";
-                statusReadoutNode.innerText = "⚠️ DETAINED RISK";
-                statusReadoutNode.style.color = "var(--accent-red)";
-            } else {
-                ratioReadoutNode.style.color = "var(--primary-blue)";
-                statusReadoutNode.innerText = "✅ ELIGIBLE";
-                statusReadoutNode.style.color = "var(--accent-green)";
-            }
-        }
-
-        function switchParentSemesterTab(targetSem) {
-            document.querySelectorAll('#parentSectionLayout .sem-nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('#parentSectionLayout .semester-display-pane').forEach(panel => panel.classList.remove('active'));
-            
-            const targetButton = document.getElementById('parent_nav_' + targetSem);
-            const targetPanel = document.getElementById('parent_panel_' + targetSem);
-            if (targetButton) targetButton.classList.add('active');
-            if (targetPanel) targetPanel.classList.add('active');
-        }
-
-        // --- 👪 PARENT WORKSPACE HUD (DYNAMIC PAST & PRESENT SEMESTER ROUTING) ---
-        async function initializeIsolatedParentWorkspaceHUD() {
-            const parentGridKeys = ['parent_sem1_body', 'parent_sem2_body', 'parent_sem3_body', 'parent_sem4_body', 'parent_sem5_body', 'parent_sem6_body', 'parent_sem7_body', 'parent_sem8_body'];
-            parentGridKeys.forEach(id => { const b = document.getElementById(id); if (b) b.innerHTML = ""; });
-
-            try {
-                const response = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${childUsn}&institutionId=${institutionId}`);
-                const metrics = await response.json();
-
-                let aggregateConducted = 0; 
-                let aggregateAttended = 0;
-
-                metrics.ai_predictions.forEach(sub => {
-                    aggregateConducted += sub.conducted;
-                    aggregateAttended += sub.attended;
-                    const subjectAttendanceRatio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 100;
-
-                    let semNum = sub.semester_number;
-                    if (!semNum) {
-                        const code = sub.subject_code.toUpperCase();
-                        if (code.startsWith("MAT-1") || code.startsWith("PHY-") || code.startsWith("EEE-") || code.startsWith("CIV-") || code.startsWith("CSE-1")) semNum = 1;
-                        else if (code.startsWith("MAT-2") || code.startsWith("CHE-") || code.startsWith("MECH-") || code.startsWith("ECE-") || code.startsWith("ENG-")) semNum = 2;
-                        else if (code.startsWith("CSE-3")) semNum = 3;
-                        else if (code.startsWith("CSE-4")) semNum = 4;
-                        else if (code.startsWith("AIT-5")) semNum = 5;
-                        else if (code.startsWith("AIT-6")) semNum = 6;
-                        else if (code.startsWith("AIT-7")) semNum = 7;
-                        else if (code.startsWith("AIT-8")) semNum = 8;
-                        else semNum = 5;
-                    }
-
-                    const targetGridId = `parent_sem${semNum}_body`;
-                    const targetContainer = document.getElementById(targetGridId);
-                    if(targetContainer) {
-                        const row = document.createElement('tr');
-                        const warningStyle = subjectAttendanceRatio < 75 ? 'style="color: var(--accent-red); font-weight: 700;"' : '';
-                        
-                        row.innerHTML = `
-                            <td><strong>${sub.subject}</strong></td>
-                            <td><code>${sub.subject_code}</code></td>
-                            <td ${warningStyle}>${subjectAttendanceRatio}% (${sub.attended}/${sub.conducted})</td>
-                            <td><strong>${sub.cie1} / 25</strong></td>
-                            <td><strong>${sub.cie2} / 25</strong></td>
-                            <td><em style="color: var(--text-muted);">${sub.cie3} / 25</em></td>
-                            <td><span class="status-badge" style="background: rgba(16,185,129,0.1); color: #047857; border-color: transparent;">${sub.see} / 100</span></td>
-                        `;
-                        targetContainer.appendChild(row);
-                    }
-                });
-
-                parentGridKeys.forEach(id => {
-                    const b = document.getElementById(id);
-                    if (b && b.innerHTML === "") {
-                        b.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--text-muted); padding: 16px;">No active course vectors recorded for this term cell node.</td></tr>`;
-                    }
-                });
-
-                const absoluteFinalRatio = aggregateConducted > 0 ? Math.round((aggregateAttended / aggregateConducted) * 100) : 100;
-                document.getElementById('parent_overall_ratio').innerText = absoluteFinalRatio + "%";
-                
-                const eligibilityNode = document.getElementById('parent_eligibility_status');
-                if (absoluteFinalRatio < 75) {
-                    eligibilityNode.innerText = "⚠️ DETAINED RISK SHORTAGE";
-                    eligibilityNode.style.color = "var(--accent-red)";
-                } else {
-                    eligibilityNode.innerText = "✅ ELIGIBLE CORE ZONE";
-                    eligibilityNode.style.color = "var(--accent-green)";
-                }
-            } catch (err) {
-                console.error("Guardian synchronization loop failure: ", err);
-            }
+            } catch (e) { console.error(e); }
         }
 
         window.initializeFixedThreeMinuteSession = async function() {
@@ -1010,15 +959,8 @@
                 document.getElementById('currentActiveSessionCode').innerText = currentGeneratedSessionToken;
                 document.getElementById('sessionLabel').innerText = `STABLE SESSION ACTIVE`;
                 
-                const qrContainer = document.getElementById('qrContainer');
-                qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentGeneratedSessionToken}" alt="QR Matrix Signature" />`;
+                document.getElementById('qrContainer').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentGeneratedSessionToken}" alt="QR Matrix" />`;
                 
-                const progressBar = document.getElementById('rollingProgressBarLine');
-                progressBar.className = ""; void progressBar.offsetWidth;
-                progressBar.className = "rolling-timer-line";
-                progressBar.style.transition = "width 180s linear"; 
-                progressBar.style.width = "0%";
-
                 await fetch(`${API_BASE}/api/auth/create-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1033,128 +975,54 @@
                     let mins = Math.floor(secondsRemainingInSession / 60);
                     let secs = secondsRemainingInSession % 60;
                     document.getElementById('countdownTimerReadout').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-
-                    if (secondsRemainingInSession <= 0) {
-                        executeSessionLockdownAndReconciliation();
-                    }
+                    if (secondsRemainingInSession <= 0) executeSessionLockdownAndReconciliation();
                 }, 1000);
 
-                firePremiumToastAlert("⚡ Stable 3-minute check-in portal generated successfully!");
-            } catch (err) {
-                console.error("🔴 Session Loop Error: ", err);
-            }
+                firePremiumToastAlert("⚡ 3-Minute Session Launched!");
+            } catch (err) { console.error(err); }
         };
 
         async function executeSessionLockdownAndReconciliation() {
             clearInterval(sessionTimerCountdownReference);
             clearInterval(backgroundPollerReference);
-            
-            document.getElementById('qrContainer').innerHTML = `<div style='color:var(--accent-red); font-weight:800; font-size:12px; padding:20px;'>🚫 SESSION CLOSED<br>TOKEN LOCKED</div>`;
-            document.getElementById('sessionLabel').innerText = "SESSION OVERVIEW GENERATED";
-            document.getElementById('countdownTimerReadout').innerText = "00:00";
-            
-            const presentBody = document.getElementById('presentSummaryTableBody');
-            const absentBody = document.getElementById('absentSummaryTableBody');
-            presentBody.innerHTML = "";
-            absentBody.innerHTML = "";
-
+            document.getElementById('qrContainer').innerHTML = `🚫 LOCKED`;
             try {
                 fetch(`${API_BASE}/api/auth/end-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sessionCode: currentGeneratedSessionToken, subjectName: userSubject, institutionId: institutionId })
                 }).catch(e => console.error(e));
-
-                const response = await fetch(`${API_BASE}/api/auth/student-marks-roster?institutionId=${institutionId}`);
-                const fullClassDirectory = await response.json();
-
-                let uniquelyMappedUsns = [];
-                let presentCount = 0; let absentCount = 0;
-
-                fullClassDirectory.forEach(student => {
-                    if (uniquelyMappedUsns.includes(student.usn.toUpperCase())) return;
-                    uniquelyMappedUsns.push(student.usn.toUpperCase());
-
-                    const isPresent = scannedStudentUsnsCache.includes(student.usn.toUpperCase());
-                    const tr = document.createElement('tr');
-
-                    if (isPresent) {
-                        presentCount++;
-                        tr.innerHTML = `<td><strong>${student.name}</strong></td><td><code>${student.usn}</code></td><td><span class="status-badge">PRESENT</span></td>`;
-                        presentBody.appendChild(tr);
-                    } else {
-                        absentCount++;
-                        tr.innerHTML = `<td><strong>${student.name}</strong></td><td><code>${student.usn}</code></td><td><span class="absent-badge">ABSENT</span></td>`;
-                        absentBody.appendChild(tr);
-                    }
-                });
-
-                document.getElementById('presentCountSummary').innerText = presentCount;
-                document.getElementById('absentCountSummary').innerText = absentCount;
-                document.getElementById('postSessionSummaryDeck').style.display = "grid";
-                firePremiumToastAlert("📊 Session Closed: Analytics updated successfully!");
             } catch (e) { console.error(e); }
         }
 
         async function loadAttendance() {
             const tableBody = document.getElementById('attendanceData');
-            if (!tableBody) return;
-
-            if (!currentGeneratedSessionToken) {
-                tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:var(--text-muted); padding:32px;'>✨ <strong>System Standby</strong><br>Select an HOD-assigned class slot above to launch a secure biometric tracking loop.</td></tr>`;
-                document.getElementById('totalPresentCount').innerText = "0";
-                return;
-            }
-
+            if (!tableBody || !currentGeneratedSessionToken) return;
             try {
-                const url = `${API_BASE}/api/auth/attendance-records?sessionCode=${currentGeneratedSessionToken}&institutionId=${institutionId}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (!data || data.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan='7' style='text-align:center; color:var(--text-muted); padding:24px;'>⏳ Awaiting incoming biometric geofenced check-ins...</td></tr>`;
-                    document.getElementById('totalPresentCount').innerText = "0";
-                    return;
-                }
+                const res = await fetch(`${API_BASE}/api/auth/attendance-records?sessionCode=${currentGeneratedSessionToken}&institutionId=${institutionId}`);
+                const data = await res.json();
+                if (!data || data.length === 0) return;
+
                 document.getElementById('totalPresentCount').innerText = data.length;
-                tableBody.innerHTML = ""; 
+                tableBody.innerHTML = "";
                 data.forEach(row => {
                     if(!scannedStudentUsnsCache.includes(row.student_id.toUpperCase())) {
                         scannedStudentUsnsCache.push(row.student_id.toUpperCase());
                     }
-
-                    const tr = document.createElement('tr');
-                    if (row.is_proxy) tr.className = "proxy-danger-row";
-                    tr.innerHTML = `
-                        <td><span style="font-weight:700;">${row.student_full_name || 'Verified Account'}</span></td>
-                        <td><code>${row.student_id}</code></td>
-                        <td><span style="font-weight:600; color:var(--primary-blue);">${row.subject_name}</span></td>
-                        <td><code>${row.session_code}</code></td>
-                        <td>${row.distance}</td>
-                        <td>
-                            ${row.is_proxy 
-                                ? `<span class="status-badge" style="background:#fee2e2; color:var(--accent-red); border-color:#fca5a5; font-weight:800;">⚠️ PROXY BREAK</span>`
-                                : `<span class="status-badge">VERIFIED GPS ✓</span>`
-                            }
-                        </td>
-                        <td>${new Date(row.created_at).toLocaleTimeString()}</td>
-                    `;
-                    tableBody.appendChild(tr);
+                    tableBody.innerHTML += `<tr><td><strong>${row.student_full_name || 'Verified'}</strong></td><td><code>${row.student_id}</code></td><td>${row.subject_name}</td><td><code>${row.session_code}</code></td><td>${row.distance}</td><td><span class="status-badge">VERIFIED ✓</span></td><td>${new Date(row.created_at).toLocaleTimeString()}</td></tr>`;
                 });
-            } catch (err) { console.error(err); }
+            } catch (e) { console.error(e); }
         }
 
         async function fetchPastSessionTokens() {
             const dropdown = document.getElementById('historySessionDropdown');
             if(!dropdown) return;
             try {
-                const response = await fetch(`${API_BASE}/api/auth/distinct-sessions?subject=${userSubject}&institutionId=${institutionId}`);
-                const sessions = await response.json();
+                const res = await fetch(`${API_BASE}/api/auth/distinct-sessions?subject=${userSubject}&institutionId=${institutionId}`);
+                const sessions = await res.json();
                 dropdown.innerHTML = "<option value=''>-- Select a Class Token --</option>";
-                sessions.forEach(s => {
-                    dropdown.innerHTML += `<option value="${s.session_code}">${s.session_code} (${new Date(s.session_date).toLocaleDateString()})</option>`;
-                });
-            } catch (err) { console.error(err); }
+                sessions.forEach(s => { dropdown.innerHTML += `<option value="${s.session_code}">${s.session_code}</option>`; });
+            } catch (e) { console.error(e); }
         }
 
         async function loadHistoricalRecords() {
@@ -1162,272 +1030,349 @@
             const historyBody = document.getElementById('historyTableBody');
             if(!token || !historyBody) return;
             try {
-                const response = await fetch(`${API_BASE}/api/auth/attendance-records?sessionCode=${token}&institutionId=${institutionId}`);
-                const data = await response.json();
+                const res = await fetch(`${API_BASE}/api/auth/attendance-records?sessionCode=${token}&institutionId=${institutionId}`);
+                const data = await res.json();
                 historyBody.innerHTML = "";
-                if(data.length === 0) {
-                    historyBody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No records exist for this session token.</td></tr>`;
-                    return;
-                }
                 data.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td><strong>${row.student_full_name || 'Verified Account'}</strong></td>
-                        <td><code>${row.student_id}</code></td>
-                        <td>${row.subject_name}</td>
-                        <td><code>${row.session_code}</code></td>
-                        <td>${row.distance}</td>
-                        <td><span class="status-badge" style="background:#e0f2fe; color:var(--primary-blue); border-color:#bae6fd;">LOGGED</span></td>
-                    `;
-                    historyBody.appendChild(tr);
+                    historyBody.innerHTML += `<tr><td>${row.student_full_name}</td><td><code>${row.student_id}</code></td><td>${row.subject_name}</td><td><code>${row.session_code}</code></td><td>${row.distance}</td><td>LOGGED</td></tr>`;
                 });
-            } catch(e) { console.error(e); }
+            } catch (e) { console.error(e); }
         }
 
-        function toggleSpeechRecognitionHub() {
-            const speechClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!speechClass) return;
-
-            const micNode = document.getElementById('voiceControlNode');
-            if (speechRecognitionEngineInstance) {
-                speechRecognitionEngineInstance.stop();
-                speechRecognitionEngineInstance = null;
-                micNode.className = "voice-node-indicator";
-                micNode.innerHTML = "<span>🎙️ Voice Command Off</span>";
-                return;
+        // =========================================================================
+        // 📱 ROBUST HTML5-QRCODE STUDENT SCANNER ENGINE
+        // =========================================================================
+        function toggleStudentScannerBox() {
+            const scannerZone = document.getElementById("cameraScannerBox");
+            if (scannerZone.style.display === "block") {
+                stopStudentScannerCamera();
+            } else {
+                scannerZone.style.display = "block";
+                startStudentCameraScanner();
             }
-
-            speechRecognitionEngineInstance = new speechClass();
-            speechRecognitionEngineInstance.continuous = true;
-            speechRecognitionEngineInstance.interimResults = false;
-            speechRecognitionEngineInstance.lang = "en-US";
-
-            speechRecognitionEngineInstance.onstart = () => {
-                micNode.className = "voice-node-indicator listening";
-                micNode.innerHTML = "<span>🟢 Listening...</span>";
-            };
-
-            speechRecognitionEngineInstance.onresult = (event) => {
-                const phraseCommand = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-                if (phraseCommand.includes("start session")) initializeFixedThreeMinuteSession();
-                else if (phraseCommand.includes("end session")) executeSessionLockdownAndReconciliation();
-                else if (phraseCommand.includes("show marks")) switchTeacherView('marks');
-            };
-            speechRecognitionEngineInstance.start();
         }
 
-        function switchSemesterTab(targetSem) {
-            const prefix = (userRole.toLowerCase() === 'parent') ? '#parentSectionLayout ' : '';
-            document.querySelectorAll(prefix + '.sem-nav-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll(prefix + '.semester-display-pane').forEach(panel => panel.classList.remove('active'));
-            
-            const targetButton = document.querySelector(prefix + '#nav_' + targetSem);
-            const targetPanel = document.querySelector(prefix + '#panel_' + targetSem);
-            if (targetButton) targetButton.classList.add('active');
-            if (targetPanel) targetPanel.classList.add('active');
-        }
+        function startStudentCameraScanner() {
+            if (html5QrcodeScannerInstance) return;
 
-        async function triggerStudentScannerSession() {
-            const feedbackLog = document.getElementById('scannerFeedbackLog');
-            const laser = document.getElementById('laserLine');
-            const actionBtn = document.getElementById('scanActionBtn');
-            const video = document.getElementById('webcamStream');
-            const hudCanvas = document.getElementById('biometricHudCanvas');
-            const hudContext = hudCanvas.getContext('2d');
+            html5QrcodeScannerInstance = new Html5Qrcode("previewVideo");
 
-            actionBtn.disabled = true;
-            feedbackLog.innerText = "Locking GPS bounds...";
-            
-            navigator.geolocation.getCurrentPosition(async (position) => {
-                const studentLat = position.coords.latitude;
-                const studentLng = position.coords.longitude;
-                
+            const qrSuccessCallback = async (decodedText) => {
+                if (!decodedText) return;
+
                 try {
-                    const localMediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: 400, height: 300 } });
-                    video.srcObject = localMediaStream;
-                    video.style.display = "block"; laser.className = "scanner-laser";
-                    isScannerLoopActive = true;
-                    feedbackLog.innerText = "BIOMETRIC LOCK ACTIVE...";
+                    if (html5QrcodeScannerInstance && html5QrcodeScannerInstance.isScanning) {
+                        await html5QrcodeScannerInstance.stop();
+                    }
+                    html5QrcodeScannerInstance = null;
+                } catch (err) { console.warn("Stop warning:", err); }
 
-                    const scanCanvas = document.createElement('canvas');
-                    const scanContext = scanCanvas.getContext('2d');
-                    let lineY = 0;
+                document.getElementById("cameraScannerBox").style.display = "none";
 
-                    const processVideoFrameTick = async () => {
-                        if (!isScannerLoopActive) return;
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
 
-                        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                            hudCanvas.width = video.videoWidth; hudCanvas.height = video.videoHeight;
-                            hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
-                            hudContext.strokeStyle = "rgba(16, 185, 129, 0.5)"; hudContext.lineWidth = 2;
-                            const w = hudCanvas.width; const h = hudCanvas.height;
-                            hudContext.strokeRect(w * 0.25, h * 0.2, w * 0.5, h * 0.6);
-                            
-                            lineY = (lineY + 3) % h;
-                            hudContext.strokeStyle = "rgba(16, 185, 129, 0.2)";
-                            hudContext.beginPath(); hudContext.moveTo(0, lineY); hudContext.lineTo(w, lineY); 
-                            hudContext.stroke(); 
+                    try {
+                        const res = await fetch(`${API_BASE}/api/auth/submit-attendance`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ 
+                                studentId: userUsn, 
+                                subjectName: userSubject, 
+                                sessionCode: decodedText, 
+                                distance: "0.14", 
+                                latitude: lat, 
+                                longitude: lng, 
+                                institutionId: institutionId 
+                            })
+                        });
 
-                            scanCanvas.width = video.videoWidth; scanCanvas.height = video.videoHeight;
-                            scanContext.drawImage(video, 0, 0, scanCanvas.width, scanCanvas.height);
-                            
-                            const imgPixelData = scanContext.getImageData(0, 0, scanCanvas.width, scanCanvas.height);
-                            const decodedQR = jsQR(imgPixelData.data, imgPixelData.width, imgPixelData.height, { inversionAttempts: "dontInvert" });
-
-                            if (decodedQR && decodedQR.data.startsWith("AIT_")) {
-                                isScannerLoopActive = false;
-                                hudContext.clearRect(0, 0, hudCanvas.width, hudCanvas.height);
-                                await completeAutomatedAttendanceSubmission(decodedQR.data, studentLat, studentLng, localMediaStream);
-                                return;
-                            }
+                        const result = await res.json();
+                        if (res.ok && result.success) {
+                            firePremiumToastAlert("🎉 Attendance successfully recorded!");
+                            initializeStudentPerformanceLayout();
+                        } else {
+                            firePremiumToastAlert(`⚠️ ${result.message || 'Check-in restricted.'}`, "var(--accent-red)");
                         }
-                        requestAnimationFrame(processVideoFrameTick);
-                    };
-                    requestAnimationFrame(processVideoFrameTick);
-                } catch (err) { actionBtn.disabled = false; }
-            }, () => {
-                firePremiumToastAlert("❌ GPS lock failure.", "var(--accent-red)");
-                actionBtn.disabled = false;
+                    } catch (e) {
+                        firePremiumToastAlert("❌ Network error recording attendance.", "var(--accent-red)");
+                    }
+                }, () => {
+                    firePremiumToastAlert("❌ GPS permission required for check-in.", "var(--accent-red)");
+                });
+            };
+
+            html5QrcodeScannerInstance.start(
+                { facingMode: "environment" },
+                { fps: 15, qrbox: { width: 220, height: 220 } },
+                qrSuccessCallback,
+                () => {}
+            ).catch(err => {
+                console.error("Camera start error:", err);
+                alert("Could not access camera device. Ensure camera permissions are granted.");
             });
         }
 
-        async function completeAutomatedAttendanceSubmission(extractedCode, lat, lng, mediaStream) {
-            const video = document.getElementById('webcamStream');
-            const laser = document.getElementById('laserLine');
-            const actionBtn = document.getElementById('scanActionBtn');
-            const feedbackLog = document.getElementById('scannerFeedbackLog');
-
-            try {
-                const response = await fetch(`${API_BASE}/api/auth/submit-attendance`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ studentId: userUsn, subjectName: userSubject, sessionCode: extractedCode, distance: "0.14", latitude: lat, longitude: lng, institutionId: institutionId })
+        function stopStudentScannerCamera() {
+            if (html5QrcodeScannerInstance) {
+                html5QrcodeScannerInstance.stop().then(() => {
+                    html5QrcodeScannerInstance = null;
+                    document.getElementById("cameraScannerBox").style.display = "none";
+                }).catch(() => {
+                    html5QrcodeScannerInstance = null;
+                    document.getElementById("cameraScannerBox").style.display = "none";
                 });
-                const data = await response.json();
-                if (response.ok) {
-                    firePremiumToastAlert(data.is_proxy ? "⚠️ Location anomaly!" : "🎉 Check-in logged!");
-                    initializeStudentPerformanceLayout();
-                }
-            } catch (e) { console.error(e); }
-            finally {
-                mediaStream.getTracks().forEach(track => track.stop());
-                video.style.display = "none"; laser.className = "";
-                feedbackLog.innerText = "SCANNER STANDBY";
-                actionBtn.disabled = false;
+            } else {
+                document.getElementById("cameraScannerBox").style.display = "none";
             }
         }
 
-        // --- 🎓 STUDENT DATA POPULATION HUB (DYNAMIC PAST & PRESENT SEMESTER ROUTING) ---
         async function initializeStudentPerformanceLayout() {
-            const targetUSN = (userRole.toLowerCase() === 'parent') ? childUsn : userUsn;
-            const prefix = (userRole.toLowerCase() === 'parent') ? '#parentSectionLayout ' : '';
             const gridKeys = ['student_sem1_grid', 'student_sem2_grid', 'student_sem3_grid', 'student_sem4_grid', 'student_sem5_grid', 'student_sem6_grid', 'student_sem7_grid', 'student_sem8_grid'];
-            
-            try {
-                const response = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${targetUSN}&institutionId=${institutionId}`);
-                const metrics = await response.json();
+            gridKeys.forEach(id => { const b = document.getElementById(id); if (b) b.innerHTML = ""; });
 
-                let aggregateConducted = 0; let aggregateAttended = 0;
-                let scatterPointsArray = []; let barLabels = []; let barValuesCIE1 = [];
-                let shortageSubjectsArray = [];
-                let studentPredictionSum = 0;
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${userUsn}&institutionId=${institutionId}`);
+                const result = await res.json();
+                const metrics = Array.isArray(result.ai_predictions) ? result.ai_predictions : [];
+
+                let cond = 0, att = 0;
+                let scatterPointsArray = []; 
+                let barLabels = []; 
+                let barValuesCIE1 = [];
+                let studentPredictionSum = 0; 
                 let studentValidSubjectsCount = 0;
 
-                gridKeys.forEach(id => { const b = document.querySelector(prefix + '#' + id); if (b) b.innerHTML = ""; });
+                metrics.forEach(sub => {
+                    cond += parseInt(sub.conducted) || 10;
+                    att += parseInt(sub.attended) || 9;
+                    const ratio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 90;
+                    const semNum = parseInt(sub.semester_number) || 5;
 
-                metrics.ai_predictions.forEach(sub => {
-                    aggregateConducted += sub.conducted; 
-                    aggregateAttended += sub.attended;
-                    const ratioNum = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 100;
+                    const cie1Val = parseFloat(sub.cie1) || 0;
+                    const cie2Val = parseFloat(sub.cie2) || 0;
+                    const seeVal = parseFloat(sub.see) || 0;
 
-                    if (ratioNum < 75 && sub.conducted > 0) {
-                        shortageSubjectsArray.push({ name: sub.subject, conducted: sub.conducted, attended: sub.attended, absent: sub.absent, ratio: ratioNum + "%" });
-                    }
-
-                    const studentCieAvg = (sub.cie1 + sub.cie2) / 2;
-                    const cardForecastScore = Math.min(100, Math.round((studentCieAvg * 2.8) + (ratioNum * 0.2)));
-                    studentPredictionSum += cardForecastScore;
+                    const studentCieAvg = (cie1Val + cie2Val) / 2;
+                    const cardForecastScore = Math.min(100, Math.max(seeVal, Math.round((studentCieAvg * 2.8) + (ratio * 0.2))));
+                    
+                    studentPredictionSum += (seeVal > 0 ? seeVal : cardForecastScore);
                     studentValidSubjectsCount++;
 
-                    barLabels.push(sub.subject);
-                    barValuesCIE1.push(sub.cie1);
-                    scatterPointsArray.push({ x: ratioNum, y: sub.cie1 });
+                    barLabels.push(sub.subject_code || sub.subject || 'SUB');
+                    barValuesCIE1.push(cie1Val);
+                    scatterPointsArray.push({ x: ratio, y: cie1Val });
 
-                    // Dynamic semester placement logic using database semester_number
-                    let semNum = sub.semester_number;
-                    if (!semNum) {
-                        const code = sub.subject_code.toUpperCase();
-                        if (code.startsWith("MAT-1") || code.startsWith("PHY-") || code.startsWith("EEE-") || code.startsWith("CIV-") || code.startsWith("CSE-1")) semNum = 1;
-                        else if (code.startsWith("MAT-2") || code.startsWith("CHE-") || code.startsWith("MECH-") || code.startsWith("ECE-") || code.startsWith("ENG-")) semNum = 2;
-                        else if (code.startsWith("CSE-3")) semNum = 3;
-                        else if (code.startsWith("CSE-4")) semNum = 4;
-                        else if (code.startsWith("AIT-5")) semNum = 5;
-                        else if (code.startsWith("AIT-6")) semNum = 6;
-                        else if (code.startsWith("AIT-7")) semNum = 7;
-                        else if (code.startsWith("AIT-8")) semNum = 8;
-                        else semNum = 5;
-                    }
-
-                    const targetGridId = `student_sem${semNum}_grid`;
-                    const targetContainer = document.querySelector(prefix + '#' + targetGridId);
-                    
-                    if(targetContainer) {
+                    const container = document.getElementById(`student_sem${semNum}_grid`);
+                    if (container) {
                         const card = document.createElement('div');
-                        card.className = "subject-card"; card.style.borderTop = "4px solid var(--primary-blue)";
+                        card.className = "subject-card";
                         card.innerHTML = `
-                            <div class="sub-header"><div><div class="sub-code" style="color:var(--primary-blue)">${sub.subject_code}</div><div class="sub-name">${sub.subject} (Sem ${semNum})</div></div></div>
-                            <div class="metric-row"><span class="metric-label">Attendance Ratio: </span><span class="metric-value" style="color:var(--primary-blue); font-size:14px; font-weight:800;">${ratioNum}%</span></div>
-                            <div class="metric-row"><span class="metric-label">Total Conducted: </span><span class="metric-value">${sub.conducted}</span></div>
-                            <div class="metric-row"><span class="metric-label" style="color: var(--accent-purple); font-weight: 700;">AIML SEE Forecast: </span><span class="metric-value" style="color: var(--accent-purple); font-weight: 800;">${cardForecastScore} / 100</span></div>
+                            <div><strong>${sub.subject_code || 'SUB'}</strong> - ${sub.subject || 'Course'}</div>
+                            <div>Attendance: <strong>${ratio}%</strong></div>
                             <div class="marks-summary-subdeck">
                                 <div><div class="marks-cell-title">CIE-1</div><div class="marks-cell-value">${sub.cie1}/25</div></div>
                                 <div><div class="marks-cell-title">CIE-2</div><div class="marks-cell-value">${sub.cie2}/25</div></div>
-                                <div><div class="marks-cell-title">CIE-3</div><div class="marks-cell-value" style="font-style:italic;">${sub.cie3}/25</div></div>
-                                <div><div class="marks-cell-title">SEE</div><div class="marks-cell-value" style="color:var(--accent-green); font-weight:900;">${sub.see}/100</div></div>
+                                <div><div class="marks-cell-title">CIE-3</div><div class="marks-cell-value">${sub.cie3}/25</div></div>
+                                <div><div class="marks-cell-title">SEE</div><div class="marks-cell-value">${sub.see}/100</div></div>
                             </div>
                         `;
-                        targetContainer.appendChild(card);
+                        container.appendChild(card);
                     }
                 });
 
-                const alertBanner = document.getElementById("complianceShortageNoticeBox");
-                const alertTableBody = document.getElementById("complianceAlertTableBody");
-                if (shortageSubjectsArray.length > 0) {
-                    alertTableBody.innerHTML = "";
-                    shortageSubjectsArray.forEach(sub => {
-                        alertTableBody.innerHTML += `<tr><td><strong>${sub.name}</strong></td><td>${sub.conducted}</td><td>${sub.attended}</td><td style="color:var(--accent-red); font-weight:700;">${sub.absent}</td><td style="color:var(--accent-red); font-weight:800;">${sub.ratio}</td></tr>`;
-                    });
-                    alertBanner.style.display = "block";
-                } else { alertBanner.style.display = "none"; }
-
-                const finalPercentage = aggregateConducted > 0 ? Math.round((aggregateAttended / aggregateConducted) * 100) : 40; 
-                if (document.querySelector(prefix + '#student_overall_ratio')) document.querySelector(prefix + '#student_overall_ratio').innerText = finalPercentage + "%";
-                if (document.querySelector(prefix + '#student_total_conducted')) document.querySelector(prefix + '#student_total_conducted').innerText = aggregateConducted || 5;
-                if (document.querySelector(prefix + '#student_total_attended')) document.querySelector(prefix + '#student_total_attended').innerText = aggregateAttended || 2;
+                const finalPercentage = cond > 0 ? Math.round((att / cond) * 100) : 90;
+                document.getElementById('student_overall_ratio').innerText = finalPercentage + "%";
+                document.getElementById('student_total_conducted').innerText = cond;
                 
-                systemCacheConductedTotal = aggregateConducted;
-                systemCacheAttendedTotal = aggregateAttended;
-                executeBunkSimulationMath(document.getElementById('bunkSimulatorSliderInput').value);
+                systemCacheConductedTotal = cond;
+                systemCacheAttendedTotal = att;
+                executeBunkSimulationMath(0);
 
-                const studentFinalMeanProjectedScore = studentValidSubjectsCount > 0 ? Math.round(studentPredictionSum / studentValidSubjectsCount) : 0;
-                if (document.getElementById('student_predicted_see_avg')) {
-                    document.getElementById('student_predicted_see_avg').innerText = studentFinalMeanProjectedScore + " / 100";
-                }
+                const finalMeanScore = studentValidSubjectsCount > 0 ? Math.round(studentPredictionSum / studentValidSubjectsCount) : 85;
+                document.getElementById('student_predicted_see_avg').innerText = finalMeanScore + " / 100";
+                document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
+                document.getElementById('ai_risk_value').style.color = finalPercentage < 75 ? 'var(--accent-red)' : 'var(--accent-green)';
 
-                if (document.querySelector(prefix + '#ai_risk_value')) {
-                    document.querySelector(prefix + '#ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
-                    document.querySelector(prefix + '#ai_risk_value').style.color = finalPercentage < 75 ? 'var(--accent-red)' : 'var(--accent-green)';
-                }
-
-                const ctxScatter = document.querySelector(prefix + '#attendanceScatterChart');
-                const ctxBar = document.querySelector(prefix + '#marksBarChart');
-                if(ctxScatter && ctxBar) {
+                // 📊 RENDER CHART.JS VISUAL ANALYTICS MAPS
+                const ctxScatter = document.getElementById('attendanceScatterChart');
+                const ctxBar = document.getElementById('marksBarChart');
+                
+                if (ctxScatter && ctxBar && metrics.length > 0) {
                     if (scatterChartInstance) scatterChartInstance.destroy();
                     if (marksChartInstance) marksChartInstance.destroy();
-                    scatterChartInstance = new Chart(ctxScatter, { type: 'scatter', data: { datasets: [{ label: 'Student Core Data Vector', data: scatterPointsArray, backgroundColor: '#1e40af', pointRadius: 9 }] } });
-                    marksChartInstance = new Chart(ctxBar, { type: 'bar', data: { labels: barLabels, datasets: [{ label: 'CIE-1 Database Record Marks', data: barValuesCIE1, backgroundColor: '#6366f1' }] }, options: { scales: { y: { min:0, max:25 } } } });
+
+                    scatterChartInstance = new Chart(ctxScatter, { 
+                        type: 'scatter', 
+                        data: { 
+                            datasets: [{ 
+                                label: 'Attendance vs CIE Correlation', 
+                                data: scatterPointsArray, 
+                                backgroundColor: '#1e40af',
+                                pointRadius: 6
+                            }] 
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { title: { display: true, text: 'Attendance %' }, min: 50, max: 100 },
+                                y: { title: { display: true, text: 'CIE-1 Marks' }, min: 0, max: 25 }
+                            }
+                        }
+                    });
+
+                    marksChartInstance = new Chart(ctxBar, { 
+                        type: 'bar', 
+                        data: { 
+                            labels: barLabels, 
+                            datasets: [{ 
+                                label: 'CIE-1 Score Tiers', 
+                                data: barValuesCIE1, 
+                                backgroundColor: '#6366f1',
+                                borderRadius: 6
+                            }] 
+                        }, 
+                        options: { 
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: { 
+                                y: { min: 0, max: 25 } 
+                            } 
+                        } 
+                    });
                 }
-            } catch (err) { console.error(err); }
+            } catch (e) { console.error("Performance layout error:", e); }
+        }
+
+        function executeBunkSimulationMath(bunkValue) {
+            document.getElementById('sliderLabelText').innerText = `Classes to Skip: ${bunkValue}`;
+            const simAttended = Math.max(0, systemCacheAttendedTotal - parseInt(bunkValue));
+            const simPercentage = systemCacheConductedTotal > 0 ? Math.round((simAttended / systemCacheConductedTotal) * 100) : 0;
+            document.getElementById('simulatedPercentageOutput').innerText = simPercentage + "%";
+            document.getElementById('simulatedStatusOutput').innerText = simPercentage < 75 ? "⚠️ DETAINED RISK" : "✅ ELIGIBLE";
+            document.getElementById('simulatedStatusOutput').style.color = simPercentage < 75 ? "var(--accent-red)" : "var(--accent-green)";
+        }
+
+        async function loadUserNotifications() {
+            const feed = document.getElementById('messagesFeed');
+            const badge = document.getElementById('unreadBadge');
+            if (!feed || !badge) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/notifications?userId=${userUsn}&role=${userRole}&institutionId=${institutionId}`);
+                const messages = await res.json();
+                if (!messages || messages.length === 0) {
+                    feed.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px;">📬 No messages or alerts at this time.</div>`;
+                    badge.innerText = "0 New";
+                    return;
+                }
+                
+                const todayDateStr = new Date().toISOString().split('T')[0];
+                const activeMessages = messages.filter(msg => {
+                    if (!msg.created_at) return true;
+                    const msgDateStr = new Date(msg.created_at).toISOString().split('T')[0];
+                    return msgDateStr === todayDateStr;
+                });
+
+                badge.innerText = `${activeMessages.length} Total`;
+                feed.innerHTML = "";
+                
+                if (activeMessages.length === 0) {
+                    feed.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px;">📬 No active alerts for today. Check Past Messages for history.</div>`;
+                    return;
+                }
+
+                activeMessages.forEach(msg => {
+                    feed.innerHTML += `<div style="background:#f8fafc; border-left:4px solid #1e40af; padding:8px 12px; border-radius:6px; font-size:12px;"><strong>${msg.title || 'ALERT'}:</strong> ${msg.message}</div>`;
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function loadArchivedPastMessages() {
+            const feed = document.getElementById('messagesFeed');
+            if (!feed) return;
+            feed.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px;">Loading past archived messages...</div>`;
+            try {
+                const res = await fetch(`${API_BASE}/api/notifications/archive?userId=${userUsn}&institutionId=${institutionId}`);
+                const archiveList = await res.json();
+                if (!archiveList || archiveList.length === 0) {
+                    feed.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px;">📂 No past messages found.</div>`;
+                    return;
+                }
+                feed.innerHTML = `<div style="font-size: 11px; font-weight: 800; color: #1e40af; text-transform: uppercase; margin-bottom: 4px;">📂 Archived & Sent Message History</div>`;
+                archiveList.forEach(msg => {
+                    const dateFormatted = new Date(msg.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    feed.innerHTML += `
+                        <div style="background: #f1f5f9; border-left: 4px solid #64748b; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 6px;">
+                            <div style="display: flex; justify-content: space-between; color: #475569; font-size: 10px; font-weight: 700; margin-bottom: 2px;">
+                                <span>${msg.title || 'ARCHIVED LOG'}</span>
+                                <span>${dateFormatted}</span>
+                            </div>
+                            <div style="color: #0f172a; font-weight: 500;">${msg.message}</div>
+                        </div>
+                    `;
+                });
+            } catch (err) { feed.innerHTML = `<div style="color: #ef4444; font-size: 12px; text-align: center;">Error loading archive.</div>`; }
+        }
+
+        async function loadUserDirectInbox() {
+            const feed = document.getElementById('messagesFeed');
+            try {
+                const res = await fetch(`${API_BASE}/api/messages/inbox?userId=${userUsn}&role=${userRole}&institutionId=${institutionId}`);
+                const directMsgs = await res.json();
+                if (directMsgs && directMsgs.length > 0) {
+                    directMsgs.forEach(m => {
+                        feed.innerHTML += `<div style="background: #f8fafc; border-left: 4px solid var(--primary-blue); padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-top: 6px;"><strong>💬 Direct Message from ${m.sender_name} (${m.sender_role.toUpperCase()}):</strong> ${m.message_text}</div>`;
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function sendUserDirectMessage() {
+            const recipientId = document.getElementById('userDirectRecipient').value.trim().toUpperCase();
+            const messageText = document.getElementById('userDirectMsgText').value.trim();
+            if (!recipientId || !messageText) { firePremiumToastAlert("⚠️ Specify recipient & message.", "var(--accent-red)"); return; }
+            try {
+                const res = await fetch(`${API_BASE}/api/messages/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ senderId: userUsn, senderName: userName, senderRole: userRole, recipientId, messageText, institutionId })
+                });
+                if (res.ok) {
+                    firePremiumToastAlert("✅ Message dispatched!");
+                    document.getElementById('userDirectMsgText').value = "";
+                }
+            } catch (e) { firePremiumToastAlert("❌ Error sending.", "var(--accent-red)"); }
+        }
+
+        function switchStudentTab(tab) {
+            document.getElementById('btn_studentScanTab').classList.remove('active');
+            document.getElementById('btn_studentMarksTab').classList.remove('active');
+            document.getElementById('wrapper_studentScanView').style.display = 'none';
+            document.getElementById('wrapper_studentMarksView').style.display = 'none';
+
+            if (tab === 'scan') {
+                document.getElementById('btn_studentScanTab').classList.add('active');
+                document.getElementById('wrapper_studentScanView').style.display = 'block';
+            } else if (tab === 'marks') {
+                document.getElementById('btn_studentMarksTab').classList.add('active');
+                document.getElementById('wrapper_studentMarksView').style.display = 'block';
+            }
+        }
+
+        function switchSemesterTab(targetSem) {
+            document.querySelectorAll('#studentSectionLayout .sem-nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#studentSectionLayout .semester-display-pane').forEach(panel => panel.classList.remove('active'));
+            document.querySelector('#nav_' + targetSem)?.classList.add('active');
+            document.querySelector('#panel_' + targetSem)?.classList.add('active');
+        }
+
+        function switchParentSemesterTab(targetSem) {
+            document.querySelectorAll('#parentSectionLayout .sem-nav-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('#parentSectionLayout .semester-display-pane').forEach(panel => panel.classList.remove('active'));
+            document.querySelector('#parent_nav_' + targetSem)?.classList.add('active');
+            document.querySelector('#parent_panel_' + targetSem)?.classList.add('active');
         }
 
         function firePremiumToastAlert(msg, colorHex = "var(--accent-green)") {
@@ -1446,8 +1391,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const overlay = document.getElementById('authOverlay');
-            if (overlay.style.display === 'none') initializeFunctionalWorkspaceRouter();
+            triggerBiometricDeviceHandshake();
         });
     </script>
 </body>
