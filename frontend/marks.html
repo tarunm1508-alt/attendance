@@ -36,7 +36,7 @@
     
     <div class="info-box">
         <h3 id="studentHeader">Loading Student Profile...</h3>
-        <p><strong>SRN:</strong> <span id="displaySRN"></span></p>
+        <p><strong>SRN / USN:</strong> <span id="displaySRN"></span></p>
         <div id="parentContent"></div>
     </div>
 
@@ -48,6 +48,15 @@
 </div>
 
 <script>
+    let API_BASE = window.location.origin;
+    if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
+    else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
+    else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        API_BASE = "http://localhost:5000";
+    }
+
+    const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
+
     const years = [
         { label: "FIRST YEAR", sems: [1, 2] },
         { label: "SECOND YEAR", sems: [3, 4] },
@@ -66,12 +75,12 @@
                         <button class="sem-btn" onclick="toggleTable('tableSem${y.sems[1]}')">Semester ${y.sems[1]}</button>
                     </div>
                     <div id="tableSem${y.sems[0]}" class="table-wrapper">
-                        <table><thead><tr><th>Subject</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>Lab</th><th>SEE</th></tr></thead>
-                        <tbody id="data-sem${y.sems[0]}"><tr><td colspan="6" class="no-data-msg">No marks added for Sem ${y.sems[0]}</td></tr></tbody></table>
+                        <table><thead><tr><th>Subject</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem${y.sems[0]}"><tr><td colspan="5" class="no-data-msg">No marks added for Sem ${y.sems[0]}</td></tr></tbody></table>
                     </div>
                     <div id="tableSem${y.sems[1]}" class="table-wrapper">
-                        <table><thead><tr><th>Subject</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>Lab</th><th>SEE</th></tr></thead>
-                        <tbody id="data-sem${y.sems[1]}"><tr><td colspan="6" class="no-data-msg">No marks added for Sem ${y.sems[1]}</td></tr></tbody></table>
+                        <table><thead><tr><th>Subject</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem${y.sems[1]}"><tr><td colspan="5" class="no-data-msg">No marks added for Sem ${y.sems[1]}</td></tr></tbody></table>
                     </div>
                 </div>
             </div>
@@ -91,44 +100,51 @@
     }
 
     async function loadAllData() {
-        const srn = localStorage.getItem("student_id");
+        const srn = localStorage.getItem("userUsn") || localStorage.getItem("student_id") || localStorage.getItem("usn");
         if (!srn) { window.location.href = 'login.html'; return; }
         document.getElementById("displaySRN").innerText = srn;
 
         try {
-            const response = await fetch(`http://localhost:5000/api/marks/student-profile/${srn}`);
+            const response = await fetch(`${API_BASE}/api/marks/student-profile/${srn}?institutionId=${institutionId}`);
             const data = await response.json();
 
-            if (data.parent) {
-                document.getElementById('parentContent').innerHTML = `<p><strong>Guardian:</strong> ${data.parent.parent_name}</p>`;
+            if (data.student_name) {
+                document.getElementById('studentHeader').innerText = `Academic Record: ${data.student_name} (${srn})`;
+            } else {
                 document.getElementById('studentHeader').innerText = `Academic Record: ${srn}`;
+            }
+
+            if (data.parent && data.parent.name) {
+                document.getElementById('parentContent').innerHTML = `<p><strong>Guardian:</strong> ${data.parent.name}</p>`;
             }
 
             if (data.academic && data.academic.length > 0) {
                 data.academic.forEach(record => {
-                    const tbody = document.getElementById(`data-sem${record.semester}`);
+                    const semNum = record.semester || record.semester_number || 3;
+                    const tbody = document.getElementById(`data-sem${semNum}`);
                     if (tbody) {
-                        // REMOVE "No marks added" message before first real entry
                         if (tbody.innerHTML.includes("no-data-msg")) {
                             tbody.innerHTML = ""; 
                         }
                         
                         tbody.innerHTML += `
                             <tr>
-                                <td style="text-align:left; font-weight:bold;">${record.subject_name}</td>
-                                <td>${record.cie_1}</td><td>${record.cie_2}</td><td>${record.cie_3}</td>
-                                <td>${record.lab_marks}</td><td><b>${record.see_marks}</b></td>
+                                <td style="text-align:left; font-weight:bold;">${record.subject_name || record.subject_code || 'Subject'}</td>
+                                <td>${record.cie1 ?? record.cie_1 ?? 0}</td>
+                                <td>${record.cie2 ?? record.cie_2 ?? 0}</td>
+                                <td>${record.cie3 ?? record.cie_3 ?? 0}</td>
+                                <td><b>${record.see ?? record.see_marks ?? 0}</b></td>
                             </tr>
                         `;
                     }
                 });
             }
-        } catch (err) { console.error(err); }
+        } catch (err) { console.error("Transcript fetch error:", err); }
     }
 
     function goBack() {
-        const role = localStorage.getItem("role");
-        window.location.href = role === 'parent' ? 'parent.html' : 'student.html';
+        const role = localStorage.getItem("userRole") || localStorage.getItem("role");
+        window.location.href = role === 'parent' ? 'parent.html' : 'dashboard.html';
     }
 
     window.onload = loadAllData;

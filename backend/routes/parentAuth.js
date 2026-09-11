@@ -3,15 +3,19 @@ const router = express.Router();
 const pool = require("../db");
 
 router.post("/login", async (req, res) => {
-    const { username, password, student_usn } = req.body;
+    const { username, password, student_usn, institutionId } = req.body;
+    const targetTenant = institutionId || 'DR_AIT';
 
     try {
         console.log("Login attempt for parent:", username);
 
-        // Query the 'users' table for the parent account
+        // Query the 'users' table for the parent account with institution isolation
         const result = await pool.query(
-            "SELECT * FROM users WHERE UPPER(usn) = UPPER($1) AND LOWER(TRIM(role)) = 'parent'",
-            [username]
+            `SELECT * FROM users 
+             WHERE UPPER(usn) = UPPER($1) 
+               AND LOWER(TRIM(role)) = 'parent' 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [username ? username.trim() : '', targetTenant]
         );
 
         // If no user found
@@ -39,12 +43,13 @@ router.post("/login", async (req, res) => {
             }
         }
 
-        // Success - Send back the data including the child link
+        // Success - Send back the data including the child link and tenant
         console.log("Login successful for:", parent.name);
         res.json({
             success: true,
             user_name: parent.name,
-            student_id: parent.child_usn 
+            student_id: parent.child_usn,
+            institutionId: parent.institution_id || targetTenant
         });
 
     } catch (err) {

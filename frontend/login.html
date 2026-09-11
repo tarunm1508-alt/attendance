@@ -20,23 +20,23 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg-canvas); color: var(--text-dark); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; }
-        
+
         .login-container { background: var(--surface-card); border: 1px solid var(--border-clean); padding: 36px 24px; border-radius: 24px; box-shadow: var(--shadow-mobile); width: 100%; max-width: 400px; text-align: center; }
         .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 700; margin-bottom: 16px; text-align: left; width: 100%; }
-        
+
         .auth-card { background: #ffffff; border: 1px solid var(--border-clean); border-radius: 20px; padding: 30px 20px; text-align: center; box-shadow: var(--shadow-mobile); margin-top: 10px; display: none; }
         .auth-icon { font-size: 48px; margin-bottom: 12px; }
         .auth-title { font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
         .auth-subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; line-height: 1.5; font-weight: 500; }
-        
+
         .form-group { margin-bottom: 18px; text-align: left; }
         label { display: block; margin-bottom: 6px; color: var(--text-labels); font-size: 11px; font-weight: 700; text-transform: uppercase; }
         input { width: 100%; padding: 14px; background: #ffffff; border: 1px solid var(--border-clean); border-radius: 12px; font-size: 14px; outline: none; }
         input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px var(--primary-glow); }
-        
+
         .btn { width: 100%; padding: 14px; background: var(--primary-blue); border: none; border-radius: 12px; color: #ffffff; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         .btn:hover { background: var(--primary-hover); }
-        
+
         .footer-links { margin-top: 20px; font-size: 13px; color: var(--text-muted); }
         .footer-links a { color: var(--primary-blue); text-decoration: none; font-weight: 700; }
         .alert { padding: 12px 14px; border-radius: 12px; margin-bottom: 18px; font-size: 13px; display: none; text-align: center; background-color: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; font-weight: 600; line-height: 1.4; }
@@ -79,7 +79,7 @@
             <div class="auth-icon">🖐️</div>
             <div class="auth-title">Fingerprint Verification Required</div>
             <div class="auth-subtitle">Please verify your physical device fingerprint sensor to securely unlock your portal session.</div>
-            
+
             <button class="btn" type="button" onclick="triggerBiometricAndLogin()">Verify Fingerprint Pass</button>
         </div>
 
@@ -107,7 +107,7 @@
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 activePortalRole = (urlParams.get('role') || 'student').toLowerCase().trim();
-                
+
                 const titleHeader = document.getElementById('portalTitle');
                 const usernameLabel = document.getElementById('usernameLabel');
                 const usernameInput = document.getElementById('username');
@@ -145,10 +145,11 @@
             }
         });
 
+        // FIXED: Fully synchronized persistent device identifier matching signup.html storage key
         function getOrCreateDeviceFingerprint() {
             let deviceId = localStorage.getItem("dr_ait_persistent_device_id");
             if (!deviceId) {
-                deviceId = "DEVICE_SECURE_" + screen.width + "_" + screen.height + "_" + Math.abs(navigator.hardwareConcurrency || 4);
+                deviceId = "DEVICE_" + (crypto.randomUUID ? crypto.randomUUID() : ('id_' + Math.random().toString(36).substring(2) + Date.now()));
                 localStorage.setItem("dr_ait_persistent_device_id", deviceId);
             }
             return deviceId;
@@ -193,7 +194,7 @@
                 if (window.PublicKeyCredential) {
                     const challenge = new Uint8Array(32);
                     window.crypto.getRandomValues(challenge);
-                    
+
                     try {
                         await navigator.credentials.create({
                             publicKey: {
@@ -230,10 +231,10 @@
 
             } catch (err) {
                 console.warn("Fingerprint scan canceled or failed:", err);
-                
+
                 document.getElementById('biometricCardSection').style.display = 'none';
                 document.getElementById('credentialsForm').style.display = 'block';
-                
+
                 alertBox.innerText = "❌ Fingerprint verification canceled or failed. Access blocked.";
                 alertBox.style.display = 'block';
             }
@@ -279,7 +280,7 @@
                 } else {
                     document.getElementById('biometricCardSection').style.display = 'none';
                     document.getElementById('credentialsForm').style.display = 'block';
-                    
+
                     alertBox.innerText = data.message || "Invalid credentials.";
                     alertBox.style.display = 'block';
                 }
@@ -287,7 +288,7 @@
                 console.error("Network error:", err);
                 document.getElementById('biometricCardSection').style.display = 'none';
                 document.getElementById('credentialsForm').style.display = 'block';
-                
+
                 alertBox.innerText = "Connection lost to API server.";
                 alertBox.style.display = 'block';
             }

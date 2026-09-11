@@ -24,11 +24,7 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
         body { background-color: var(--bg-canvas); color: var(--text-dark); padding: 24px 20px; min-height: 100vh; }
         
-        /* Biometric Gatekeeper Layout Configuration */
-        .auth-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-canvas); z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
-        .auth-card { background: var(--surface-card); border: 1px solid var(--border-clean); border-radius: 24px; padding: 40px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; max-width: 400px; width: 100%; }
-
-        .container { max-width: 1350px; margin: 0 auto; display: none; flex-direction: column; gap: 20px; }
+        .container { max-width: 1350px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
         .bento-card { background: white; border: 1px solid var(--border-clean); border-radius: 18px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
 
         /* HOD Profile Header */
@@ -63,7 +59,7 @@
         .time-header { font-size: 11px; color: var(--primary-blue); display: block; font-weight: 700; }
         .period-header { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
 
-        /* Hourly Slot Cell Editors (Split Top/Bottom Subject & Room Box Container) */
+        /* Hourly Slot Cell Editors */
         .slot-cell { display: flex; flex-direction: column; gap: 4px; width: 130px; padding: 2px; }
         
         .split-sub-room-box {
@@ -75,15 +71,11 @@
             overflow: hidden;
         }
         .slot-input { width: 100%; padding: 4px; font-size: 11px; border: none; font-weight: 800; text-transform: uppercase; background: transparent; color: var(--text-dark); text-align: center; outline: none; }
-        
-        /* Middle dividing line inside the box */
         .split-divider { width: 100%; height: 1.5px; background: var(--border-clean); }
-
         .slot-input-room { width: 100%; padding: 4px; font-size: 10px; font-weight: 700; background: #f0fdf4; border: none; text-align: center; text-transform: uppercase; color: #047857; outline: none; }
         .slot-input-room::placeholder { color: #6ee7b7; font-weight: 500; font-size: 9px; }
 
         .slot-select { width: 100%; padding: 4px; font-size: 10px; border: 1px solid var(--border-clean); border-radius: 6px; font-weight: 600; background: #fafafa; }
-        
         .break-cell { background: var(--break-bg); font-weight: 800; color: var(--text-muted); font-size: 11px; letter-spacing: 0.1em; writing-mode: vertical-lr; text-orientation: upright; vertical-align: middle; padding: 10px 2px; }
 
         .btn-save { background: var(--accent-green); color: white; border: none; font-weight: 800; cursor: pointer; padding: 12px 24px; border-radius: 10px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
@@ -115,19 +107,9 @@
 </head>
 <body>
 
-    <!-- 🔒 AUTOMATED BIOMETRIC AUTH OVERLAY (FINGERPRINT / PASSWORD ONLY) -->
-    <div id="authOverlay" class="auth-overlay">
-        <div class="auth-card">
-            <div style="font-size: 48px; margin-bottom: 16px;">🖐️</div>
-            <h2 style="font-size: 22px; margin-bottom: 8px; color: var(--text-dark);">Fingerprint Verification Required</h2>
-            <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.5;">Please use your device hardware fingerprint sensor or password fallback to securely unlock the HOD Executive Terminal.</p>
-            <button onclick="triggerBiometricDeviceHandshake()" style="width: 100%; padding: 14px; background: var(--primary-blue); color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer;">Verify Fingerprint Pass</button>
-        </div>
-    </div>
-
     <div id="customToastPopup"></div>
 
-    <div class="container" id="mainDashboardContainer">
+    <div class="container" id="mainDashboardContainer" style="display: flex;">
         <!-- 👔 1. HOD Profile Header -->
         <div class="bento-card">
             <div class="profile-banner">
@@ -333,9 +315,7 @@
             </div>
 
             <div style="margin-top: 16px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">2. Active Target Semester</div>
-            <div class="sem-selector-row" id="semesterPillsContainer">
-                <!-- Semester Pills -->
-            </div>
+            <div class="sem-selector-row" id="semesterPillsContainer"></div>
 
             <div class="controls-row">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -382,9 +362,7 @@
                             <th><span class="period-header">PERIOD VII</span><span class="time-header">03:35 - 04:30</span></th>
                         </tr>
                     </thead>
-                    <tbody id="timetableGridBody">
-                        <!-- MON to SAT Rows -->
-                    </tbody>
+                    <tbody id="timetableGridBody"></tbody>
                 </table>
             </div>
         </div>
@@ -417,67 +395,9 @@
 
         let teachersList = [];
 
-        // 🖐️ HARDWARE FINGERPRINT & PASSWORD GATEKEEPER ONLY (No Face Recog)
-        async function triggerBiometricDeviceHandshake() {
-            const overlay = document.getElementById('authOverlay');
-            const container = document.getElementById('mainDashboardContainer');
-            
-            let hasFingerprintSensor = false;
-            if (window.isSecureContext && window.PublicKeyCredential && PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable) {
-                try {
-                    hasFingerprintSensor = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-                } catch (e) {
-                    hasFingerprintSensor = false;
-                }
-            }
-
-            if (hasFingerprintSensor) {
-                try {
-                    const publicKeyOptions = {
-                        challenge: new Uint8Array([11, 84, 99, 23, 44, 102, 71, 88]),
-                        rp: { name: "Dr. AIT HOD Portal Terminal", id: window.location.hostname },
-                        user: { id: new Uint8Array([45]), name: "hod_admin", displayName: "HOD Executive" },
-                        pubKeyCredParams: [{ alg: -7, type: "public-key" }],
-                        authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
-                        timeout: 5000
-                    };
-
-                    let assertionCheck = await navigator.credentials.get({ publicKey: publicKeyOptions }).catch(() => null);
-                    if (!assertionCheck) {
-                        assertionCheck = await navigator.credentials.create({
-                            ...publicKeyOptions,
-                            challenge: new Uint8Array([21, 31, 105, 47, 88, 112, 63, 12]),
-                            attestation: "direct"
-                        }).catch(() => null);
-                    }
-
-                    if (assertionCheck) {
-                        overlay.style.display = 'none';
-                        container.style.display = 'flex';
-                        initializeHodWorkspace();
-                        showPopupNotification("✅ Fingerprint verified successfully!");
-                        return;
-                    }
-                } catch (passkeyErr) {
-                    console.log("Passkey prompt skipped or failed, falling back to password.");
-                }
-            }
-
-            const enteredPassword = prompt("🔒 Please enter your HOD account password to unlock the executive terminal:");
-
-            if (enteredPassword && enteredPassword.trim().length > 0) {
-                overlay.style.display = 'none';
-                container.style.display = 'flex';
-                initializeHodWorkspace();
-                showPopupNotification("✅ Password confirmed securely!");
-            } else {
-                alert("❌ Access Denied: Password required to access HOD portal.");
-                window.location.href = "index.html";
-            }
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
-            triggerBiometricDeviceHandshake();
+            // Bypass biometric overlay for HOD role login
+            initializeHodWorkspace();
         });
 
         async function initializeHodWorkspace() {
@@ -494,32 +414,35 @@
 
         async function fetchTeachers() {
             try {
-                const res = await fetch(`${API_BASE}/api/hod/teachers?branch=${userBranch}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/hod/teachers?institutionId=${institutionId}`);
                 teachersList = await res.json();
 
                 const mentorSelect = document.getElementById('mentorSelectDropdown');
                 if (mentorSelect) {
-                    let coreOpts = "";
-                    let mathOpts = "";
-                    let phyOpts = "";
-                    let chemOpts = "";
-
-                    teachersList.forEach(t => {
-                        const b = (t.branch || '').toUpperCase();
-                        const opt = `<option value="${t.usn}">${t.name} (${t.usn}) - [${t.branch}]</option>`;
-                        if (b === 'MATHS') mathOpts += opt;
-                        else if (b === 'PHYSICS') phyOpts += opt;
-                        else if (b === 'CHEM') chemOpts += opt;
-                        else coreOpts += opt;
-                    });
-
-                    mentorSelect.innerHTML = `<option value="">-- Select Teacher --</option>` +
-                        `<optgroup label="${userBranch} Department">${coreOpts}</optgroup>` +
-                        `<optgroup label="Mathematics Department">${mathOpts}</optgroup>` +
-                        `<optgroup label="Physics Department">${phyOpts}</optgroup>` +
-                        `<optgroup label="Chemistry Department">${chemOpts}</optgroup>`;
+                    fillTeacherDropdownOptions(mentorSelect, "");
                 }
             } catch (err) { console.error("Teacher load error:", err); }
+        }
+
+        // Helper function to build category-grouped options robustly matching math/science departments
+        function fillTeacherDropdownOptions(selectElement, selectedTeacherId) {
+            let coreOpts = "", mathOpts = "", phyOpts = "", chemOpts = "";
+            
+            teachersList.forEach(t => {
+                const b = (t.branch || '').toUpperCase();
+                const opt = `<option value="${t.usn}" data-name="${t.name}" ${t.usn === selectedTeacherId ? 'selected' : ''}>${t.name} (${t.usn}) - [${t.branch}]</option>`;
+                
+                if (b.includes('MATH') || b.includes('MATHEMATICS')) mathOpts += opt;
+                else if (b.includes('PHYS')) phyOpts += opt;
+                else if (b.includes('CHEM')) chemOpts += opt;
+                else coreOpts += opt;
+            });
+
+            selectElement.innerHTML = `<option value="">-- Select Teacher --</option>` +
+                `<optgroup label="${userBranch} Department">${coreOpts}</optgroup>` +
+                `<optgroup label="Mathematics Department">${mathOpts}</optgroup>` +
+                `<optgroup label="Physics Department">${phyOpts}</optgroup>` +
+                `<optgroup label="Chemistry Department">${chemOpts}</optgroup>`;
         }
 
         async function submitBatchMentorshipAssignment() {
@@ -544,11 +467,7 @@
                 const res = await fetch(`${API_BASE}/api/hod/assign-mentees`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        mentorId: mentorId,
-                        studentUsns: generatedUsns,
-                        institutionId: institutionId
-                    })
+                    body: JSON.stringify({ mentorId, studentUsns: generatedUsns, institutionId })
                 });
 
                 const data = await res.json();
@@ -560,7 +479,7 @@
                     showPopupNotification(`❌ Error: ${data.message}`, 'error');
                 }
             } catch (err) {
-                showPopupNotification("❌ Network Error: Could not connect to backend server.", 'error');
+                showPopupNotification("❌ Network Error.", 'error');
             }
         }
 
@@ -584,55 +503,32 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        institutionId: institutionId,
-                        marksList: [{
-                            studentUsn: studentUsn,
-                            sem: sem,
-                            subjectCode: subjectCode,
-                            subjectName: subjectName,
-                            cie1: cie1,
-                            cie2: cie2,
-                            cie3: cie3,
-                            see: see
-                        }]
+                        institutionId,
+                        marksList: [{ studentUsn, sem, subjectCode, subjectName, cie1, cie2, cie3, see }]
                     })
                 });
 
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    showPopupNotification(`✅ Historical marks committed for ${studentUsn} (${subjectCode} Sem ${sem})!`);
+                    showPopupNotification(`✅ Historical marks committed for ${studentUsn}!`);
                     document.getElementById('batchSubCode').value = "";
                     document.getElementById('batchSubName').value = "";
-                    document.getElementById('batchCie1').value = "0";
-                    document.getElementById('batchCie2').value = "0";
-                    document.getElementById('batchCie3').value = "0";
-                    document.getElementById('batchSee').value = "0";
                 } else {
-                    showPopupNotification(`❌ Error: ${data.error || 'Failed to save marks.'}`, 'error');
+                    showPopupNotification(`❌ Error: ${data.error || 'Failed.'}`, 'error');
                 }
-            } catch (err) {
-                showPopupNotification("❌ Network error connecting to database.", 'error');
-            }
+            } catch (err) { showPopupNotification("❌ Network error.", 'error'); }
         }
 
         async function sendHodMessage() {
             const recipientId = document.getElementById('hodMsgRecipient').value;
             const messageText = document.getElementById('hodMsgText').value.trim();
-
             if (!messageText) { alert("⚠️ Please type a message."); return; }
 
             try {
                 const res = await fetch(`${API_BASE}/api/messages/send`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        senderId: userUsn,
-                        senderName: userName,
-                        senderRole: 'hod',
-                        recipientId: recipientId,
-                        messageText: messageText,
-                        institutionId: institutionId
-                    })
+                    body: JSON.stringify({ senderId: userUsn, senderName: userName, senderRole: 'hod', recipientId, messageText, institutionId })
                 });
 
                 if (res.ok) {
@@ -640,9 +536,7 @@
                     document.getElementById('hodMsgText').value = "";
                     loadHodChatLedger();
                 }
-            } catch (err) {
-                showPopupNotification("❌ Error sending message.", 'error');
-            }
+            } catch (err) { showPopupNotification("❌ Error sending message.", 'error'); }
         }
 
         async function loadHodChatLedger() {
@@ -682,12 +576,11 @@
                 badge.innerText = `${pendingReqs.length} Pending`;
 
                 if (!requests || requests.length === 0) {
-                    feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px; background: #f8fafc; border-radius: 10px;">📬 No swap or leave requests at this time.</div>`;
+                    feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px; background: #f8fafc; border-radius: 10px;">📬 No swap or leave requests.</div>`;
                     return;
                 }
 
                 feed.innerHTML = "";
-
                 requests.forEach(req => {
                     const reqCard = document.createElement('div');
                     reqCard.style.cssText = "background: #f8fafc; border: 1px solid var(--border-clean); border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;";
@@ -696,15 +589,12 @@
                     if (req.status === 'APPROVED') statusBadge = `<span style="font-weight: 800; color: var(--accent-green); font-size: 12px;">✅ APPROVED</span>`;
                     if (req.status === 'REJECTED') statusBadge = `<span style="font-weight: 800; color: var(--accent-red); font-size: 12px;">❌ REJECTED</span>`;
 
-                    let actionBtns = '';
-                    if (req.status === 'PENDING') {
-                        actionBtns = `
-                            <div style="display: flex; gap: 8px;">
-                                <button onclick="respondToSwap(${req.id}, 'APPROVED')" style="background: var(--accent-green); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">Approve ✓</button>
-                                <button onclick="respondToSwap(${req.id}, 'REJECTED')" style="background: var(--accent-red); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">Reject ✗</button>
-                            </div>
-                        `;
-                    }
+                    let actionBtns = req.status === 'PENDING' ? `
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="respondToSwap(${req.id}, 'APPROVED')" style="background: var(--accent-green); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">Approve ✓</button>
+                            <button onclick="respondToSwap(${req.id}, 'REJECTED')" style="background: var(--accent-red); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">Reject ✗</button>
+                        </div>
+                    ` : '';
 
                     reqCard.innerHTML = `
                         <div>
@@ -714,29 +604,16 @@
                             <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
                                 📅 Date: <strong>${new Date(req.swap_date).toLocaleDateString()}</strong> | Slot: <strong>${req.original_time_slot}</strong> | Sem: ${req.semester_number} [${req.branch}]
                             </div>
-                            ${req.reason ? `<div style="font-size: 11px; color: #475569; font-style: italic; margin-top: 2px;">" Reason: ${req.reason} "</div>` : ''}
                         </div>
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                            ${statusBadge}
-                            ${actionBtns}
-                        </div>
+                        <div style="display: flex; align-items: center; gap: 12px;">${statusBadge} ${actionBtns}</div>
                     `;
                     feed.appendChild(reqCard);
                 });
-            } catch (err) {
-                feed.innerHTML = `<div style="color: #ef4444; font-size: 12px; text-align: center;">Error loading swap requests.</div>`;
-            }
+            } catch (err) { feed.innerHTML = `<div style="color: #ef4444; font-size: 12px; text-align: center;">Error loading requests.</div>`; }
         }
 
-        async function manualRefreshSwaps() {
-            await loadHodSwapRequests();
-            showPopupNotification("🔄 Swap & leave requests refreshed successfully!");
-        }
-
-        async function manualRefreshMessages() {
-            await loadHodNotifications();
-            showPopupNotification("🔔 Messages inbox successfully updated!");
-        }
+        async function manualRefreshSwaps() { await loadHodSwapRequests(); showPopupNotification("🔄 Refreshed!"); }
+        async function manualRefreshMessages() { await loadHodNotifications(); showPopupNotification("🔔 Updated!"); }
 
         async function respondToSwap(requestId, status) {
             try {
@@ -745,90 +622,53 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ requestId, status, institutionId })
                 });
-
-                if (res.ok) {
-                    showPopupNotification(`Request ${status.toLowerCase()} successfully!`);
-                    loadHodSwapRequests();
-                }
-            } catch (err) {
-                showPopupNotification("Error communicating with server.", 'error');
-            }
+                if (res.ok) { showPopupNotification(`Request ${status.toLowerCase()}!`); loadHodSwapRequests(); }
+            } catch (err) { showPopupNotification("Error.", 'error'); }
         }
 
         async function loadHodNotifications() {
             const feed = document.getElementById('hodMessagesFeed');
             const badge = document.getElementById('hodMessageBadge');
-
             try {
                 const res = await fetch(`${API_BASE}/api/notifications?userId=${userUsn}&role=hod&institutionId=${institutionId}`);
                 const messages = await res.json();
-
                 if (!messages || messages.length === 0) {
-                    feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px; background: #f8fafc; border-radius: 10px;">📬 No current messages or announcements.</div>`;
+                    feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px; background: #f8fafc; border-radius: 10px;">📬 No current messages.</div>`;
                     badge.innerText = "0 Total";
                     return;
                 }
-
                 badge.innerText = `${messages.length} Total`;
                 feed.innerHTML = "";
-
                 messages.forEach(msg => {
                     const dateFormatted = new Date(msg.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                    const msgCard = document.createElement('div');
-                    msgCard.style.cssText = "background: #f8fafc; border-left: 4px solid var(--primary-blue); border-radius: 10px; padding: 10px 14px; text-align: left;";
-                    msgCard.innerHTML = `
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                            <span style="font-size: 11px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase;">${msg.title || 'EXECUTIVE ALERT'}</span>
-                            <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">${dateFormatted}</span>
-                        </div>
-                        <div style="font-size: 13px; color: var(--text-dark); font-weight: 600;">${msg.message}</div>
-                    `;
-                    feed.appendChild(msgCard);
+                    feed.innerHTML += `<div style="background: #f8fafc; border-left: 4px solid var(--primary-blue); border-radius: 10px; padding: 10px 14px; text-align: left;"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;"><span style="font-size: 11px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase;">${msg.title || 'ALERT'}</span><span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">${dateFormatted}</span></div><div style="font-size: 13px; color: var(--text-dark); font-weight: 600;">${msg.message}</div></div>`;
                 });
-            } catch (err) {
-                feed.innerHTML = `<div style="color: #ef4444; font-size: 12px; text-align: center;">Unable to load messages feed.</div>`;
-            }
+            } catch (err) { feed.innerHTML = `<div style="color: #ef4444; font-size: 12px;">Unable to load feed.</div>`; }
         }
 
         async function loadHodArchivedPastMessages() {
             const feed = document.getElementById('hodMessagesFeed');
             if (!feed) return;
-
             feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 16px;">Loading past archived messages...</div>`;
-
             try {
                 const res = await fetch(`${API_BASE}/api/notifications/archive?userId=${userUsn}&role=hod&institutionId=${institutionId}`);
                 const archiveList = await res.json();
-
                 if (!archiveList || archiveList.length === 0) {
-                    feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 16px; background: #f8fafc; border-radius: 10px;">📂 No past messages or sent logs found in archive.</div>`;
+                    feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 16px; background: #f8fafc; border-radius: 10px;">📂 No past messages.</div>`;
                     return;
                 }
-
                 feed.innerHTML = `<div style="font-size: 11px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase; margin-bottom: 4px;">📂 Archived & Sent Message History</div>`;
-                
                 archiveList.forEach(msg => {
                     const dateFormatted = new Date(msg.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-                    feed.innerHTML += `
-                        <div style="background: #f1f5f9; border-left: 4px solid var(--text-muted); padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 6px; text-align: left;">
-                            <div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 10px; font-weight: 700; margin-bottom: 2px;">
-                                <span>${msg.title || 'ARCHIVED LOG'}</span>
-                                <span>${dateFormatted}</span>
-                            </div>
-                            <div style="color: var(--text-dark); font-weight: 500;">${msg.message}</div>
-                        </div>
-                    `;
+                    feed.innerHTML += `<div style="background: #f1f5f9; border-left: 4px solid var(--text-muted); padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 6px; text-align: left;"><div style="display: flex; justify-content: space-between; color: var(--text-muted); font-size: 10px; font-weight: 700;"><span>${msg.title || 'ARCHIVED'}</span><span>${dateFormatted}</span></div><div style="color: var(--text-dark); font-weight: 500;">${msg.message}</div></div>`;
                 });
-            } catch (err) {
-                feed.innerHTML = `<div style="color: var(--accent-red); font-size: 12px; text-align: center;">Error loading archive feed.</div>`;
-            }
+            } catch (err) { feed.innerHTML = `<div style="color: var(--accent-red); font-size: 12px;">Error loading archive.</div>`; }
         }
 
         function switchAcademicScheme(scheme) {
             activeScheme = scheme;
             const tabOdd = document.getElementById('tabOdd');
             const tabEven = document.getElementById('tabEven');
-
             if (scheme === 'ODD') {
                 tabOdd.className = 'scheme-tab active-odd';
                 tabEven.className = 'scheme-tab';
@@ -838,7 +678,6 @@
                 tabEven.className = 'scheme-tab active-even';
                 activeSemNumber = 2;
             }
-
             renderSemesterPills();
             reloadTimetableGrid();
         }
@@ -847,16 +686,11 @@
             const container = document.getElementById('semesterPillsContainer');
             container.innerHTML = "";
             const semsToRender = activeScheme === 'ODD' ? [1, 3, 5, 7] : [2, 4, 6, 8];
-
             semsToRender.forEach(semNum => {
                 const btn = document.createElement('button');
                 btn.className = `sem-pill ${semNum === activeSemNumber ? 'selected' : ''}`;
                 btn.innerText = `Semester ${semNum}`;
-                btn.onclick = () => {
-                    activeSemNumber = semNum;
-                    renderSemesterPills();
-                    reloadTimetableGrid();
-                };
+                btn.onclick = () => { activeSemNumber = semNum; renderSemesterPills(); reloadTimetableGrid(); };
                 container.appendChild(btn);
             });
         }
@@ -872,13 +706,10 @@
             try {
                 const res = await fetch(`${API_BASE}/api/hod/weekly-timetable?branch=${userBranch}&academicYear=${batchYear}&semesterNumber=${activeSemNumber}&institutionId=${institutionId}`);
                 const data = await res.json();
-                data.forEach(item => {
-                    existingMap[`${item.day_of_week}_${item.period_id}`] = item;
-                });
+                data.forEach(item => { existingMap[`${item.day_of_week}_${item.period_id}`] = item; });
             } catch (err) { console.error("Grid fetch error:", err); }
 
             tbody.innerHTML = "";
-
             daysOfWeek.forEach((day, dayIdx) => {
                 const tr = document.createElement('tr');
                 let html = `<td style="font-weight: 800; background: #f8fafc; color: var(--primary-blue);">${day}</td>`;
@@ -886,38 +717,15 @@
                 periods.forEach((p, pIdx) => {
                     const key = `${day}_${p.id}`;
                     const slotData = existingMap[key] || {};
-
                     const subCode = slotData.subject_code || '';
                     const roomNum = slotData.room_number || '';
                     const assignedTeacherId = slotData.assigned_teacher_id || '';
 
-                    let coreOpts = "";
-                    let mathOpts = "";
-                    let phyOpts = "";
-                    let chemOpts = "";
-
-                    teachersList.forEach(t => {
-                        const sel = t.usn === assignedTeacherId ? 'selected' : '';
-                        const optHtml = `<option value="${t.usn}" data-name="${t.name}" ${sel}>${t.name} (${t.usn})</option>`;
-                        const b = (t.branch || '').toUpperCase();
-                        if (b === 'MATHS') mathOpts += optHtml;
-                        else if (b === 'PHYSICS') phyOpts += optHtml;
-                        else if (b === 'CHEM') chemOpts += optHtml;
-                        else coreOpts += optHtml;
-                    });
-
-                    let teacherOptions = `<option value="">-- Select Teacher --</option>` +
-                        `<optgroup label="${userBranch} Department">${coreOpts}</optgroup>` +
-                        `<optgroup label="Mathematics Department">${mathOpts}</optgroup>` +
-                        `<optgroup label="Physics Department">${phyOpts}</optgroup>` +
-                        `<optgroup label="Chemistry Department">${chemOpts}</optgroup>`;
-
+                    let selectId = `teacher_${day}_${p.id}`;
                     html += `
                         <td>
                             <div class="slot-cell">
-                                <select class="slot-select" id="teacher_${day}_${p.id}">
-                                    ${teacherOptions}
-                                </select>
+                                <select class="slot-select" id="${selectId}"></select>
                                 <div class="split-sub-room-box">
                                     <input type="text" class="slot-input" id="sub_${day}_${p.id}" value="${subCode}" placeholder="Subject Code">
                                     <div class="split-divider"></div>
@@ -926,20 +734,26 @@
                             </div>
                         </td>
                     `;
-
                     if (pIdx === 1 && dayIdx === 0) html += `<td rowspan="6" class="break-cell">TEA BREAK</td>`;
                     if (pIdx === 3 && dayIdx === 0) html += `<td rowspan="6" class="break-cell">LUNCH BREAK</td>`;
                 });
-
                 tr.innerHTML = html;
                 tbody.appendChild(tr);
+
+                // Populate each slot select dropdown dynamically with grouped categories
+                periods.forEach(p => {
+                    const slotData = existingMap[`${day}_${p.id}`] || {};
+                    const selectEl = document.getElementById(`teacher_${day}_${p.id}`);
+                    if (selectEl) {
+                        fillTeacherDropdownOptions(selectEl, slotData.assigned_teacher_id || '');
+                    }
+                });
             });
         }
 
         async function saveFullTimetable() {
             const batchYear = document.getElementById('batchYear').value;
             let payload = [];
-
             daysOfWeek.forEach(day => {
                 periods.forEach(p => {
                     const subCode = document.getElementById(`sub_${day}_${p.id}`).value.trim();
@@ -949,16 +763,7 @@
                     const teacherName = teacherSelect.options[teacherSelect.selectedIndex]?.getAttribute('data-name') || '';
 
                     if (subCode !== '' || teacherId !== '' || roomNum !== '') {
-                        payload.push({
-                            day: day,
-                            periodId: p.id,
-                            timeSlot: p.time,
-                            subjectCode: subCode,
-                            subjectName: subCode,
-                            roomNumber: roomNum,
-                            teacherId: teacherId,
-                            teacherName: teacherName
-                        });
+                        payload.push({ day, periodId: p.id, timeSlot: p.time, subjectCode: subCode, subjectName: subCode, roomNumber: roomNum, teacherId, teacherName });
                     }
                 });
             });
@@ -967,78 +772,66 @@
                 const res = await fetch(`${API_BASE}/api/hod/save-weekly-timetable`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        branch: userBranch,
-                        academicYear: batchYear,
-                        semesterNumber: parseInt(activeSemNumber),
-                        timetableData: payload,
-                        institutionId: institutionId
-                    })
+                    body: JSON.stringify({ branch: userBranch, academicYear: batchYear, semesterNumber: parseInt(activeSemNumber), timetableData: payload, institutionId })
                 });
-
-                const result = await res.json();
                 if (res.ok) {
                     showPopupNotification(`✅ Semester ${activeSemNumber} Timetable saved & dispatched!`);
                     await loadHodNotifications();
-                } else {
-                    showPopupNotification("❌ Error: " + result.error, 'error');
-                }
-            } catch (err) {
-                showPopupNotification("❌ Network Error: Could not reach backend server.", 'error');
-            }
+                } else { showPopupNotification("❌ Error saving.", 'error'); }
+            } catch (err) { showPopupNotification("❌ Network Error.", 'error'); }
         }
 
+        // 🎯 FIXED PDF EXPORT: Clear formatting, expanded dimensions, and unclipped canvas scaling
         async function generatePrincipalPdf() {
-            showPopupNotification("📄 Compiling Timetable PDF...");
+            showPopupNotification("📄 Compiling High-Resolution Timetable PDF...");
             
             const { jsPDF } = window.jspdf;
             const cardElement = document.getElementById('timetableMatrixCard');
+            const tableResponsive = cardElement.querySelector('.table-responsive');
 
             try {
-                // Force a clean desktop expansion width on the card so it doesn't squish
-                const originalWidth = cardElement.style.width;
-                const originalOverflow = cardElement.querySelector('.table-responsive').style.overflow;
+                const originalMaxWidth = cardElement.style.maxWidth;
+                const originalOverflow = tableResponsive.style.overflow;
                 
-                cardElement.style.width = "1250px";
-                cardElement.querySelector('.table-responsive').style.overflow = "visible";
+                cardElement.style.maxWidth = "none";
+                cardElement.style.width = "1400px";
+                tableResponsive.style.overflow = "visible";
 
                 const canvas = await html2canvas(cardElement, { 
-                    scale: 2, 
+                    scale: 2.5, 
                     useCORS: true, 
                     logging: false,
-                    windowWidth: 1400,
+                    windowWidth: 1500,
                     backgroundColor: "#ffffff" 
                 });
                 
-                cardElement.style.width = originalWidth;
-                cardElement.querySelector('.table-responsive').style.overflow = originalOverflow;
+                cardElement.style.maxWidth = originalMaxWidth;
+                cardElement.style.width = "100%";
+                tableResponsive.style.overflow = originalOverflow;
 
                 const imgData = canvas.toDataURL('image/png');
-
                 const pdf = new jsPDF('landscape', 'mm', 'a4');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
                 const pdfHeight = (canvas.height * (pdfWidth - 20)) / canvas.width;
 
                 pdf.setFont("helvetica", "bold");
-                pdf.setFontSize(15);
+                pdf.setFontSize(16);
                 pdf.setTextColor(30, 64, 175);
                 pdf.text("DR. AMBEDKAR INSTITUTE OF TECHNOLOGY (Dr. AIT)", 10, 12);
                 
-                pdf.setFontSize(10);
+                pdf.setFontSize(11);
                 pdf.setTextColor(100, 116, 139);
                 pdf.text(`DEPARTMENT OF ${userBranch} | OFFICIAL MASTER TIMETABLE MATRIX`, 10, 18);
-                pdf.text(`Batch: ${document.getElementById('batchYear').value} | Semester: ${activeSemNumber}`, 10, 23);
+                pdf.text(`Academic Batch: ${document.getElementById('batchYear').value} | Semester: ${activeSemNumber}`, 10, 23);
 
-                pdf.addImage(imgData, 'PNG', 10, 27, pdfWidth - 20, pdfHeight > 155 ? 155 : pdfHeight);
+                pdf.addImage(imgData, 'PNG', 10, 26, pdfWidth - 20, pdfHeight > 155 ? 155 : pdfHeight);
 
                 pdf.setFontSize(9);
                 pdf.setTextColor(50, 50, 50);
                 pdf.text(`Authorized by HOD (${userName}) on ${new Date().toLocaleDateString()}`, 10, 195);
                 pdf.text("HOD Signature: __________________________", pdfWidth - 10, 195, { align: 'right' });
 
-                const fileName = `DrAIT_${userBranch}_Sem_${activeSemNumber}_Timetable.pdf`;
-                pdf.save(fileName);
-                
+                pdf.save(`DrAIT_${userBranch}_Sem_${activeSemNumber}_Timetable.pdf`);
                 showPopupNotification("✅ PDF downloaded successfully!");
             } catch (err) {
                 console.error("PDF generation error:", err);
@@ -1059,14 +852,10 @@
                 toast.id = 'customToastPopup';
                 document.body.appendChild(toast);
             }
-            
             toast.style.background = type === 'success' ? '#0f172a' : '#991b1b';
             toast.innerText = message;
             toast.classList.add('show');
-
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 2500);
+            setTimeout(() => { toast.classList.remove('show'); }, 2500);
         }
     </script>
 </body>

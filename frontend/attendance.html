@@ -1,47 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Scan Attendance</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dr. AIT | Scan Attendance</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        :root {
+            --bg-canvas: #f8fafc;
+            --surface-card: #ffffff;
+            --border-clean: #e2e8f0;
+            --primary-blue: #1e40af;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; font-family: 'Inter', system-ui, sans-serif; }
+        .container { background: var(--surface-card); border: 1px solid var(--border-clean); padding: 30px 20px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        h2 { font-size: 20px; font-weight: 800; margin-bottom: 16px; color: var(--primary-blue); }
+        #status-msg { margin-top: 16px; font-size: 13px; color: var(--text-muted); font-weight: 500; }
+        .btn-cancel { width: 100%; padding: 14px; background: #e2e8f0; border: none; border-radius: 12px; color: var(--text-dark); font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 20px; transition: 0.2s; }
+        .btn-cancel:hover { background: #cbd5e1; }
+    </style>
 </head>
 <body>
     <div class="container">
-        <h2> Scan QR Code</h2>
-        <div id="reader" style="width: 300px; margin: auto;"></div>
-        <p id="status-msg">Align the QR code inside the box</p>
-        <button onclick="window.location.href='student.html'">Cancel</button>
+        <h2>📸 Scan QR Code</h2>
+        <div id="reader" style="width: 100%; max-width: 300px; margin: auto; border-radius: 12px; overflow: hidden;"></div>
+        <p id="status-msg">Align the session QR code inside the box</p>
+        <button class="btn-cancel" onclick="window.location.href='dashboard.html'">Cancel</button>
     </div>
 
     <script>
-        const studentId = localStorage.getItem("student_id");
+        let API_BASE = window.location.origin;
+        if (API_BASE.includes("-5501.")) {
+            API_BASE = API_BASE.replace("-5501.", "-5000.");
+        } else if (API_BASE.includes(":5501")) {
+            API_BASE = API_BASE.replace(":5501", ":5000");
+        } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            API_BASE = "http://localhost:5000";
+        }
 
-        function onScanSuccess(decodedText) {
-            html5QrcodeScanner.clear(); // Stop camera
+        const studentUsn = localStorage.getItem("userUsn") || localStorage.getItem("student_id");
+
+        if (!studentUsn) {
+            alert("Session expired or missing USN. Please log in again.");
+            window.location.href = "index.html";
+        }
+
+        let scannerCleaned = false;
+
+        async function onScanSuccess(decodedText) {
+            if (scannerCleaned) return;
+            scannerCleaned = true;
+
+            try {
+                await html5QrcodeScanner.clear();
+            } catch (e) {
+                console.warn("Scanner clear notice:", e);
+            }
             
+            document.getElementById('status-msg').innerText = "📍 Acquiring GPS location for geo-fence validation...";
+
             // Get GPS Location
             navigator.geolocation.getCurrentPosition(async (pos) => {
-                const response = await fetch('http://localhost:5000/api/attendance/mark', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        student_id: studentId,
-                        qr_code: decodedText,
-                        latitude: pos.coords.latitude,
-                        longitude: pos.coords.longitude
-                    })
-                });
+                try {
+                    const response = await fetch(`${API_BASE}/api/attendance/mark`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            usn: studentUsn,
+                            qrData: decodedText,
+                            latitude: pos.coords.latitude,
+                            longitude: pos.coords.longitude,
+                            institutionId: 'DR_AIT'
+                        })
+                    });
 
-                const result = await response.json();
-                alert(result.message);
-                window.location.href = 'student.html';
+                    const result = await response.json();
+                    alert(result.message || (result.success ? "Attendance marked successfully! ✅" : "Failed to mark attendance."));
+                    window.location.href = 'dashboard.html';
+                } catch (err) {
+                    console.error("Submission error:", err);
+                    alert("Network error submitting attendance.");
+                    window.location.href = 'dashboard.html';
+                }
             }, (err) => {
-                alert("Please enable GPS to mark attendance.");
-            });
+                alert("❌ GPS Location permission is required to mark attendance.");
+                window.location.href = 'dashboard.html';
+            }, { enableHighAccuracy: true, timeout: 10000 });
         }
 
         const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
-        html5QrcodeScanner.render(onScanSuccess);
+        html5QrcodeScanner.render(onScanSuccess, (err) => {
+            // Suppress continuous scan framing warnings
+        });
     </script>
 </body>
 </html>

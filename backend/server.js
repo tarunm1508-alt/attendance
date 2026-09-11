@@ -819,7 +819,6 @@ app.post('/api/messages/send', async (req, res, next) => {
         );
 
         if (recipientId.startsWith('SECTION_')) {
-            // Target specific branch, semester, and section (e.g., AIML - Sem 1 - Section B)
             const branchVal = targetBranch || 'AIML';
             const semVal = parseInt(targetSemester) || 1;
             const secVal = targetSection || 'B';

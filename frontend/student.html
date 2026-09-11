@@ -155,7 +155,7 @@
             <div class="profile-item"><strong>Student Name</strong><span id="profileName">Loading...</span></div>
             <div class="profile-item"><strong>University USN</strong><span id="profileUSN">Loading...</span></div>
             <div class="profile-item"><strong>Branch Specialization</strong><span id="profileBranch">AIML</span></div>
-            <div class="profile-item"><strong>Current Class / Sec</strong><span id="profileClassSec">2nd Year - A</span></div>
+            <div class="profile-item"><strong>Current Class / Sec</strong><span id="profileClassSec">Sem 3 - A</span></div>
         </div>
     </div>
 
@@ -243,16 +243,15 @@
 </div>
 
 <script>
-    // 🔒 SECURE SESSION GUARD: Prevent direct URL access without login
-    const currentStudentUSN = localStorage.getItem("user_usn") || localStorage.getItem("loggedInUsn") || localStorage.getItem("student_id") || localStorage.getItem("userUsn");
-    const userRole = localStorage.getItem("role") || localStorage.getItem("userRole") || "student";
+    // 🔒 SECURE SESSION GUARD
+    const currentStudentUSN = localStorage.getItem("userUsn") || localStorage.getItem("loggedInUsn") || localStorage.getItem("student_id") || localStorage.getItem("user_usn");
+    const institutionId = localStorage.getItem("institutionId") || "DR_AIT";
 
     if (!currentStudentUSN) {
         alert("⚠️ Unauthorized Access: No active student session detected. Please log in first.");
         window.location.href = "login.html"; 
     }
 
-    // 🎯 Dynamically resolve backend API endpoint
     let BACKEND_URL = window.location.origin;
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
         if (window.location.port === "5501" || window.location.origin.includes("-5501.")) {
@@ -403,25 +402,40 @@
                 } catch (stopErr) { console.warn(stopErr); }
             }
             
-            try {
-                const scanResponse = await fetch(`${BACKEND_URL}/api/attendance/mark`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ usn: currentStudentUSN, qrData: qrCodeContentData })
-                });
-                
-                const resultLog = await scanResponse.json();
-                document.getElementById("cameraScannerBox").style.display = "none";
-                
-                if (scanResponse.ok && resultLog.success) {
-                    alert(`Attendance Success: ${resultLog.message} ✅`);
-                    loadStudentDashboardPayload();
-                } else {
-                    alert(`Scanner Restriction: ${resultLog.message} ⚠️`);
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+
+                try {
+                    const scanResponse = await fetch(`${BACKEND_URL}/api/attendance/mark`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                            usn: currentStudentUSN, 
+                            qrData: qrCodeContentData,
+                            latitude: lat,
+                            longitude: lng,
+                            institutionId: institutionId
+                        })
+                    });
+                    
+                    const resultLog = await scanResponse.json();
+                    document.getElementById("cameraScannerBox").style.display = "none";
+                    
+                    if (scanResponse.ok && resultLog.success) {
+                        alert(`Attendance Success: ${resultLog.message} ✅`);
+                        loadStudentDashboardPayload();
+                    } else {
+                        alert(`Scanner Restriction: ${resultLog.message} ⚠️`);
+                    }
+                } catch(e) { 
+                    document.getElementById("cameraScannerBox").style.display = "none";
+                    alert("Network error marking attendance.");
                 }
-            } catch(e) { 
+            }, () => {
+                alert("❌ GPS location is required to mark attendance.");
                 document.getElementById("cameraScannerBox").style.display = "none";
-            }
+            });
         };
 
         html5QrcodeScannerInstance.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, qrSuccessCallback, () => {});
@@ -452,30 +466,45 @@
         const updatedPassword = document.getElementById("editPassword").value.trim();
 
         try {
-            const res = await fetch(`${BACKEND_URL}/api/marks/update-profile/${currentStudentUSN}`, {
+            const res = await fetch(`${BACKEND_URL}/api/marks/update-profile/${encodeURIComponent(currentStudentUSN)}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: updatedName, email: updatedEmail, password: updatedPassword })
+                body: JSON.stringify({ name: updatedName, email: updatedEmail, password: updatedPassword, institutionId: institutionId })
             });
-            if(res.ok) {
+            const data = await res.json();
+            if(res.ok && data.success) {
                 alert("Profile synchronized successfully!");
                 localStorage.setItem("user_name", updatedName);
                 document.getElementById("profileName").innerText = updatedName;
                 closeEditModal();
                 loadStudentDashboardPayload();
+            } else {
+                alert(data.message || "Failed to update profile.");
             }
         } catch(e) { alert("Network sync timeout."); }
     }
 
     async function loadStudentDashboardPayload() {
         try {
-            const cachedName = localStorage.getItem("user_name") || localStorage.getItem("loggedInName") || "Student";
+            const cachedName = localStorage.getItem("user_name") || localStorage.getItem("loggedInName") || localStorage.getItem("userName") || "Student";
             document.getElementById("profileName").innerText = cachedName;
             document.getElementById("profileUSN").innerText = currentStudentUSN;
-            document.getElementById("profileBranch").innerText = "AIML";
-            document.getElementById("profileClassSec").innerText = "2nd Year - A";
 
-            const res = await fetch(`${BACKEND_URL}/api/auth/student-subject-metrics?studentId=${currentStudentUSN}&institutionId=DR_AIT`);
+            // Fetch profile details via marks route
+            const profileRes = await fetch(`${BACKEND_URL}/api/marks/student-profile/${encodeURIComponent(currentStudentUSN)}?institutionId=${institutionId}`);
+            const profileData = await profileRes.json();
+            
+            if (profileData) {
+                cachedUserRawData = profileData;
+                if (profileData.student_name) {
+                    document.getElementById("profileName").innerText = profileData.student_name;
+                    localStorage.setItem("user_name", profileData.student_name);
+                }
+                document.getElementById("profileBranch").innerText = profileData.branch || "AIML";
+                document.getElementById("profileClassSec").innerText = `Sem ${profileData.current_class || '3'} - ${profileData.section || 'A'}`;
+            }
+
+            const res = await fetch(`${BACKEND_URL}/api/auth/student-subject-metrics?studentId=${encodeURIComponent(currentStudentUSN)}&institutionId=${institutionId}`);
             const result = await res.json();
 
             if (result && result.success) {
