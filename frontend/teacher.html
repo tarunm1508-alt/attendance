@@ -54,10 +54,6 @@
 
         /* Marks Management Section */
         .marks-section { background: #ffffff; padding: 28px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 35px; text-align: left; }
-        .search-bar-row { display: flex; gap: 12px; margin-bottom: 20px; align-items: flex-end; }
-        .search-bar-row .input-wrap { flex: 1; margin-bottom: 0; }
-        .search-bar-row .btn-search { width: auto; padding: 12px 24px; background: var(--dark); color: white; border-radius: 10px; font-weight: 700; cursor: pointer; border: none; height: 45px; }
-
         .student-banner { display: none; padding: 14px 18px; border-radius: 10px; background: #eff6ff; border: 1px solid #bfdbfe; margin-bottom: 20px; font-size: 14px; color: #1e3a8a; }
         
         .marks-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
@@ -122,20 +118,34 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- 📚 SECTION 1: MARKS EVALUATION (ASSIGNED SUBJECT ONLY + FROZEN OTHERS)-->
+    <!-- 📚 SECTION 1: MARKS EVALUATION (SEMESTER + STUDENT ROSTER SELECTOR)   -->
     <!-- ===================================================================== -->
     <div class="marks-section">
         <div class="section-title">📝 Student Evaluation & Continuous Internal Marks</div>
         <p style="font-size: 13px; color: var(--muted); margin-top: 0; margin-bottom: 18px;">
-            Enter student USN to view the academic mark sheet. <strong>You can enter marks only for your assigned subject module.</strong> All other subjects are locked in read-only mode.
+            Select the target semester and choose a student from the roster to inspect and evaluate scores for your assigned module. <strong>You can enter marks only for your assigned subject module.</strong> All other subjects are locked in read-only mode.
         </p>
 
-        <div class="search-bar-row">
-            <div class="input-wrap">
-                <label for="searchUsnInput">Target Student USN</label>
-                <input type="text" id="searchUsnInput" placeholder="Enter student USN (e.g., 1DA24AI099)" value="1DA24AI099" style="margin-bottom:0;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 16px;">
+            <div>
+                <label for="filterSemester">Select Semester</label>
+                <select id="filterSemester" onchange="loadStudentRosterForTeacher()">
+                    <option value="1">Semester 1</option>
+                    <option value="2">Semester 2</option>
+                    <option value="3" selected>Semester 3</option>
+                    <option value="4">Semester 4</option>
+                    <option value="5">Semester 5</option>
+                    <option value="6">Semester 6</option>
+                    <option value="7">Semester 7</option>
+                    <option value="8">Semester 8</option>
+                </select>
             </div>
-            <button class="btn-search" onclick="fetchStudentMarksMatrix()">Fetch Marks Matrix</button>
+            <div>
+                <label for="rosterStudentSelect">Select Student from Roster</label>
+                <select id="rosterStudentSelect" onchange="onStudentRosterSelected()">
+                    <option value="">-- Load semester to view students --</option>
+                </select>
+            </div>
         </div>
 
         <div id="studentDetailBanner" class="student-banner"></div>
@@ -156,7 +166,7 @@
                 <tbody id="marksMatrixBody">
                     <tr>
                         <td colspan="7" style="padding: 24px; color: var(--muted); font-style: italic;">
-                            Enter a USN above and click "Fetch Marks Matrix" to inspect evaluation scores.
+                            Select a semester and student above to evaluate marks.
                         </td>
                     </tr>
                 </tbody>
@@ -165,7 +175,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- 📡 SECTION 2: ATTENDANCE QR GENERATOR & LIVE SCANS                    -->
+    <!-- 📡 SECTION 2: ATTENDANCE QR GENERATOR & LIVE SCANS                     -->
     <!-- ===================================================================== -->
     <div class="section-title" style="text-align: left;">📡 Live Lecture Attendance System</div>
     <div class="control-panel">
@@ -197,6 +207,60 @@
         <p style="font-size:12px; color:var(--warning); font-weight:bold; margin-bottom:0; margin-top:12px;">⚠️ Keep this QR Code visible on the projector screen for students to scan.</p>
     </div>
 
+    <!-- ===================================================================== -->
+    <!-- 📋 SECTION 3: LIVE CLASS ROSTER (PRESENT VS ABSENT BREAKDOWN)           -->
+    <!-- ===================================================================== -->
+    <div class="live-monitor-container" style="margin-bottom: 25px;">
+        <div class="live-monitor-header">
+            <h3 style="color: var(--dark); margin: 0; font-size: 17px; font-weight: 800;">📋 Class Attendance Roster (Present vs Absent)</h3>
+            <div style="display: flex; gap: 10px;">
+                <span id="presentCountBadge" style="background: #e8f8f5; color: #117a65; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">0 Present</span>
+                <span id="absentCountBadge" style="background: #fdf2f2; color: #991b1b; padding: 6px 12px; border-radius: 12px; font-size: 12px; font-weight: bold;">0 Absent</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <!-- Present Students Column -->
+            <div>
+                <h4 style="color: var(--success); margin-bottom: 10px; font-size: 14px;">✅ Present Students</h4>
+                <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8fafc; position: sticky; top: 0;">
+                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid var(--border);">USN & Name</th>
+                                <th style="padding: 8px; text-align: right; border-bottom: 1px solid var(--border);">Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="presentTableBody">
+                            <tr><td colspan="2" style="padding: 15px; text-align: center; color: var(--muted); font-style: italic;">No records yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Absent Students Column -->
+            <div>
+                <h4 style="color: var(--danger); margin-bottom: 10px; font-size: 14px;">❌ Absent Students</h4>
+                <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #f8fafc; position: sticky; top: 0;">
+                                <th style="padding: 8px; text-align: left; border-bottom: 1px solid var(--border);">USN & Name</th>
+                                <th style="padding: 8px; text-align: right; border-bottom: 1px solid var(--border);">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="absentTableBody">
+                            <tr><td colspan="2" style="padding: 15px; text-align: center; color: var(--muted); font-style: italic;">No records yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
+    <!-- 📡 SECTION 4: REAL-TIME SCANS LOG STREAM                              -->
+    <!-- ===================================================================== -->
     <div class="live-monitor-container">
         <div class="live-monitor-header">
             <h3 style="color: var(--dark); margin: 0; font-size: 17px; font-weight: 800;">Real-Time Attendance Feed</h3>
@@ -249,6 +313,7 @@
     const teacherName = localStorage.getItem("userName") || localStorage.getItem("user_name") || "Faculty Member";
     const teacherUsn = localStorage.getItem("userUsn") || localStorage.getItem("usn") || localStorage.getItem("teacherId") || "";
     let teacherAssignedSubject = (localStorage.getItem("userSubject") || "").trim();
+    const teacherBranch = localStorage.getItem("userBranch") || "AIML";
     const institutionId = localStorage.getItem("institutionId") || "DR_AIT";
 
     document.getElementById("teacherName").innerText = teacherName;
@@ -265,9 +330,10 @@
     }
 
     let trackerInterval = null;
+    let currentActiveSessionCode = "";
 
     window.onload = () => {
-        fetchStudentMarksMatrix();
+        loadStudentRosterForTeacher();
         loadTeacherInboxMessages();
     };
 
@@ -350,17 +416,41 @@
     }
 
     // =========================================================================
-    // 📝 MARKS MATRIX CONTROLLER
+    // 📝 STUDENT ROSTER & MARKS MATRIX CONTROLLER
     // =========================================================================
-    async function fetchStudentMarksMatrix() {
-        const studentUsn = document.getElementById("searchUsnInput").value.trim();
+    async function loadStudentRosterForTeacher() {
+        const semNum = document.getElementById("filterSemester").value;
+        const studentSelect = document.getElementById("rosterStudentSelect");
+        
+        studentSelect.innerHTML = `<option value="">Loading students...</option>`;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/teacher-student-roster?branch=${encodeURIComponent(teacherBranch)}&semesterNumber=${semNum}&institutionId=${encodeURIComponent(institutionId)}`);
+            const data = await res.json();
+
+            if (data.success && data.students.length > 0) {
+                studentSelect.innerHTML = `<option value="">-- Choose Student from Roster --</option>`;
+                data.students.forEach(st => {
+                    studentSelect.innerHTML += `<option value="${st.usn}">${st.name} (${st.usn})</option>`;
+                });
+            } else {
+                studentSelect.innerHTML = `<option value="">No students found for Semester ${semNum}</option>`;
+            }
+        } catch (err) {
+            studentSelect.innerHTML = `<option value="">Error loading student list</option>`;
+        }
+    }
+
+    function onStudentRosterSelected() {
+        const selectedUsn = document.getElementById("rosterStudentSelect").value;
+        if (selectedUsn) {
+            fetchStudentMarksMatrixDirect(selectedUsn);
+        }
+    }
+
+    async function fetchStudentMarksMatrixDirect(studentUsn) {
         const tbody = document.getElementById("marksMatrixBody");
         const banner = document.getElementById("studentDetailBanner");
-
-        if (!studentUsn) {
-            alert("Please enter a valid student USN.");
-            return;
-        }
 
         tbody.innerHTML = `<tr><td colspan="7" style="padding:20px; text-align:center; color:#64748b;">Fetching evaluation records for ${studentUsn}...</td></tr>`;
 
@@ -430,6 +520,7 @@
         const cie2 = document.getElementById(`cie2_${subjectCode}`).value;
         const cie3 = document.getElementById(`cie3_${subjectCode}`).value;
         const see = document.getElementById(`see_${subjectCode}`).value;
+        const semNum = document.getElementById("filterSemester").value;
 
         try {
             const res = await fetch(`${API_BASE}/api/teacher/update-marks`, {
@@ -443,7 +534,7 @@
                     cie2: cie2,
                     cie3: cie3,
                     see: see,
-                    semesterNumber: 3,
+                    semesterNumber: parseInt(semNum),
                     institutionId: institutionId
                 })
             });
@@ -451,7 +542,7 @@
             const data = await res.json();
             if (res.ok && data.success) {
                 alert(`✓ ${data.message}`);
-                fetchStudentMarksMatrix();
+                fetchStudentMarksMatrixDirect(studentUsn);
             } else {
                 alert(`⛔ Failed: ${data.message || 'Update rejected by server.'}`);
             }
@@ -488,6 +579,7 @@
                 }
 
                 document.getElementById("qrDisplayBox").style.display = 'block';
+                currentActiveSessionCode = data.token || data.sessionCode || "";
                 startLiveTracking(subject);
                 alert(`Attendance session successfully initiated for ${subject}!`);
             } else {
@@ -501,12 +593,15 @@
     function startLiveTracking(subject) {
         if (trackerInterval) clearInterval(trackerInterval);
         fetchLiveScans(); 
-        trackerInterval = setInterval(fetchLiveScans, 3000); 
+        fetchClassSessionRoster();
+        trackerInterval = setInterval(() => {
+            fetchLiveScans();
+            fetchClassSessionRoster();
+        }, 3000); 
     }
 
     async function fetchLiveScans() {
         try {
-            // FIXED: Calls correct attendance route prefix /api/attendance/live-session-count
             const res = await fetch(`${API_BASE}/api/attendance/live-session-count?institutionId=${encodeURIComponent(institutionId)}`);
             const data = await res.json();
 
@@ -542,9 +637,55 @@
         }
     }
 
+    async function fetchClassSessionRoster() {
+        if (!currentActiveSessionCode) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/teacher-session-roster?sessionCode=${encodeURIComponent(currentActiveSessionCode)}&institutionId=${encodeURIComponent(institutionId)}`);
+            const data = await res.json();
+
+            if (data.success) {
+                document.getElementById('presentCountBadge').innerText = `${data.presentCount} Present`;
+                document.getElementById('absentCountBadge').innerText = `${data.absentCount} Absent`;
+
+                // Present Table
+                let presentHtml = "";
+                if (data.presentStudents.length === 0) {
+                    presentHtml = `<tr><td colspan="2" style="padding: 15px; text-align: center; color: var(--muted); font-style: italic;">No students present yet.</td></tr>`;
+                } else {
+                    data.presentStudents.forEach(s => {
+                        presentHtml += `
+                            <tr>
+                                <td style="padding: 8px; border-bottom: 1px solid var(--border);"><strong>${s.usn}</strong><br><span style="color:var(--muted); font-size:11px;">${s.name}</span></td>
+                                <td style="padding: 8px; text-align: right; border-bottom: 1px solid var(--border); color: var(--success); font-weight: bold;">📍 ${s.distance}</td>
+                            </tr>
+                        `;
+                    });
+                }
+                document.getElementById('presentTableBody').innerHTML = presentHtml;
+
+                // Absent Table
+                let absentHtml = "";
+                if (data.absentStudents.length === 0) {
+                    absentHtml = `<tr><td colspan="2" style="padding: 15px; text-align: center; color: var(--muted); font-style: italic;">All students are present! 🎉</td></tr>`;
+                } else {
+                    data.absentStudents.forEach(s => {
+                        absentHtml += `
+                            <tr>
+                                <td style="padding: 8px; border-bottom: 1px solid var(--border);"><strong>${s.usn}</strong><br><span style="color:var(--muted); font-size:11px;">${s.name}</span></td>
+                                <td style="padding: 8px; text-align: right; border-bottom: 1px solid var(--border); color: var(--danger); font-weight: bold;">ABSENT</td>
+                            </tr>
+                        `;
+                    });
+                }
+                document.getElementById('absentTableBody').innerHTML = absentHtml;
+            }
+        } catch (err) {
+            console.error("Error fetching class roster breakdown:", err);
+        }
+    }
+
     async function closeAttendanceSession() {
         try {
-            // FIXED: Calls correct attendance route prefix /api/attendance/close-session
             const res = await fetch(`${API_BASE}/api/attendance/close-session`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -556,7 +697,12 @@
                 clearInterval(trackerInterval); 
                 document.getElementById("qrDisplayBox").style.display = 'none'; 
                 document.getElementById("scanCount").innerText = "0";
+                document.getElementById('presentCountBadge').innerText = "0 Present";
+                document.getElementById('absentCountBadge').innerText = "0 Absent";
                 document.getElementById("liveScanTableBody").innerHTML = `<tr><td colspan="4" style="padding:20px; text-align:center; color:#64748b; font-style:italic;">Session finalized cleanly. All attendance logs synchronized into database.</td></tr>`;
+                document.getElementById('presentTableBody').innerHTML = `<tr><td colspan="2" style="padding: 15px; text-align: center; color: var(--muted); font-style: italic;">No records yet.</td></tr>`;
+                document.getElementById('absentTableBody').innerHTML = `<tr><td colspan="2" style="padding: 15px; text-align: center; color: var(--muted); font-style: italic;">No records yet.</td></tr>`;
+                currentActiveSessionCode = "";
                 alert(data.message || "Class session terminated completely!");
             } else {
                 alert("Error closing session: " + data.message);

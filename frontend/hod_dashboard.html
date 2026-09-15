@@ -124,7 +124,38 @@
             </div>
         </div>
 
-        <!-- 🎓 2. PROCTOR & MENTORSHIP ALLOCATION TOOL -->
+        <!-- 🩺 2. MEDICAL / LEAVE ATTENDANCE EXCUSE DESK -->
+        <div class="bento-card" style="border-left: 5px solid var(--accent-red);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                <span style="font-size: 20px;">🩺</span>
+                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Medical / Leave Attendance Excuse Desk</h3>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+                Manually excuse absent students due to health issues or approved leave by granting them attendance for an active session code.
+            </p>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean);">
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">STUDENT USN</label>
+                    <input type="text" id="overrideStudentUsn" placeholder="e.g., 1DA24AI044" style="width: 100%; text-transform: uppercase;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">ACTIVE SESSION CODE</label>
+                    <input type="text" id="overrideSessionCode" placeholder="e.g., AI_SESS_101" style="width: 100%; text-transform: uppercase;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SUBJECT NAME</label>
+                    <input type="text" id="overrideSubjectName" value="AI" placeholder="e.g., Artificial Intelligence" style="width: 100%;">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button onclick="submitHodAttendanceOverride()" style="background: var(--accent-red); color: white; border: none; padding: 11px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; height: 42px; width: 100%;">
+                        ✅ Excuse & Mark Present
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🎓 3. PROCTOR & MENTORSHIP ALLOCATION TOOL -->
         <div class="bento-card" style="border-left: 5px solid var(--accent-purple);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -171,7 +202,7 @@
             </div>
         </div>
 
-        <!-- 📝 3. HOD HISTORICAL & PAST SEMESTER MARKS BATCH WORKSTATION -->
+        <!-- 📝 4. HOD HISTORICAL & PAST SEMESTER MARKS BATCH WORKSTATION -->
         <div class="bento-card" style="border-left: 5px solid var(--accent-green);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -236,7 +267,7 @@
             </div>
         </div>
 
-        <!-- 💬 4. HOD COMMAND MESSAGING & BROADCAST DESK -->
+        <!-- 💬 5. HOD COMMAND MESSAGING & BROADCAST DESK -->
         <div class="bento-card" style="border-left: 5px solid var(--accent-green);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
                 <span style="font-size: 20px;">💬</span>
@@ -266,7 +297,7 @@
             </div>
         </div>
 
-        <!-- 🔄 5. FACULTY SWAP & LEAVE APPROVALS INBOX -->
+        <!-- 🔄 6. FACULTY SWAP & LEAVE APPROVALS INBOX -->
         <div class="bento-card" style="border-left: 5px solid var(--primary-blue);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -282,7 +313,7 @@
             </div>
         </div>
 
-        <!-- 🔔 6. EXECUTIVE MESSAGES & ANNOUNCEMENTS BOX -->
+        <!-- 🔔 7. EXECUTIVE MESSAGES & ANNOUNCEMENTS BOX -->
         <div class="bento-card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
@@ -301,7 +332,7 @@
             </div>
         </div>
 
-        <!-- 📅 7. SCHEME & SEMESTER FILTER WORKSTATION -->
+        <!-- 📅 8. SCHEME & SEMESTER FILTER WORKSTATION -->
         <div class="bento-card">
             <div style="font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">1. Select Academic Scheme Category</div>
             
@@ -335,7 +366,7 @@
             </div>
         </div>
 
-        <!-- 🗓️ 8. DR. AIT WEEKLY TIMETABLE GRID -->
+        <!-- 🗓️ 9. DR. AIT WEEKLY TIMETABLE GRID -->
         <div class="bento-card" id="timetableMatrixCard">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <h3 id="gridTitleLabel" style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">
@@ -519,6 +550,41 @@
             } catch (err) { showPopupNotification("❌ Network error.", 'error'); }
         }
 
+        async function submitHodAttendanceOverride() {
+            const studentUsn = document.getElementById('overrideStudentUsn').value.trim().toUpperCase();
+            const sessionCode = document.getElementById('overrideSessionCode').value.trim().toUpperCase();
+            const subjectName = document.getElementById('overrideSubjectName').value.trim() || 'AI';
+
+            if (!studentUsn || !sessionCode) {
+                alert("⚠️ Please provide both a Student USN and an Active Session Code.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/hod/override-attendance`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentUsn,
+                        sessionCode,
+                        subjectName,
+                        institutionId
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showPopupNotification(`✅ ${data.message}`);
+                    document.getElementById('overrideStudentUsn').value = "";
+                    document.getElementById('overrideSessionCode').value = "";
+                } else {
+                    showPopupNotification(`❌ Error: ${data.message || 'Failed to override.'}`, 'error');
+                }
+            } catch (err) {
+                showPopupNotification("❌ Network error connecting to attendance override gateway.", 'error');
+            }
+        }
+
         async function sendHodMessage() {
             const recipientId = document.getElementById('hodMsgRecipient').value;
             const messageText = document.getElementById('hodMsgText').value.trim();
@@ -654,7 +720,7 @@
                 const res = await fetch(`${API_BASE}/api/notifications/archive?userId=${userUsn}&role=hod&institutionId=${institutionId}`);
                 const archiveList = await res.json();
                 if (!archiveList || archiveList.length === 0) {
-                    feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 16px; background: #f8fafc; border-radius: 10px;">📂 No past messages.</div>`;
+                    feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 16px; background: #f8fafc; border-radius: 10px;">📂 No past messages.</div>`;
                     return;
                 }
                 feed.innerHTML = `<div style="font-size: 11px; font-weight: 800; color: var(--primary-blue); text-transform: uppercase; margin-bottom: 4px;">📂 Archived & Sent Message History</div>`;

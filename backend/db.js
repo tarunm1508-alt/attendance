@@ -18,8 +18,10 @@ pool.on('connect', () => {
     console.log(isCloud ? '☁️ Connected to Cloud PostgreSQL Database!' : '💻 Connected to Local PostgreSQL Database!');
 });
 
-pool.on('error', (err) => {
-    console.error('❌ Database Pool Error:', err.message);
+// Robust error listener to handle sudden socket closures or idle terminations smoothly
+pool.on('error', (err, client) => {
+    console.error('⚠️ Warning: Database idle client error encountered:', err.message);
+    // The pool will automatically handle reconnecting dead clients on the next query
 });
 
 module.exports = pool;
