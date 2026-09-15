@@ -59,8 +59,7 @@
         .qr-placeholder img { width: 100%; height: 100%; object-fit: contain; border-radius: 12px; padding: 6px; }
 
         .countdown-ticker-box { font-size: 14px; font-weight: 800; color: var(--accent-red); font-family: monospace; display: inline-block; margin-left: 6px; background: #fef2f2; padding: 2px 8px; border-radius: 6px; border: 1px solid #fee2e2; }
-        .rolling-timer-line { position: absolute; bottom: 0; left: 0; height: 5px; background: var(--accent-red); width: 100%; border-radius: 0 0 16px 16px; }
-
+        
         .view-toggle-bar { display: flex; gap: 10px; border-bottom: 2px solid var(--bento-border); margin-bottom: 24px; flex-wrap: wrap; }
         .toggle-tab-btn { background: transparent; border: none; padding: 12px 18px; font-size: 13px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s; }
         .toggle-tab-btn.active { color: var(--primary-blue); border-bottom-color: var(--primary-blue); font-weight: 800; }
@@ -84,7 +83,6 @@
         th { background-color: #f1f5f9; color: var(--text-dark); padding: 14px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--bento-border); }
         td { padding: 12px 16px; border-bottom: 1px solid var(--bento-border); font-size: 13px; color: #334155; background: #ffffff; }
         .status-badge { background: rgba(16, 185, 129, 0.1); color: #047857; padding: 5px 12px; border-radius: 20px; font-weight: 700; font-size: 11px; border: 1px solid rgba(16, 185, 129, 0.2); }
-        .absent-badge { background: #fef2f2; color: #b91c1c; padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; border: 1px solid #fca5a5; }
 
         .semester-display-pane { display: none; animation: fadeInPane 0.25s ease; }
         .semester-display-pane.active { display: block; }
@@ -99,8 +97,7 @@
         .marks-cell-value { font-size: 12px; font-weight: 800; color: var(--primary-blue); margin-top: 2px; }
 
         .scanner-zone { display: none; margin: 0 auto; padding: 16px; background: #0f172a; border-radius: 16px; max-width: 340px; text-align: center; }
-        #previewVideo { width: 100%; max-width: 300px; border-radius: 12px; overflow: hidden; background: #000; display: block; margin: 0 auto; }
-
+        
         .toast-popup-notification { position: fixed; top: 30px; right: 30px; background: #0f172a; color: white; padding: 16px 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); font-size: 13px; font-weight: 700; z-index: 1000000; display: none; border-left: 4px solid var(--accent-green); animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
@@ -120,8 +117,7 @@
         .slider-control::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent-purple); cursor: pointer; }
 
         .voice-node-indicator { background: #f1f5f9; border: 1px solid var(--bento-border); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 12px; display: inline-flex; align-items: center; gap: 6px; }
-        .voice-node-indicator.listening { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
-
+        
         .mentee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
         .mentee-card { background: white; border: 1px solid var(--bento-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-premium); }
     </style>
@@ -318,29 +314,6 @@
                         </div>
                         <div id="rollingProgressBarLine" class=""></div>
                         <div id="sessionLabel" style="font-size: 11px; font-weight: 700; color: var(--text-muted); font-family: monospace; margin-top: 4px;">NO ACTIVE DISPATCH</div>
-                    </div>
-                </div>
-
-                <!-- RECONCILIATION SUMMARY DECK -->
-                <div id="postSessionSummaryDeck" class="reconciliation-deck-grid" style="display: none;">
-                    <div class="reconciliation-pane-card" style="border-top: 4px solid var(--accent-green);">
-                        <div class="rec-header-row" style="color:#047857;">✅ Verified Present Directory (<span id="presentCountSummary">0</span>)</div>
-                        <div class="table-container" style="margin:0; max-height: 250px; overflow-y: auto;">
-                            <table>
-                                <thead><tr><th>Student Name</th><th>USN / ID</th><th>Status</th></tr></thead>
-                                <tbody id="presentSummaryTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="reconciliation-pane-card" style="border-top: 4px solid var(--accent-red);">
-                        <div class="rec-header-row" style="color:var(--accent-red);">❌ Flagged Absent Directory (<span id="absentCountSummary">0</span>)</div>
-                        <div class="table-container" style="margin:0; max-height: 250px; overflow-y: auto;">
-                            <table>
-                                <thead><tr><th>Student Name</th><th>USN / ID</th><th>Status</th></tr></thead>
-                                <tbody id="absentSummaryTableBody"></tbody>
-                            </table>
-                        </div>
                     </div>
                 </div>
 
@@ -652,7 +625,6 @@
 
     <!-- JavaScript Client Engine -->
     <script>
-        // GLOBAL BACK BUTTON LOCK FOR ALL ROLES (Prevents navigating back to login unless logged out)
         history.pushState(null, null, location.href);
         window.addEventListener('popstate', function () {
             history.pushState(null, null, location.href);
@@ -678,11 +650,9 @@
         const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
 
         let currentGeneratedSessionToken = ""; 
-        let isScannerLoopActive = false; 
         let secondsRemainingInSession = 180; 
         let sessionTimerCountdownReference = null;
         let backgroundPollerReference = null;
-        let speechRecognitionEngineInstance = null;
         let scatterChartInstance = null;
         let marksChartInstance = null;
         let scannedStudentUsnsCache = []; 
@@ -690,7 +660,6 @@
         let systemCacheAttendedTotal = 0;
         let html5QrcodeScannerInstance = null;
 
-        // 🚀 CLIENT-SIDE DEVICE FINGERPRINT GENERATOR & STORAGE
         function getOrCreateDeviceFingerprint() {
             let fingerprint = localStorage.getItem('device_fingerprint');
             if (!fingerprint) {
@@ -700,7 +669,6 @@
             return fingerprint;
         }
 
-        // 🚀 SEAMLESS MOBILE UNLOCK GATEKEEPER
         async function triggerBiometricDeviceHandshake() {
             const overlay = document.getElementById('authOverlay');
             const container = document.getElementById('mainDashboardContainer');
@@ -800,7 +768,6 @@
             }
         }
 
-        // ➕ FIXED: Added saveStudentMarks for the marks table roster view
         async function saveStudentMarks(studentUsn, subjectCode) {
             const cie1 = document.getElementById(`cie1_${studentUsn}_${subjectCode}`)?.value || 0;
             const cie2 = document.getElementById(`cie2_${studentUsn}_${subjectCode}`)?.value || 0;
@@ -864,7 +831,6 @@
             } catch (err) { console.error(err); }
         }
 
-        // ➕ FIXED: Defined missing parent HUD initialization function
         async function initializeIsolatedParentWorkspaceHUD() {
             if (!childUsn) return;
             try {
@@ -1013,7 +979,6 @@
 
                 scannedStudentUsnsCache = []; 
                 secondsRemainingInSession = 180; 
-                document.getElementById('postSessionSummaryDeck').style.display = "none"; 
 
                 currentGeneratedSessionToken = "AIT_" + Math.floor(100000 + Math.random() * 900000);
                 document.getElementById('currentActiveSessionCode').innerText = currentGeneratedSessionToken;
@@ -1137,7 +1102,7 @@
         }
 
         // =========================================================================
-        // 📱 ROBUST HTML5-QRCODE STUDENT SCANNER ENGINE
+        // 📱 ROBUST HTML5-QRCODE STUDENT SCANNER ENGINE WITH LOCATION PROMPT
         // =========================================================================
         function toggleStudentScannerBox() {
             const scannerZone = document.getElementById("cameraScannerBox");
@@ -1165,6 +1130,12 @@
                 } catch (err) { console.warn("Stop warning:", err); }
 
                 document.getElementById("cameraScannerBox").style.display = "none";
+
+                // 🌐 GEOLOCATION PERMISSION & LOCATION PROMPT CHECK
+                if (!navigator.geolocation) {
+                    firePremiumToastAlert("❌ Geolocation is not supported by your browser.", "var(--accent-red)");
+                    return;
+                }
 
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     const lat = position.coords.latitude;
@@ -1195,9 +1166,10 @@
                     } catch (e) {
                         firePremiumToastAlert("❌ Network error recording attendance.", "var(--accent-red)");
                     }
-                }, () => {
-                    firePremiumToastAlert("❌ GPS permission required for check-in.", "var(--accent-red)");
-                });
+                }, (error) => {
+                    console.error("Location error:", error);
+                    firePremiumToastAlert("⚠️ Please turn on your location/GPS to mark attendance. Location access is required.", "var(--accent-red)");
+                }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
             };
 
             html5QrcodeScannerInstance.start(
@@ -1292,7 +1264,6 @@
                 document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
                 document.getElementById('ai_risk_value').style.color = finalPercentage < 75 ? 'var(--accent-red)' : 'var(--accent-green)';
 
-                // 📊 RENDER CHART.JS VISUAL ANALYTICS MAPS
                 const ctxScatter = document.getElementById('attendanceScatterChart');
                 const ctxBar = document.getElementById('marksBarChart');
 

@@ -63,7 +63,7 @@
 
             <div class="form-group">
                 <label for="password">Account Password</label>
-                <input type="password" id="password" placeholder="••••••••" required autocomplete="new-password">
+                <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
             </div>
 
             <div class="form-group" id="parentLinkGroup" style="display: none;">
@@ -145,7 +145,6 @@
             }
         });
 
-        // FIXED: Fully synchronized persistent device identifier matching signup.html storage key
         function getOrCreateDeviceFingerprint() {
             let deviceId = localStorage.getItem("dr_ait_persistent_device_id");
             if (!deviceId) {
@@ -172,18 +171,15 @@
                 return;
             }
 
-            // Non-student accounts log in immediately without fingerprint verification card
             if (activePortalRole !== 'student') {
                 sendLoginRequest();
                 return;
             }
 
-            // Show Fingerprint Verification Card for students
             document.getElementById('credentialsForm').style.display = 'none';
             document.getElementById('biometricCardSection').style.display = 'block';
         }
 
-        // STRICT FINGERPRINT HARDWARE SENSOR AUTHENTICATION
         async function triggerBiometricAndLogin() {
             const alertBox = document.getElementById('alertBox');
             alertBox.style.display = 'none';
@@ -196,27 +192,16 @@
                     window.crypto.getRandomValues(challenge);
 
                     try {
-                        await navigator.credentials.create({
+                        await navigator.credentials.get({
                             publicKey: {
                                 challenge: challenge,
-                                rp: { name: "Dr. AIT Academic Portal", id: window.location.hostname },
-                                user: { 
-                                    id: new Uint8Array([1]), 
-                                    name: cachedUsn, 
-                                    displayName: cachedUsn 
-                                },
-                                pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
-                                authenticatorSelection: { 
-                                    authenticatorAttachment: "platform", 
-                                    userVerification: "required",
-                                    residentKey: "preferred"
-                                },
-                                timeout: 60000
+                                timeout: 60000,
+                                userVerification: "required"
                             }
                         });
                         fingerprintVerified = true;
                     } catch (webAuthnErr) {
-                        console.warn("Native hardware fingerprint restriction on tunnel domain, initiating secure fingerprint device validation.");
+                        console.warn("Hardware assertion fallback initiated.");
                     }
                 }
 

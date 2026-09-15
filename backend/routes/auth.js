@@ -27,6 +27,19 @@ router.post("/login-challenge", async (req, res) => {
         }
 
         const user = result.rows[0];
+        
+        // 🔒 STRICT SINGLE-DEVICE BINDING ENFORCEMENT DURING CHALLENGE FOR STUDENTS
+        if (user.role.toLowerCase() === 'student') {
+            if (user.device_fingerprint && user.device_fingerprint.trim() !== '' && deviceFingerprint && deviceFingerprint.trim() !== '') {
+                if (user.device_fingerprint.trim() !== deviceFingerprint.trim()) {
+                    return res.status(403).json({ 
+                        success: false, 
+                        message: "⛔ ACCESS DENIED: Security restriction. This student account is already locked and bound to another registered device." 
+                    });
+                }
+            }
+        }
+
         const challenge = crypto.randomBytes(32).toString('base64url');
 
         return res.json({
@@ -42,7 +55,7 @@ router.post("/login-challenge", async (req, res) => {
     }
 });
 
-// 1. SECURE COMBINED LOGIN (With Self-Healing Device Token Synchronization)
+// 1. SECURE COMBINED LOGIN (Strict Single-Device Binding Enforcement)
 router.post("/combined-login", async (req, res) => {
     const { usn, password, role, deviceFingerprint, institutionId, childUsn } = req.body;
     const targetTenant = institutionId || 'DR_AIT';
@@ -75,18 +88,20 @@ router.post("/combined-login", async (req, res) => {
             }
         }
 
-        // AUTO-HEALING SMART PROXY LOCKDOWN FOR STUDENTS:
+        // 🔒 STRICT SINGLE-DEVICE BINDING SECURITY FOR STUDENTS:
         if (user.role.toLowerCase() === 'student') {
             if (!user.device_fingerprint || user.device_fingerprint.trim() === '') {
-                // If fingerprint is missing or empty, bind it immediately with the incoming device fingerprint
+                // If fingerprint is completely missing, bind it to this initial device
                 if (deviceFingerprint && deviceFingerprint.trim() !== '') {
                     await pool.query("UPDATE users SET device_fingerprint = $1 WHERE UPPER(usn) = UPPER($2)", [deviceFingerprint.trim(), user.usn]);
                 }
             } else if (deviceFingerprint && deviceFingerprint.trim() !== '') {
-                // If the device fingerprint differs (e.g. browser cache cleared or cookies reset on their phone), 
-                // auto-heal/update it smoothly instead of throwing a hard proxy block error during test sessions.
+                // If a registered fingerprint exists, strictly enforce that it matches the current device
                 if (user.device_fingerprint.trim() !== deviceFingerprint.trim()) {
-                    await pool.query("UPDATE users SET device_fingerprint = $1 WHERE UPPER(usn) = UPPER($2)", [deviceFingerprint.trim(), user.usn]);
+                    return res.status(403).json({ 
+                        success: false, 
+                        message: "⛔ ACCESS DENIED: Security restriction. This student account is already locked and bound to another registered device." 
+                    });
                 }
             }
         }
@@ -321,13 +336,11 @@ router.get("/teacher-session-roster", async (req, res) => {
     const tenant = institutionId || 'DR_AIT';
 
     try {
-        // 1. Get all active students enrolled in the institution
         const allStudentsResult = await pool.query(
             "SELECT usn, name, phone_number, branch FROM users WHERE LOWER(role) = 'student' AND COALESCE(institution_id, 'DR_AIT') ILIKE $1 ORDER BY usn ASC",
             [tenant]
         );
 
-        // 2. Get students who successfully marked attendance for this session code
         const presentResult = await pool.query(
             `SELECT a.student_id, a.student_full_name, a.distance, a.created_at, a.latitude, a.longitude
              FROM users_attendance a
@@ -418,20 +431,17 @@ router.post("/hod/override-attendance", async (req, res) => {
             return res.status(400).json({ success: false, message: "Student USN and Session Code are required." });
         }
 
-        // 1. Fetch student details
         const studentLookup = await pool.query("SELECT name FROM users WHERE UPPER(usn) = UPPER($1) AND institution_id = $2", [studentUsn.trim(), tenant]);
         if (studentLookup.rows.length === 0) {
             return res.status(404).json({ success: false, message: "Student record not found." });
         }
         const studentFullName = studentLookup.rows[0].name;
 
-        // 2. Check if already marked present for this session
         const duplicateCheck = await pool.query("SELECT * FROM users_attendance WHERE student_id = $1 AND session_code = $2 AND institution_id = $3", [studentUsn.trim().toUpperCase(), sessionCode, tenant]);
         if (duplicateCheck.rows.length > 0) {
             return res.status(400).json({ success: false, message: "Student is already marked present for this session." });
         }
 
-        // 3. Insert override record with a special distance marker indicating HOD medical/leave excuse
         await pool.query(
             "INSERT INTO users_attendance (student_id, student_full_name, subject_name, session_code, distance, institution_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())", 
             [studentUsn.trim().toUpperCase(), studentFullName, subjectName || 'AI', sessionCode, 'HOD_EXCUSED', tenant]
