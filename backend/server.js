@@ -947,12 +947,14 @@ app.use((err, req, res, next) => {
 // 9. START SERVER
 // ==========================================================================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     console.log("==================================================");
     console.log(`✅ SERVER RUNNING ON port ${PORT}`);
     console.log(`📡 ACTIVE ENDPOINTS: /api/auth, /api/qr, /api/marks, /api/parent, /api/hod, /api/teacher`);
     console.log(`👔 PORTALS READY: HOD, Teacher, Student, and Parent`);
     console.log("==================================================");
 });
+
+server.setTimeout(30000); // 30 second timeout safeguard
 
 module.exports = app;

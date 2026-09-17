@@ -3,11 +3,12 @@ const router = express.Router();
 const pool = require('../db'); 
 const crypto = require('crypto');
 
-// 0. INITIATE LOGIN CHALLENGE & DEVICE BINDING CHECK
+// 0. INITIATE LOGIN CHALLENGE & STRICT DEVICE BINDING CHECK
 router.post("/login-challenge", async (req, res) => {
     const { usn, role, deviceFingerprint, institutionId } = req.body;
-    const targetTenant = institutionId || 'DR_AIT';
+    const targetTenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const cleanRole = (role || 'student').toLowerCase().trim();
+    const cleanUsn = usn ? usn.trim().toUpperCase() : '';
 
     try {
         const result = await pool.query(
@@ -19,7 +20,7 @@ router.post("/login-challenge", async (req, res) => {
                    OR ($2 IN ('hod', 'teacher') AND LOWER(TRIM(role)) IN ('hod', 'teacher'))
                )
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
-            [usn ? usn.trim() : '', cleanRole, targetTenant]
+            [cleanUsn, cleanRole, targetTenant]
         );
 
         if (result.rows.length === 0) {
@@ -28,13 +29,17 @@ router.post("/login-challenge", async (req, res) => {
 
         const user = result.rows[0];
         
-        // 🔒 STRICT SINGLE-DEVICE BINDING ENFORCEMENT DURING CHALLENGE FOR STUDENTS
+        // 🔒 STRICT PROXY-PREVENTION CHECK DURING CHALLENGE FOR STUDENTS
         if (user.role.toLowerCase() === 'student') {
-            if (user.device_fingerprint && user.device_fingerprint.trim() !== '' && deviceFingerprint && deviceFingerprint.trim() !== '') {
-                if (user.device_fingerprint.trim() !== deviceFingerprint.trim()) {
+            const cleanStoredFingerprint = user.device_fingerprint ? user.device_fingerprint.trim() : '';
+            const cleanIncomingFingerprint = deviceFingerprint ? deviceFingerprint.trim() : '';
+
+            if (cleanStoredFingerprint !== '' && cleanIncomingFingerprint !== '') {
+                if (cleanStoredFingerprint !== cleanIncomingFingerprint) {
+                    console.warn(`🚨 [CHALLENGE PROXY ATTEMPT] Student USN ${user.usn} attempted challenge from unauthorized device!`);
                     return res.status(403).json({ 
                         success: false, 
-                        message: "⛔ ACCESS DENIED: Security restriction. This student account is already locked and bound to another registered device." 
+                        message: "⛔ PROXY DETECTED & ACCESS DENIED: This student account is permanently bound to another registered device. Multi-device login is strictly blocked." 
                     });
                 }
             }
@@ -55,11 +60,12 @@ router.post("/login-challenge", async (req, res) => {
     }
 });
 
-// 1. SECURE COMBINED LOGIN (Strict Single-Device Binding Enforcement)
+// 1. SECURE COMBINED LOGIN (Strict Proxy-Prevention & Permanent Single-Device Binding)
 router.post("/combined-login", async (req, res) => {
     const { usn, password, role, deviceFingerprint, institutionId, childUsn } = req.body;
-    const targetTenant = institutionId || 'DR_AIT';
+    const targetTenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const cleanRole = (role || 'student').toLowerCase().trim();
+    const cleanUsn = usn ? usn.trim().toUpperCase() : '';
 
     try {
         const result = await pool.query(
@@ -70,7 +76,7 @@ router.post("/combined-login", async (req, res) => {
                    OR ($2 IN ('hod', 'teacher') AND LOWER(TRIM(role)) IN ('hod', 'teacher'))
                )
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
-            [usn ? usn.trim() : '', cleanRole, targetTenant]
+            [cleanUsn, cleanRole, targetTenant]
         );
 
         if (result.rows.length === 0) return res.status(400).json({ success: false, message: "Account record not found." });
@@ -88,19 +94,23 @@ router.post("/combined-login", async (req, res) => {
             }
         }
 
-        // 🔒 STRICT SINGLE-DEVICE BINDING SECURITY FOR STUDENTS:
+        // 🔒 STRICT PROXY-PREVENTION & PERMANENT SINGLE-DEVICE BINDING FOR STUDENTS:
         if (user.role.toLowerCase() === 'student') {
-            if (!user.device_fingerprint || user.device_fingerprint.trim() === '') {
-                // If fingerprint is completely missing, bind it to this initial device
-                if (deviceFingerprint && deviceFingerprint.trim() !== '') {
-                    await pool.query("UPDATE users SET device_fingerprint = $1 WHERE UPPER(usn) = UPPER($2)", [deviceFingerprint.trim(), user.usn]);
+            const cleanStoredFingerprint = user.device_fingerprint ? user.device_fingerprint.trim() : '';
+            const cleanIncomingFingerprint = deviceFingerprint ? deviceFingerprint.trim() : '';
+
+            if (cleanStoredFingerprint === '') {
+                // First-time signup/login: Permanently lock this phone's fingerprint to the account
+                if (cleanIncomingFingerprint !== '') {
+                    await pool.query("UPDATE users SET device_fingerprint = $1 WHERE UPPER(usn) = UPPER($2)", [cleanIncomingFingerprint, user.usn]);
                 }
-            } else if (deviceFingerprint && deviceFingerprint.trim() !== '') {
-                // If a registered fingerprint exists, strictly enforce that it matches the current device
-                if (user.device_fingerprint.trim() !== deviceFingerprint.trim()) {
+            } else {
+                // Already bound: If a different phone tries to log in, block it and flag a proxy attempt!
+                if (cleanStoredFingerprint !== cleanIncomingFingerprint) {
+                    console.warn(`🚨 [COMBINED LOGIN PROXY ATTEMPT] Student USN ${user.usn} attempted login from an unauthorized device!`);
                     return res.status(403).json({ 
                         success: false, 
-                        message: "⛔ ACCESS DENIED: Security restriction. This student account is already locked and bound to another registered device." 
+                        message: "⛔ PROXY DETECTED & ACCESS DENIED: This student account is permanently bound to a different registered device. Multi-device login is strictly blocked." 
                     });
                 }
             }
@@ -122,21 +132,22 @@ router.post("/combined-login", async (req, res) => {
     }
 });
 
-// 2. SIGNUP WORKSPACE REGISTRY (Binds Device Token)
+// 2. SIGNUP WORKSPACE REGISTRY (Binds Initial Device Token)
 router.post("/signup", async (req, res) => {
     const { 
         usn, email, password, role, name, childUsn, subjectName, 
         branch, institutionId, phoneNumber, deviceFingerprint 
     } = req.body;
 
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const cleanRole = (role || 'student').toLowerCase().trim();
     const isStudent = cleanRole === 'student';
+    const cleanUsn = usn ? usn.trim().toUpperCase() : '';
 
     try {
         const userExists = await pool.query(
             "SELECT * FROM users WHERE UPPER(usn) = UPPER($1) AND COALESCE(institution_id, 'DR_AIT') ILIKE $2", 
-            [usn ? usn.trim() : '', tenant]
+            [cleanUsn, tenant]
         );
         if (userExists.rows.length > 0) return res.status(400).json({ success: false, message: "USN / Username already registered." });
 
@@ -147,12 +158,12 @@ router.post("/signup", async (req, res) => {
                 device_fingerprint, biometric_enabled
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
             [
-                usn ? usn.trim().toUpperCase() : '', 
-                email ? email.trim() : `${usn ? usn.trim() : 'user'}@drait.edu.in`, 
+                cleanUsn, 
+                email ? email.trim() : `${cleanUsn || 'user'}@drait.edu.in`, 
                 password, 
                 cleanRole, 
-                name || usn, 
-                childUsn || null, 
+                name || cleanUsn, 
+                childUsn ? childUsn.trim().toUpperCase() : null, 
                 cleanRole === 'teacher' || cleanRole === 'hod' ? subjectName : null, 
                 branch || 'AIML',
                 tenant, 
@@ -171,7 +182,7 @@ router.post("/signup", async (req, res) => {
 // 3. TEACHER REGISTER A NEW CLASS SESSION INSTANCE
 router.post("/create-session", async (req, res) => {
     const { sessionCode, subjectName, institutionId } = req.body;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
         await pool.query("INSERT INTO class_sessions (session_code, subject_name, institution_id, created_at) VALUES ($1, $2, $3, NOW())", [sessionCode, subjectName || 'AI', tenant]);
         return res.status(200).json({ success: true });
@@ -184,10 +195,10 @@ router.post("/create-session", async (req, res) => {
 // 4. SUBMIT ATTENDANCE WITH MANDATORY GEOFENCING & DISTANCE RESTRICTION
 router.post("/submit-attendance", async (req, res) => {
     const { studentId, subjectName, sessionCode, latitude, longitude, institutionId } = req.body;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanStudentId = studentId ? studentId.trim().toUpperCase() : '';
 
     try {
-        // 1. MANDATORY LOCATION CHECK: Deny immediately if location services are turned off or missing
         if (latitude === undefined || longitude === undefined || latitude === null || longitude === null || latitude === '' || longitude === '') {
             return res.status(400).json({ 
                 success: false, 
@@ -205,14 +216,12 @@ router.post("/submit-attendance", async (req, res) => {
             });
         }
 
-        // 2. OFFICIAL DR. AIT COLLEGE COORDINATES (Bengaluru)
         const COLLEGE_LAT = 12.9635;
         const COLLEGE_LON = 77.5059;
-        const MAX_ALLOWED_RADIUS_METERS = 300; // Strict campus region boundary (300 meters)
+        const MAX_ALLOWED_RADIUS_METERS = 300;
 
-        // 3. HAVERSINE DISTANCE CALCULATION (Exact distance in meters)
         function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; // Earth radius in meters
+            const R = 6371e3;
             const φ1 = lat1 * Math.PI / 180;
             const φ2 = lat2 * Math.PI / 180;
             const Δφ = (lat2 - lat1) * Math.PI / 180;
@@ -228,7 +237,6 @@ router.post("/submit-attendance", async (req, res) => {
         const distanceMeters = calculateDistance(studentLat, studentLon, COLLEGE_LAT, COLLEGE_LON);
         const roundedDistance = Math.round(distanceMeters);
 
-        // 4. STRICT REGION CHECK: Deny attendance if student is outside the college boundary
         if (distanceMeters > MAX_ALLOWED_RADIUS_METERS) {
             return res.status(403).json({ 
                 success: false, 
@@ -236,24 +244,22 @@ router.post("/submit-attendance", async (req, res) => {
             });
         }
 
-        // 5. SESSION & DUPLICATE VERIFICATION
         const sessionResult = await pool.query("SELECT * FROM class_sessions WHERE session_code = $1 AND institution_id = $2", [sessionCode, tenant]);
         if (sessionResult.rows.length === 0) {
             await pool.query("INSERT INTO class_sessions (session_code, subject_name, institution_id, created_at) VALUES ($1, $2, $3, NOW()) ON CONFLICT DO NOTHING", [sessionCode, subjectName || 'AI', tenant]);
         }
 
-        const studentLookup = await pool.query("SELECT name FROM users WHERE UPPER(usn) = UPPER($1) AND institution_id = $2", [studentId, tenant]);
+        const studentLookup = await pool.query("SELECT name FROM users WHERE UPPER(usn) = UPPER($1) AND institution_id = $2", [cleanStudentId, tenant]);
         const studentFullName = studentLookup.rows[0]?.name || 'Student';
 
-        const duplicateCheck = await pool.query("SELECT * FROM users_attendance WHERE student_id = $1 AND session_code = $2 AND institution_id = $3", [studentId, sessionCode, tenant]);
+        const duplicateCheck = await pool.query("SELECT * FROM users_attendance WHERE student_id = $1 AND session_code = $2 AND institution_id = $3", [cleanStudentId, sessionCode, tenant]);
         if (duplicateCheck.rows.length > 0) {
             return res.status(400).json({ success: false, message: "Attendance duplicate flagged for this session." });
         }
 
-        // 6. RECORD ATTENDANCE SUCCESSFULLY WITH CALCULATED DISTANCE
         await pool.query(
             "INSERT INTO users_attendance (student_id, student_full_name, subject_name, session_code, distance, latitude, longitude, institution_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())", 
-            [studentId, studentFullName, subjectName || 'AI', sessionCode, `${roundedDistance}m`, studentLat, studentLon, tenant]
+            [cleanStudentId, studentFullName, subjectName || 'AI', sessionCode, `${roundedDistance}m`, studentLat, studentLon, tenant]
         );
 
         return res.status(200).json({ 
@@ -271,7 +277,7 @@ router.post("/submit-attendance", async (req, res) => {
 // 5. AUTOMATED LOCKDOWN COMPLIANCE COMMUNICATIONS BROKER
 router.post("/end-session", async (req, res) => {
     const { sessionCode, subjectName, institutionId } = req.body;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const targetSubject = subjectName || 'AI';
     try {
         const allStudents = await pool.query("SELECT usn, name, phone_number FROM users WHERE role = 'student' AND institution_id = $1", [tenant]);
@@ -300,7 +306,7 @@ router.post("/end-session", async (req, res) => {
 // 6. STREAM REGISTRY DATA FEEDS (Teacher Live Feed Polling)
 router.get("/attendance-records", async (req, res) => {
     const { sessionCode, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
         let queryStr = `
             SELECT a.id, a.student_id, a.session_code, a.distance, a.created_at, a.subject_name, 
@@ -333,7 +339,7 @@ router.get("/attendance-records", async (req, res) => {
 // 6.1 TEACHER REAL-TIME CLASS ATTENDANCE ROSTER (Present vs Absent breakdown)
 router.get("/teacher-session-roster", async (req, res) => {
     const { sessionCode, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     try {
         const allStudentsResult = await pool.query(
@@ -397,7 +403,7 @@ router.get("/teacher-session-roster", async (req, res) => {
 // 6.2 FETCH STUDENT ROSTER FOR TEACHER MARKS ENTRY (Filtered by Branch & Semester)
 router.get("/teacher-student-roster", async (req, res) => {
     const { branch, semesterNumber, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const targetBranch = branch || 'AIML';
 
     try {
@@ -424,30 +430,31 @@ router.get("/teacher-student-roster", async (req, res) => {
 // 6.3 HOD MANUAL ATTENDANCE OVERRIDE (Excuse/Mark Absent Student Present)
 router.post("/hod/override-attendance", async (req, res) => {
     const { studentUsn, sessionCode, subjectName, institutionId } = req.body;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanStudentUsn = studentUsn ? studentUsn.trim().toUpperCase() : '';
 
     try {
-        if (!studentUsn || !sessionCode) {
+        if (!cleanStudentUsn || !sessionCode) {
             return res.status(400).json({ success: false, message: "Student USN and Session Code are required." });
         }
 
-        const studentLookup = await pool.query("SELECT name FROM users WHERE UPPER(usn) = UPPER($1) AND institution_id = $2", [studentUsn.trim(), tenant]);
+        const studentLookup = await pool.query("SELECT name FROM users WHERE UPPER(usn) = UPPER($1) AND institution_id = $2", [cleanStudentUsn, tenant]);
         if (studentLookup.rows.length === 0) {
             return res.status(404).json({ success: false, message: "Student record not found." });
         }
         const studentFullName = studentLookup.rows[0].name;
 
-        const duplicateCheck = await pool.query("SELECT * FROM users_attendance WHERE student_id = $1 AND session_code = $2 AND institution_id = $3", [studentUsn.trim().toUpperCase(), sessionCode, tenant]);
+        const duplicateCheck = await pool.query("SELECT * FROM users_attendance WHERE student_id = $1 AND session_code = $2 AND institution_id = $3", [cleanStudentUsn, sessionCode, tenant]);
         if (duplicateCheck.rows.length > 0) {
             return res.status(400).json({ success: false, message: "Student is already marked present for this session." });
         }
 
         await pool.query(
             "INSERT INTO users_attendance (student_id, student_full_name, subject_name, session_code, distance, institution_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, NOW())", 
-            [studentUsn.trim().toUpperCase(), studentFullName, subjectName || 'AI', sessionCode, 'HOD_EXCUSED', tenant]
+            [cleanStudentUsn, studentFullName, subjectName || 'AI', sessionCode, 'HOD_EXCUSED', tenant]
         );
 
-        return res.json({ success: true, message: `Successfully excused and marked ${studentUsn.toUpperCase()} present!` });
+        return res.json({ success: true, message: `Successfully excused and marked ${cleanStudentUsn} present!` });
     } catch (err) {
         console.error("💥 HOD ATTENDANCE OVERRIDE ERROR:", err);
         return res.status(500).json({ success: false, message: err.message });
@@ -457,13 +464,15 @@ router.post("/hod/override-attendance", async (req, res) => {
 // 7. FIXED ALL-SEMESTER DATA-DRIVEN METRICS PERF ENDPOINT
 router.get("/student-subject-metrics", async (req, res) => {
     const { studentId, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanStudentId = studentId ? studentId.trim() : '';
+
     try {
         const totalConducted = await pool.query("SELECT subject_name, COUNT(*) as conducted FROM class_sessions WHERE institution_id = $1 GROUP BY subject_name", [tenant]);
-        const totalAttended = await pool.query("SELECT subject_name, COUNT(*) as attended FROM users_attendance WHERE student_id = $1 AND institution_id = $2 GROUP BY subject_name", [studentId, tenant]);
-        const logsHistory = await pool.query("SELECT subject_name, created_at FROM users_attendance WHERE student_id = $1 AND institution_id = $2 ORDER BY created_at DESC", [studentId, tenant]);
+        const totalAttended = await pool.query("SELECT subject_name, COUNT(*) as attended FROM users_attendance WHERE student_id = $1 AND institution_id = $2 GROUP BY subject_name", [cleanStudentId, tenant]);
+        const logsHistory = await pool.query("SELECT subject_name, created_at FROM users_attendance WHERE student_id = $1 AND institution_id = $2 ORDER BY created_at DESC", [cleanStudentId, tenant]);
 
-        const realMarksResult = await pool.query("SELECT * FROM student_marks WHERE student_id = $1 AND institution_id = $2", [studentId, tenant]);
+        const realMarksResult = await pool.query("SELECT * FROM student_marks WHERE student_id = $1 AND institution_id = $2", [cleanStudentId, tenant]);
 
         let aiPredictions = [];
         realMarksResult.rows.forEach(markRow => {
@@ -504,7 +513,7 @@ router.get("/student-subject-metrics", async (req, res) => {
 // 8. DISTINCT HISTORICAL SESSIONS
 router.get("/distinct-sessions", async (req, res) => {
     const { subject, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
         const result = await pool.query("SELECT session_code, created_at as session_date FROM class_sessions WHERE subject_name = $1 AND institution_id = $2 ORDER BY created_at DESC", [subject || 'AI', tenant]);
         return res.json(result.rows);
@@ -517,7 +526,7 @@ router.get("/distinct-sessions", async (req, res) => {
 // 9. STUDENT MARKS GENERAL ROSTER
 router.get("/student-marks-roster", async (req, res, next) => {
     const { institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
         const result = await pool.query(`
             SELECT u.name, m.student_id AS usn, u.phone_number, m.subject_code, m.subject_name, m.cie1, m.cie2, m.cie3, m.see
@@ -530,6 +539,48 @@ router.get("/student-marks-roster", async (req, res, next) => {
     } catch (err) { 
         console.error("💥 MARKS ROSTER ERROR:", err);
         next(err); 
+    }
+});
+
+// 10. FETCH HOD-MAPPED CLASS SLOTS FOR TEACHER QR GENERATION
+router.get("/teacher-mapped-slots", async (req, res) => {
+    const { teacherId, institutionId } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+
+    try {
+        if (!teacherId) {
+            return res.status(400).json({ success: false, message: "Teacher ID is required." });
+        }
+
+        const cleanId = teacherId.trim();
+
+        const result = await pool.query(
+            `SELECT * FROM weekly_timetables 
+             WHERE (
+                 LOWER(assigned_teacher_id) = LOWER($1) 
+                 OR LOWER(assigned_teacher_name) ILIKE LOWER($2) 
+                 OR assigned_teacher_id ILIKE '%' || $1 || '%'
+             ) 
+             AND COALESCE(institution_id, 'DR_AIT') ILIKE $3 
+             ORDER BY id DESC`,
+            [cleanId, cleanId, tenant]
+        );
+
+        if (result.rows.length === 0) {
+            const fallbackResult = await pool.query(
+                `SELECT * FROM weekly_timetables WHERE COALESCE(institution_id, 'DR_AIT') ILIKE $1 ORDER BY id DESC LIMIT 20`,
+                [tenant]
+            );
+            return res.json({ success: true, slots: fallbackResult.rows });
+        }
+
+        return res.json({
+            success: true,
+            slots: result.rows
+        });
+    } catch (err) {
+        console.error("💥 TEACHER MAPPED SLOTS ERROR:", err);
+        return res.status(500).json({ success: false, slots: [] });
     }
 });
 

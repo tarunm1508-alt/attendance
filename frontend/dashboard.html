@@ -71,13 +71,6 @@
         .sem-nav-btn { flex: 1; text-align: center; padding: 10px 4px; font-size: 12px; font-weight: 700; color: var(--text-muted); border: 1px solid var(--bento-border); background: #f8fafc; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
         .sem-nav-btn.active { background: var(--primary-blue); color: #ffffff; border-color: var(--primary-blue); box-shadow: 0 4px 12px rgba(30,64,175,0.15); }
 
-        .reconciliation-deck-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .reconciliation-pane-card { background: #ffffff; border: 1px solid var(--bento-border); border-radius: 20px; padding: 24px; box-shadow: var(--shadow-premium); }
-        .rec-header-row { font-size: 14px; font-weight: 800; text-transform: uppercase; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--bento-border); }
-
-        .visual-analytics-card-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .chart-frame-box { background: #ffffff; border: 1px solid var(--bento-border); padding: 24px; border-radius: 20px; box-shadow: var(--shadow-premium); }
-
         .table-container { overflow-x: auto; border-radius: 16px; border: 1px solid var(--bento-border); background: #ffffff; margin-bottom: 20px;}
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th { background-color: #f1f5f9; color: var(--text-dark); padding: 14px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--bento-border); }
@@ -630,16 +623,13 @@
             history.pushState(null, null, location.href);
         });
 
+        // 🌐 ROBUST DYNAMIC API BASE RESOLUTION (Supports Local & Tunnels)
         let API_BASE = "https://dr-ait-portal-backend.onrender.com";
 
         if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-            if (window.location.port === "5501" || window.location.origin.includes("-5501.")) {
-                API_BASE = "http://localhost:5000";
-            } else if (window.location.port === "5000") {
-                API_BASE = window.location.origin;
-            } else {
-                API_BASE = "http://localhost:5000";
-            }
+            API_BASE = "http://localhost:5000";
+        } else if (window.location.hostname.includes("loca.lt") || window.location.hostname.includes("ngrok") || window.location.hostname.includes("trycloudflare")) {
+            API_BASE = window.location.origin;
         }
 
         const userRole = localStorage.getItem('userRole') || localStorage.getItem('role') || 'student';
@@ -673,18 +663,20 @@
             const overlay = document.getElementById('authOverlay');
             const container = document.getElementById('mainDashboardContainer');
 
-            overlay.style.display = 'none';
-            container.style.display = 'flex';
+            if (overlay) overlay.style.display = 'none';
+            if (container) container.style.display = 'flex';
             initializeFunctionalWorkspaceRouter();
             firePremiumToastAlert("✅ Workspace unlocked successfully!", "var(--accent-green)");
         }
 
         function openMarksEntryModal() {
             const modal = document.getElementById('marksEntryModal');
-            modal.style.display = 'flex';
+            if (modal) modal.style.display = 'flex';
             const input = document.getElementById('modalStudentUsnInput');
-            input.value = "";
-            input.focus();
+            if (input) {
+                input.value = "";
+                input.focus();
+            }
             document.getElementById('modalStudentBanner').style.display = 'none';
             document.getElementById('modalMarksCardWrapper').style.display = 'none';
             document.getElementById('modalStateNotice').style.display = 'block';
@@ -692,11 +684,12 @@
         }
 
         function closeMarksEntryModal() {
-            document.getElementById('marksEntryModal').style.display = 'none';
+            const modal = document.getElementById('marksEntryModal');
+            if (modal) modal.style.display = 'none';
         }
 
         async function executeModalStudentFetch() {
-            const usn = document.getElementById('modalStudentUsnInput').value.trim().toUpperCase();
+            const usn = document.getElementById('modalStudentUsnInput')?.value.trim().toUpperCase();
             const banner = document.getElementById('modalStudentBanner');
             const cardWrapper = document.getElementById('modalMarksCardWrapper');
             const notice = document.getElementById('modalStateNotice');
@@ -793,27 +786,27 @@
 
         async function initializeFunctionalWorkspaceRouter() {
             const role = userRole.toLowerCase().trim();
-            document.getElementById('teacherSectionLayout').style.display = 'none';
-            document.getElementById('studentSectionLayout').style.display = 'none';
-            document.getElementById('parentSectionLayout').style.display = 'none';
-            document.getElementById('directMessagingDesk').style.display = 'none';
+            if (document.getElementById('teacherSectionLayout')) document.getElementById('teacherSectionLayout').style.display = 'none';
+            if (document.getElementById('studentSectionLayout')) document.getElementById('studentSectionLayout').style.display = 'none';
+            if (document.getElementById('parentSectionLayout')) document.getElementById('parentSectionLayout').style.display = 'none';
+            if (document.getElementById('directMessagingDesk')) document.getElementById('directMessagingDesk').style.display = 'none';
 
             loadUserNotifications();
             loadUserDirectInbox();
 
             if (role === 'teacher' || role === 'hod') {
-                document.getElementById('teacherSectionLayout').style.display = 'block';
-                document.getElementById('directMessagingDesk').style.display = 'block';
-                document.getElementById('welcomeBadge').innerText = `👤 ${role.toUpperCase()}: ${userName} | TENANT: ${institutionId}`;
+                if (document.getElementById('teacherSectionLayout')) document.getElementById('teacherSectionLayout').style.display = 'block';
+                if (document.getElementById('directMessagingDesk')) document.getElementById('directMessagingDesk').style.display = 'block';
+                if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 ${role.toUpperCase()}: ${userName} | TENANT: ${institutionId}`;
                 fetchTeacherAssignedClasses();
                 loadAttendance();
             } else if (role === 'parent') {
-                document.getElementById('parentSectionLayout').style.display = 'block';
+                if (document.getElementById('parentSectionLayout')) document.getElementById('parentSectionLayout').style.display = 'block';
                 await resolveParentAndChildProfile();
                 initializeIsolatedParentWorkspaceHUD();
             } else {
-                document.getElementById('studentSectionLayout').style.display = 'block';
-                document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | USN: ${userUsn}`;
+                if (document.getElementById('studentSectionLayout')) document.getElementById('studentSectionLayout').style.display = 'block';
+                if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | USN: ${userUsn}`;
                 initializeStudentPerformanceLayout();
             }
         }
@@ -826,7 +819,7 @@
                 const data = await res.json();
                 if (data && data.success) {
                     childUsn = data.childUsn || childUsn;
-                    document.getElementById('welcomeBadge').innerText = `👤 GUARDIAN ➔ WARD: ${data.studentName} [${childUsn}]`;
+                    if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 GUARDIAN ➔ WARD: ${data.studentName} [${childUsn}]`;
                 }
             } catch (err) { console.error(err); }
         }
@@ -844,9 +837,11 @@
                     att += parseInt(sub.attended) || 9;
                 });
                 const finalPercentage = cond > 0 ? Math.round((att / cond) * 100) : 90;
-                document.getElementById('parent_overall_ratio').innerText = finalPercentage + "%";
-                document.getElementById('parent_eligibility_status').innerText = finalPercentage >= 75 ? "✅ ELIGIBLE" : "⚠️ SHORTAGE RISK";
-                document.getElementById('parent_eligibility_status').style.color = finalPercentage >= 75 ? "var(--accent-green)" : "var(--accent-red)";
+                if (document.getElementById('parent_overall_ratio')) document.getElementById('parent_overall_ratio').innerText = finalPercentage + "%";
+                if (document.getElementById('parent_eligibility_status')) {
+                    document.getElementById('parent_eligibility_status').innerText = finalPercentage >= 75 ? "✅ ELIGIBLE" : "⚠️ SHORTAGE RISK";
+                    document.getElementById('parent_eligibility_status').style.color = finalPercentage >= 75 ? "var(--accent-green)" : "var(--accent-red)";
+                }
             } catch (e) { console.error("Parent HUD error:", e); }
         }
 
@@ -856,62 +851,78 @@
             if (!dropdown) return;
 
             try {
-                const res = await fetch(`${API_BASE}/api/teacher/assigned-classes?teacherId=${userUsn}&institutionId=${institutionId}`);
-                const slots = await res.json();
+                const endpointUrl = `${API_BASE}/api/auth/teacher-mapped-slots?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`;
+                console.log("📡 Fetching Teacher Slots from:", endpointUrl);
+
+                const res = await fetch(endpointUrl);
+                const data = await res.json();
+                
+                const slots = Array.isArray(data) ? data : (data.slots || data.data || []);
 
                 if (!slots || slots.length === 0) {
-                    dropdown.innerHTML = `<option value="">⚠️ No classes mapped by HOD yet</option>`;
-                    badge.innerText = "0 Slots Mapped";
-                    document.getElementById('btnLaunchQrSession').disabled = true;
+                    dropdown.innerHTML = `<option value="">⚠️ No classes mapped by HOD yet for ID: ${userUsn}</option>`;
+                    if (badge) badge.innerText = "0 Slots Mapped";
+                    if (document.getElementById('btnLaunchQrSession')) document.getElementById('btnLaunchQrSession').disabled = true;
                     return;
                 }
 
-                badge.innerText = `${slots.length} Slots Mapped`;
+                if (badge) badge.innerText = `${slots.length} Slots Mapped`;
                 dropdown.innerHTML = `<option value="">-- Choose Assigned Class Slot --</option>`;
+                
                 slots.forEach(slot => {
-                    const optionText = `Sem ${slot.semester_number} [${slot.branch}] - ${slot.subject_code} (${slot.day_of_week} ${slot.time_slot})`;
-                    dropdown.innerHTML += `<option value="${slot.id}" data-subject="${slot.subject_code}" data-text="${optionText}">${optionText}</option>`;
+                    const subCode = slot.subject_code || slot.subject_name || 'AI';
+                    const semNum = slot.semester_number || slot.semester || 5;
+                    const branch = slot.branch || 'AIML';
+                    const dayTime = slot.day_of_week ? `${slot.day_of_week} ${slot.time_slot || ''}` : (slot.time_slot || 'Regular Slot');
+                    const optionText = `Sem ${semNum} [${branch}] - ${subCode} (${dayTime})`;
+                    
+                    dropdown.innerHTML += `<option value="${slot.id || subCode}" data-subject="${subCode}" data-text="${optionText}">${optionText}</option>`;
                 });
-            } catch (err) { dropdown.innerHTML = `<option value="">❌ Connection error</option>`; }
+            } catch (err) { 
+                console.error("❌ Error fetching teacher slots:", err);
+                dropdown.innerHTML = `<option value="">❌ Connection error loading slots</option>`; 
+            }
         }
 
         function onTeacherClassSlotSelected() {
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const selectedOpt = dropdown.options[dropdown.selectedIndex];
             userSubject = selectedOpt.getAttribute('data-subject') || 'ml';
-            document.getElementById('btnLaunchQrSession').disabled = !dropdown.value;
+            if (document.getElementById('btnLaunchQrSession')) document.getElementById('btnLaunchQrSession').disabled = !dropdown.value;
 
             const notice = document.getElementById('selectedSlotNotice');
-            if (dropdown.value) {
-                notice.style.display = 'block';
-                document.getElementById('selectedSlotText').innerText = selectedOpt.getAttribute('data-text');
-            } else {
-                notice.style.display = 'none';
+            if (notice) {
+                if (dropdown.value) {
+                    notice.style.display = 'block';
+                    document.getElementById('selectedSlotText').innerText = selectedOpt.getAttribute('data-text');
+                } else {
+                    notice.style.display = 'none';
+                }
             }
         }
 
         function switchTeacherView(targetView) {
             document.querySelectorAll('.toggle-tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('wrapper_liveStream').style.display = 'none';
-            document.getElementById('wrapper_historyLog').style.display = 'none';
-            document.getElementById('wrapper_marksLedger').style.display = 'none';
-            document.getElementById('wrapper_mentorshipWorkspace').style.display = 'none';
+            if (document.getElementById('wrapper_liveStream')) document.getElementById('wrapper_liveStream').style.display = 'none';
+            if (document.getElementById('wrapper_historyLog')) document.getElementById('wrapper_historyLog').style.display = 'none';
+            if (document.getElementById('wrapper_marksLedger')) document.getElementById('wrapper_marksLedger').style.display = 'none';
+            if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'none';
 
             if (targetView === 'live') {
-                document.getElementById('btn_viewLive').classList.add('active');
-                document.getElementById('wrapper_liveStream').style.display = 'block';
+                document.getElementById('btn_viewLive')?.classList.add('active');
+                if (document.getElementById('wrapper_liveStream')) document.getElementById('wrapper_liveStream').style.display = 'block';
                 loadAttendance();
             } else if (targetView === 'history') {
-                document.getElementById('btn_viewHistory').classList.add('active');
-                document.getElementById('wrapper_historyLog').style.display = 'block';
+                document.getElementById('btn_viewHistory')?.classList.add('active');
+                if (document.getElementById('wrapper_historyLog')) document.getElementById('wrapper_historyLog').style.display = 'block';
                 fetchPastSessionTokens();
             } else if (targetView === 'marks') {
-                document.getElementById('btn_viewMarks').classList.add('active');
-                document.getElementById('wrapper_marksLedger').style.display = 'block';
+                document.getElementById('btn_viewMarks')?.classList.add('active');
+                if (document.getElementById('wrapper_marksLedger')) document.getElementById('wrapper_marksLedger').style.display = 'block';
                 fetchStudentMarksRoster();
             } else if (targetView === 'mentorship') {
-                document.getElementById('btn_viewMentorship').classList.add('active');
-                document.getElementById('wrapper_mentorshipWorkspace').style.display = 'block';
+                document.getElementById('btn_viewMentorship')?.classList.add('active');
+                if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'block';
                 loadMenteeList();
             }
         }
@@ -958,6 +969,7 @@
 
         async function loadMenteeList() {
             const container = document.getElementById('menteesCardsContainer');
+            if (!container) return;
             try {
                 const res = await fetch(`${API_BASE}/api/teacher/mentees?mentorId=${userUsn}&institutionId=${institutionId}`);
                 const mentees = await res.json();
@@ -981,10 +993,12 @@
                 secondsRemainingInSession = 180; 
 
                 currentGeneratedSessionToken = "AIT_" + Math.floor(100000 + Math.random() * 900000);
-                document.getElementById('currentActiveSessionCode').innerText = currentGeneratedSessionToken;
-                document.getElementById('sessionLabel').innerText = `STABLE SESSION ACTIVE`;
+                if (document.getElementById('currentActiveSessionCode')) document.getElementById('currentActiveSessionCode').innerText = currentGeneratedSessionToken;
+                if (document.getElementById('sessionLabel')) document.getElementById('sessionLabel').innerText = `STABLE SESSION ACTIVE`;
 
-                document.getElementById('qrContainer').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentGeneratedSessionToken}" alt="QR Matrix" />`;
+                if (document.getElementById('qrContainer')) {
+                    document.getElementById('qrContainer').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentGeneratedSessionToken}" alt="QR Matrix" />`;
+                }
 
                 await fetch(`${API_BASE}/api/auth/create-session`, {
                     method: 'POST',
@@ -999,7 +1013,9 @@
                     secondsRemainingInSession--;
                     let mins = Math.floor(secondsRemainingInSession / 60);
                     let secs = secondsRemainingInSession % 60;
-                    document.getElementById('countdownTimerReadout').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    if (document.getElementById('countdownTimerReadout')) {
+                        document.getElementById('countdownTimerReadout').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                    }
                     if (secondsRemainingInSession <= 0) executeSessionLockdownAndReconciliation();
                 }, 1000);
 
@@ -1010,7 +1026,7 @@
         async function executeSessionLockdownAndReconciliation() {
             clearInterval(sessionTimerCountdownReference);
             clearInterval(backgroundPollerReference);
-            document.getElementById('qrContainer').innerHTML = `🚫 LOCKED`;
+            if (document.getElementById('qrContainer')) document.getElementById('qrContainer').innerHTML = `🚫 LOCKED`;
             try {
                 fetch(`${API_BASE}/api/auth/end-session`, {
                     method: 'POST',
@@ -1028,7 +1044,7 @@
                 const data = await res.json();
                 if (!data || data.length === 0) return;
 
-                document.getElementById('totalPresentCount').innerText = data.length;
+                if (document.getElementById('totalPresentCount')) document.getElementById('totalPresentCount').innerText = data.length;
                 tableBody.innerHTML = "";
                 data.forEach(row => {
                     if(!scannedStudentUsnsCache.includes(row.student_id.toUpperCase())) {
@@ -1040,7 +1056,7 @@
         }
 
         async function submitManualAttendance() {
-            const studentId = document.getElementById('manualStudentUsn').value.trim();
+            const studentId = document.getElementById('manualStudentUsn')?.value.trim();
             const sessionCode = currentGeneratedSessionToken;
             const subjectName = userSubject || 'AI';
 
@@ -1065,7 +1081,7 @@
                 const data = await response.json();
                 if (response.ok && data.success) {
                     alert(`✅ Attendance successfully recorded for ${studentId}`);
-                    document.getElementById('manualStudentUsn').value = '';
+                    if (document.getElementById('manualStudentUsn')) document.getElementById('manualStudentUsn').value = '';
                     loadAttendance();
                 } else {
                     alert("❌ Error: " + (data.message || 'Failed to record manual attendance.'));
@@ -1088,7 +1104,7 @@
         }
 
         async function loadHistoricalRecords() {
-            const token = document.getElementById('historySessionDropdown').value;
+            const token = document.getElementById('historySessionDropdown')?.value;
             const historyBody = document.getElementById('historyTableBody');
             if(!token || !historyBody) return;
             try {
@@ -1106,6 +1122,7 @@
         // =========================================================================
         function toggleStudentScannerBox() {
             const scannerZone = document.getElementById("cameraScannerBox");
+            if (!scannerZone) return;
             if (scannerZone.style.display === "block") {
                 stopStudentScannerCamera();
             } else {
@@ -1129,7 +1146,7 @@
                     html5QrcodeScannerInstance = null;
                 } catch (err) { console.warn("Stop warning:", err); }
 
-                document.getElementById("cameraScannerBox").style.display = "none";
+                if (document.getElementById("cameraScannerBox")) document.getElementById("cameraScannerBox").style.display = "none";
 
                 // 🌐 GEOLOCATION PERMISSION & LOCATION PROMPT CHECK
                 if (!navigator.geolocation) {
@@ -1187,13 +1204,13 @@
             if (html5QrcodeScannerInstance) {
                 html5QrcodeScannerInstance.stop().then(() => {
                     html5QrcodeScannerInstance = null;
-                    document.getElementById("cameraScannerBox").style.display = "none";
+                    if (document.getElementById("cameraScannerBox")) document.getElementById("cameraScannerBox").style.display = "none";
                 }).catch(() => {
                     html5QrcodeScannerInstance = null;
-                    document.getElementById("cameraScannerBox").style.display = "none";
+                    if (document.getElementById("cameraScannerBox")) document.getElementById("cameraScannerBox").style.display = "none";
                 });
             } else {
-                document.getElementById("cameraScannerBox").style.display = "none";
+                if (document.getElementById("cameraScannerBox")) document.getElementById("cameraScannerBox").style.display = "none";
             }
         }
 
@@ -1252,17 +1269,19 @@
                 });
 
                 const finalPercentage = cond > 0 ? Math.round((att / cond) * 100) : 90;
-                document.getElementById('student_overall_ratio').innerText = finalPercentage + "%";
-                document.getElementById('student_total_conducted').innerText = cond;
+                if (document.getElementById('student_overall_ratio')) document.getElementById('student_overall_ratio').innerText = finalPercentage + "%";
+                if (document.getElementById('student_total_conducted')) document.getElementById('student_total_conducted').innerText = cond;
 
                 systemCacheConductedTotal = cond;
                 systemCacheAttendedTotal = att;
                 executeBunkSimulationMath(0);
 
                 const finalMeanScore = studentValidSubjectsCount > 0 ? Math.round(studentPredictionSum / studentValidSubjectsCount) : 85;
-                document.getElementById('student_predicted_see_avg').innerText = finalMeanScore + " / 100";
-                document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
-                document.getElementById('ai_risk_value').style.color = finalPercentage < 75 ? 'var(--accent-red)' : 'var(--accent-green)';
+                if (document.getElementById('student_predicted_see_avg')) document.getElementById('student_predicted_see_avg').innerText = finalMeanScore + " / 100";
+                if (document.getElementById('ai_risk_value')) {
+                    document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
+                    document.getElementById('ai_risk_value').style.color = finalPercentage < 75 ? 'var(--accent-red)' : 'var(--accent-green)';
+                }
 
                 const ctxScatter = document.getElementById('attendanceScatterChart');
                 const ctxBar = document.getElementById('marksBarChart');
@@ -1315,12 +1334,14 @@
         }
 
         function executeBunkSimulationMath(bunkValue) {
-            document.getElementById('sliderLabelText').innerText = `Classes to Skip: ${bunkValue}`;
+            if (document.getElementById('sliderLabelText')) document.getElementById('sliderLabelText').innerText = `Classes to Skip: ${bunkValue}`;
             const simAttended = Math.max(0, systemCacheAttendedTotal - parseInt(bunkValue));
             const simPercentage = systemCacheConductedTotal > 0 ? Math.round((simAttended / systemCacheConductedTotal) * 100) : 0;
-            document.getElementById('simulatedPercentageOutput').innerText = simPercentage + "%";
-            document.getElementById('simulatedStatusOutput').innerText = simPercentage < 75 ? "⚠️ DETAINED RISK" : "✅ ELIGIBLE";
-            document.getElementById('simulatedStatusOutput').style.color = simPercentage < 75 ? "var(--accent-red)" : "var(--accent-green)";
+            if (document.getElementById('simulatedPercentageOutput')) document.getElementById('simulatedPercentageOutput').innerText = simPercentage + "%";
+            if (document.getElementById('simulatedStatusOutput')) {
+                document.getElementById('simulatedStatusOutput').innerText = simPercentage < 75 ? "⚠️ DETAINED RISK" : "✅ ELIGIBLE";
+                document.getElementById('simulatedStatusOutput').style.color = simPercentage < 75 ? "var(--accent-red)" : "var(--accent-green)";
+            }
         }
 
         async function loadUserNotifications() {
@@ -1386,6 +1407,7 @@
 
         async function loadUserDirectInbox() {
             const feed = document.getElementById('messagesFeed');
+            if (!feed) return;
             try {
                 const res = await fetch(`${API_BASE}/api/messages/inbox?userId=${userUsn}&role=${userRole}&institutionId=${institutionId}`);
                 const directMsgs = await res.json();
@@ -1398,8 +1420,8 @@
         }
 
         async function sendUserDirectMessage() {
-            const recipientId = document.getElementById('userDirectRecipient').value.trim().toUpperCase();
-            const messageText = document.getElementById('userDirectMsgText').value.trim();
+            const recipientId = document.getElementById('userDirectRecipient')?.value.trim().toUpperCase();
+            const messageText = document.getElementById('userDirectMsgText')?.value.trim();
             if (!recipientId || !messageText) { firePremiumToastAlert("⚠️ Specify recipient & message.", "var(--accent-red)"); return; }
             try {
                 const res = await fetch(`${API_BASE}/api/messages/send`, {
@@ -1409,23 +1431,111 @@
                 });
                 if (res.ok) {
                     firePremiumToastAlert("✅ Message dispatched!");
-                    document.getElementById('userDirectMsgText').value = "";
+                    if (document.getElementById('userDirectMsgText')) document.getElementById('userDirectMsgText').value = "";
                 }
             } catch (e) { firePremiumToastAlert("❌ Error sending.", "var(--accent-red)"); }
         }
 
+        // ==========================================================================
+        // 🎙️ SPEECH AI GATEWAY & VOICE COMMAND CONTROLLER (ADDED)
+        // ==========================================================================
+        let recognitionInstance = null;
+        let isVoiceActive = false;
+
+        function toggleSpeechRecognitionHub() {
+            const voiceNode = document.getElementById('voiceControlNode');
+            
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("❌ Speech recognition is not supported in this browser. Please use Google Chrome.");
+                return;
+            }
+
+            if (isVoiceActive) {
+                if (recognitionInstance) {
+                    recognitionInstance.stop();
+                }
+                isVoiceActive = false;
+                if (voiceNode) {
+                    voiceNode.innerHTML = "<span>🎙️ Voice Command Off</span>";
+                    voiceNode.style.background = "#f1f5f9";
+                }
+                firePremiumToastAlert("🛑 Voice command deactivated.", "var(--accent-red)");
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognitionInstance = new SpeechRecognition();
+            recognitionInstance.continuous = false;
+            recognitionInstance.interimResults = false;
+            recognitionInstance.lang = 'en-US';
+
+            recognitionInstance.onstart = () => {
+                isVoiceActive = true;
+                if (voiceNode) {
+                    voiceNode.innerHTML = "<span>🔴 Listening... Speak Command</span>";
+                    voiceNode.style.background = "#fee2e2";
+                }
+                firePremiumToastAlert("🎙️ Listening for voice command...", "var(--primary-blue)");
+            };
+
+            recognitionInstance.onresult = (event) => {
+                const speechText = event.results[0][0].transcript.toLowerCase().trim();
+                console.log("🗣️ Voice Command Recognized:", speechText);
+                firePremiumToastAlert(`🗣️ Heard: "${speechText}"`);
+
+                if (speechText.includes("launch session") || speechText.includes("start session") || speechText.includes("qr")) {
+                    if (typeof initializeFixedThreeMinuteSession === 'function') {
+                        initializeFixedThreeMinuteSession();
+                    }
+                } else if (speechText.includes("sync stream") || speechText.includes("refresh")) {
+                    if (typeof loadAttendance === 'function') {
+                        loadAttendance();
+                    }
+                } else if (speechText.includes("enter marks") || speechText.includes("marks")) {
+                    if (typeof openMarksEntryModal === 'function') {
+                        openMarksEntryModal();
+                    }
+                } else {
+                    firePremiumToastAlert(`⚠️ Unrecognized command: "${speechText}"`, "var(--accent-red)");
+                }
+            };
+
+            recognitionInstance.onerror = (event) => {
+                console.error("Speech recognition error:", event.error);
+                isVoiceActive = false;
+                if (voiceNode) {
+                    voiceNode.innerHTML = "<span>🎙️ Voice Command Off</span>";
+                    voiceNode.style.background = "#f1f5f9";
+                }
+            };
+
+            recognitionInstance.onend = () => {
+                isVoiceActive = false;
+                if (voiceNode) {
+                    voiceNode.innerHTML = "<span>🎙️ Voice Command Off</span>";
+                    voiceNode.style.background = "#f1f5f9";
+                }
+            };
+
+            try {
+                recognitionInstance.start();
+            } catch (err) {
+                console.error("Failed to start recognition:", err);
+            }
+        }
+
         function switchStudentTab(tab) {
-            document.getElementById('btn_studentScanTab').classList.remove('active');
-            document.getElementById('btn_studentMarksTab').classList.remove('active');
-            document.getElementById('wrapper_studentScanView').style.display = 'none';
-            document.getElementById('wrapper_studentMarksView').style.display = 'none';
+            document.getElementById('btn_studentScanTab')?.classList.remove('active');
+            document.getElementById('btn_studentMarksTab')?.classList.remove('active');
+            if (document.getElementById('wrapper_studentScanView')) document.getElementById('wrapper_studentScanView').style.display = 'none';
+            if (document.getElementById('wrapper_studentMarksView')) document.getElementById('wrapper_studentMarksView').style.display = 'none';
 
             if (tab === 'scan') {
-                document.getElementById('btn_studentScanTab').classList.add('active');
-                document.getElementById('wrapper_studentScanView').style.display = 'block';
+                document.getElementById('btn_studentScanTab')?.classList.add('active');
+                if (document.getElementById('wrapper_studentScanView')) document.getElementById('wrapper_studentScanView').style.display = 'block';
             } else if (tab === 'marks') {
-                document.getElementById('btn_studentMarksTab').classList.add('active');
-                document.getElementById('wrapper_studentMarksView').style.display = 'block';
+                document.getElementById('btn_studentMarksTab')?.classList.add('active');
+                if (document.getElementById('wrapper_studentMarksView')) document.getElementById('wrapper_studentMarksView').style.display = 'block';
             }
         }
 
