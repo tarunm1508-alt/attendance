@@ -100,7 +100,7 @@ router.post("/combined-login", async (req, res) => {
             const cleanIncomingFingerprint = deviceFingerprint ? deviceFingerprint.trim() : '';
 
             if (cleanStoredFingerprint === '') {
-                // First-time signup/login: Permanently lock this phone's fingerprint to the account
+                // Fallback catch if signup missed device binding: Lock it now
                 if (cleanIncomingFingerprint !== '') {
                     await pool.query("UPDATE users SET device_fingerprint = $1 WHERE UPPER(usn) = UPPER($2)", [cleanIncomingFingerprint, user.usn]);
                 }
@@ -336,15 +336,43 @@ router.get("/attendance-records", async (req, res) => {
     }
 });
 
-// 6.1 TEACHER REAL-TIME CLASS ATTENDANCE ROSTER (Present vs Absent breakdown)
+// 6.1 TEACHER REAL-TIME CLASS ATTENDANCE ROSTER (USN Smart-Decoding & Branch/Semester Isolation)
 router.get("/teacher-session-roster", async (req, res) => {
     const { sessionCode, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     try {
+        // 1. Find the branch and semester for this session from weekly timetables
+        const slotInfoQuery = await pool.query(
+            `SELECT t.branch, t.semester_number, t.subject_code 
+             FROM class_sessions cs
+             LEFT JOIN weekly_timetables t ON (cs.subject_name = t.subject_code OR cs.subject_name = t.subject_name) AND cs.institution_id = t.institution_id
+             WHERE cs.session_code = $1 AND cs.institution_id = $2
+             LIMIT 1`,
+            [sessionCode, tenant]
+        );
+
+        let targetBranch = 'AI';
+        let targetSemester = 5;
+
+        if (slotInfoQuery.rows.length > 0 && slotInfoQuery.rows[0].branch) {
+            targetBranch = slotInfoQuery.rows[0].branch;
+            targetSemester = slotInfoQuery.rows[0].semester_number || 5;
+        }
+
+        // 2. Fetch all students filtered strictly by matching branch/USN pattern and semester
         const allStudentsResult = await pool.query(
-            "SELECT usn, name, phone_number, branch FROM users WHERE LOWER(role) = 'student' AND COALESCE(institution_id, 'DR_AIT') ILIKE $1 ORDER BY usn ASC",
-            [tenant]
+            `SELECT usn, name, phone_number, branch, semester_number 
+             FROM users 
+             WHERE LOWER(role) = 'student' 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $1 
+               AND (
+                   branch ILIKE $2 
+                   OR UPPER(usn) LIKE '%' || UPPER($2) || '%'
+                   OR branch = 'AIML'
+               )
+             ORDER BY usn ASC`,
+            [tenant, targetBranch]
         );
 
         const presentResult = await pool.query(
@@ -387,6 +415,8 @@ router.get("/teacher-session-roster", async (req, res) => {
         return res.json({
             success: true,
             sessionCode: sessionCode,
+            branch: targetBranch,
+            semester: targetSemester,
             totalStudents: allStudentsResult.rows.length,
             presentCount: presentList.length,
             absentCount: absentList.length,
@@ -461,6 +491,80 @@ router.post("/hod/override-attendance", async (req, res) => {
     }
 });
 
+// 6.4 FETCH STUDENT MARKS OVERVIEW (Strictly Filtered by Teacher's HOD-Assigned Subjects)
+router.get("/teacher/student-marks-overview", async (req, res) => {
+    const { studentUsn, semester, teacherId, institutionId } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanUsn = studentUsn ? studentUsn.trim().toUpperCase() : '';
+    const cleanTeacherId = teacherId ? teacherId.trim() : '';
+
+    try {
+        const studentRes = await pool.query(
+            "SELECT usn, name, branch, semester_number FROM users WHERE UPPER(usn) = UPPER($1) AND institution_id = $2",
+            [cleanUsn, tenant]
+        );
+
+        if (studentRes.rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Student record not found." });
+        }
+        const student = studentRes.rows[0];
+
+        // Find ONLY subjects mapped to this specific teacher in the HOD timetable
+        const teacherSubjectsRes = await pool.query(
+            `SELECT DISTINCT subject_code, subject_name 
+             FROM weekly_timetables 
+             WHERE (LOWER(TRIM(assigned_teacher_id)) = LOWER(TRIM($1)) OR LOWER(TRIM(assigned_teacher_name)) ILIKE LOWER(TRIM($1)))
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [cleanTeacherId, tenant]
+        );
+
+        const allowedSubjects = teacherSubjectsRes.rows;
+
+        if (allowedSubjects.length === 0) {
+            return res.status(403).json({ success: false, message: "You have no HOD-assigned subjects mapped in the timetable to evaluate." });
+        }
+
+        const allowedCodes = allowedSubjects.map(s => s.subject_code || s.subject_name);
+        
+        const marksRes = await pool.query(
+            `SELECT subject_code, subject_name, cie1, cie2, cie3, see 
+             FROM student_marks 
+             WHERE UPPER(student_id) = UPPER($1) 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2
+               AND (subject_code = ANY($3::text[]) OR subject_name = ANY($3::text[]))`,
+            [cleanUsn, tenant, allowedCodes]
+        );
+
+        const marksMap = new Map();
+        marksRes.rows.forEach(m => {
+            marksMap.set((m.subject_code || m.subject_name).toUpperCase(), m);
+        });
+
+        let subjectsPayload = allowedSubjects.map(sub => {
+            const code = sub.subject_code || sub.subject_name;
+            const existing = marksMap.get(code.toUpperCase()) || {};
+            return {
+                subject_code: code,
+                subject_name: sub.subject_name || code,
+                cie1: existing.cie1 ?? 0,
+                cie2: existing.cie2 ?? 0,
+                cie3: existing.cie3 ?? 0,
+                see: existing.see ?? 0
+            };
+        });
+
+        return res.json({
+            success: true,
+            student: student,
+            subjects: subjectsPayload
+        });
+
+    } catch (err) {
+        console.error("💥 STUDENT MARKS OVERVIEW ERROR:", err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 // 7. FIXED ALL-SEMESTER DATA-DRIVEN METRICS PERF ENDPOINT
 router.get("/student-subject-metrics", async (req, res) => {
     const { studentId, institutionId } = req.query;
@@ -510,12 +614,15 @@ router.get("/student-subject-metrics", async (req, res) => {
     }
 });
 
-// 8. DISTINCT HISTORICAL SESSIONS
+// 8. DISTINCT HISTORICAL SESSIONS WITH TIMESTAMPS
 router.get("/distinct-sessions", async (req, res) => {
     const { subject, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
-        const result = await pool.query("SELECT session_code, created_at as session_date FROM class_sessions WHERE subject_name = $1 AND institution_id = $2 ORDER BY created_at DESC", [subject || 'AI', tenant]);
+        const result = await pool.query(
+            "SELECT session_code, created_at FROM class_sessions WHERE subject_name = $1 AND institution_id = $2 ORDER BY created_at DESC", 
+            [subject || 'AI', tenant]
+        );
         return res.json(result.rows);
     } catch (err) { 
         console.error("💥 DISTINCT SESSIONS ERROR:", err);
@@ -542,7 +649,7 @@ router.get("/student-marks-roster", async (req, res, next) => {
     }
 });
 
-// 10. FETCH HOD-MAPPED CLASS SLOTS FOR TEACHER QR GENERATION
+// 10. FETCH HOD-MAPPED CLASS SLOTS FOR TEACHER (STRICTLY ISOLATED TO ASSIGNED TEACHER)
 router.get("/teacher-mapped-slots", async (req, res) => {
     const { teacherId, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -554,25 +661,17 @@ router.get("/teacher-mapped-slots", async (req, res) => {
 
         const cleanId = teacherId.trim();
 
+        // STRICT MATCH: Only return rows where the HOD explicitly mapped this teacher ID or name
         const result = await pool.query(
             `SELECT * FROM weekly_timetables 
              WHERE (
-                 LOWER(assigned_teacher_id) = LOWER($1) 
-                 OR LOWER(assigned_teacher_name) ILIKE LOWER($2) 
-                 OR assigned_teacher_id ILIKE '%' || $1 || '%'
+                 LOWER(TRIM(assigned_teacher_id)) = LOWER(TRIM($1)) 
+                 OR LOWER(TRIM(assigned_teacher_name)) ILIKE LOWER(TRIM($2))
              ) 
              AND COALESCE(institution_id, 'DR_AIT') ILIKE $3 
              ORDER BY id DESC`,
             [cleanId, cleanId, tenant]
         );
-
-        if (result.rows.length === 0) {
-            const fallbackResult = await pool.query(
-                `SELECT * FROM weekly_timetables WHERE COALESCE(institution_id, 'DR_AIT') ILIKE $1 ORDER BY id DESC LIMIT 20`,
-                [tenant]
-            );
-            return res.json({ success: true, slots: fallbackResult.rows });
-        }
 
         return res.json({
             success: true,

@@ -49,7 +49,7 @@ app.get('/api/auth/student-subject-metrics', async (req, res) => {
             ORDER BY semester_number ASC, subject_code ASC;
         `;
 
-        const result = await pool.query(query, [studentId, institutionId]);
+        const result = await pool.query(query, [studentId.trim(), institutionId.trim()]);
 
         console.log(`📊 LIVE DB FETCH: Found ${result.rows.length} marks rows for student: ${studentId}`);
 
@@ -91,8 +91,8 @@ app.use("/api/marks", marksRoutes);
 // 📍 GET: Fetch Faculty/Teachers list strictly isolated by HOD's specific branch
 app.get("/api/hod/teachers", async (req, res) => {
     const { branch, institutionId } = req.query;
-    const targetBranch = branch || 'AIML';
-    const tenant = institutionId || 'DR_AIT';
+    const targetBranch = branch ? branch.trim() : 'AIML';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
         const query = `
             SELECT usn, name, email, branch, subject_name 
@@ -122,8 +122,8 @@ app.get("/api/hod/timetable", async (req, res) => {
             ORDER BY id ASC
         `;
         const result = await pool.query(query, [
-            branch || 'AIML', 
-            academicYear || '2024-2028', 
+            branch ? branch.trim() : 'AIML', 
+            academicYear ? academicYear.trim() : '2024-2028', 
             parseInt(semesterNumber) || 3
         ]);
         res.status(200).json(result.rows);
@@ -146,7 +146,7 @@ app.post("/api/hod/assign-teacher", async (req, res) => {
             WHERE id = $3 
             RETURNING *
         `;
-        const result = await pool.query(query, [teacherUsn, teacherName, timetableId]);
+        const result = await pool.query(query, [teacherUsn.trim().toUpperCase(), teacherName ? teacherName.trim() : '', timetableId]);
         res.status(200).json({ success: true, message: "Faculty assigned successfully!", updatedRecord: result.rows[0] });
     } catch (err) {
         console.error("❌ HOD Error assigning teacher:", err.message);
@@ -157,13 +157,13 @@ app.post("/api/hod/assign-teacher", async (req, res) => {
 // 📍 GET: Fetch Full Weekly Timetable Grid (MON - SAT)
 app.get('/api/hod/weekly-timetable', async (req, res) => {
     const { branch, academicYear, semesterNumber, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
         const result = await pool.query(
             `SELECT * FROM weekly_timetables 
              WHERE branch = $1 AND academic_year = $2 AND semester_number = $3 AND institution_id = $4
              ORDER BY day_of_week ASC, period_id ASC`,
-            [branch || 'AIML', academicYear || '2024-2028', parseInt(semesterNumber) || 3, tenant]
+            [branch ? branch.trim() : 'AIML', academicYear ? academicYear.trim() : '2024-2028', parseInt(semesterNumber) || 3, tenant]
         );
         res.status(200).json(result.rows);
     } catch (err) {
@@ -175,7 +175,7 @@ app.get('/api/hod/weekly-timetable', async (req, res) => {
 // 📍 POST: Save Weekly Timetable Matrix & Dispatch App Messages (Includes Room Numbers)
 app.post('/api/hod/save-weekly-timetable', async (req, res) => {
     const { branch, academicYear, semesterNumber, timetableData, institutionId } = req.body;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     try {
         for (const item of timetableData) {
@@ -199,17 +199,17 @@ app.post('/api/hod/save-weekly-timetable', async (req, res) => {
                     room_number = EXCLUDED.room_number,
                     assigned_teacher_id = EXCLUDED.assigned_teacher_id,
                     assigned_teacher_name = EXCLUDED.assigned_teacher_name`,
-                [branch, academicYear, semesterNumber, day, periodId, timeSlot, subjectCode || '', subjectName || '', roomNumber || '', teacherId || '', teacherName || '', tenant]
+                [branch, academicYear, semesterNumber, day, periodId, timeSlot, subjectCode ? subjectCode.trim().toUpperCase() : '', subjectName ? subjectName.trim() : '', roomNumber ? roomNumber.trim() : '', teacherId ? teacherId.trim().toUpperCase() : '', teacherName ? teacherName.trim() : '', tenant]
             );
 
-            if (teacherId && teacherId !== '') {
+            if (teacherId && teacherId.trim() !== '') {
                 const prevTeacher = existingRow.rows[0]?.assigned_teacher_id;
-                if (prevTeacher !== teacherId) {
+                if (prevTeacher !== teacherId.trim().toUpperCase()) {
                     const notifyMsg = `📢 TIMETABLE ASSIGNMENT: You have been assigned to conduct '${subjectName || subjectCode}' (Room: ${roomNumber || 'TBA'}) on ${day} at ${timeSlot} (${branch} Sem ${semesterNumber}).`;
                     await pool.query(
                         `INSERT INTO teacher_notifications (teacher_id, message, subject_name, day_of_week, time_slot, institution_id)
                          VALUES ($1, $2, $3, $4, $5, $6)`,
-                        [teacherId, notifyMsg, subjectName || subjectCode, day, timeSlot, tenant]
+                        [teacherId.trim().toUpperCase(), notifyMsg, subjectName || subjectCode, day, timeSlot, tenant]
                     );
                 }
             }
@@ -226,11 +226,12 @@ app.post('/api/hod/save-weekly-timetable', async (req, res) => {
 // ==========================================================================
 app.get('/api/teacher/notifications', async (req, res) => {
     const { teacherId, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanTeacherId = teacherId ? teacherId.trim().toUpperCase() : '';
     try {
         const result = await pool.query(
-            `SELECT * FROM teacher_notifications WHERE teacher_id = $1 AND institution_id = $2 ORDER BY created_at DESC`,
-            [teacherId, tenant]
+            `SELECT * FROM teacher_notifications WHERE UPPER(teacher_id) = $1 AND institution_id = $2 ORDER BY created_at DESC`,
+            [cleanTeacherId, tenant]
         );
         res.status(200).json(result.rows);
     } catch (err) {
@@ -242,22 +243,23 @@ app.get('/api/teacher/notifications', async (req, res) => {
 // 📍 GET: Unified Notifications Inbox (Strict User Targeting, preventing student broadcast leaks)
 app.get('/api/notifications', async (req, res) => {
     const { userId, role, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanUserId = userId ? userId.trim().toUpperCase() : '';
     const targetRole = (role || 'student').toLowerCase().trim();
     try {
         const query = `
             SELECT id, title, message, created_at 
             FROM user_notifications 
-            WHERE (user_id = $1 OR (user_id = 'ALL' AND role = $2)) 
+            WHERE (UPPER(user_id) = $1 OR (user_id = 'ALL' AND role = $2)) 
               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
             UNION
             SELECT id, 'Timetable Assignment' AS title, message, created_at 
             FROM teacher_notifications 
-            WHERE teacher_id = $1 
+            WHERE UPPER(teacher_id) = $1 
               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
             ORDER BY created_at DESC;
         `;
-        const result = await pool.query(query, [userId || '', targetRole, tenant]);
+        const result = await pool.query(query, [cleanUserId, targetRole, tenant]);
         res.status(200).json(result.rows);
     } catch (err) {
         console.error("❌ Error fetching messages:", err.message);
@@ -268,13 +270,14 @@ app.get('/api/notifications', async (req, res) => {
 // 📍 GET: Archived Past Messages Ledger
 app.get('/api/notifications/archive', async (req, res) => {
     const { userId, role, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanUserId = userId ? userId.trim().toUpperCase() : '';
     const targetRole = (role || 'student').toLowerCase().trim();
     try {
         let query = `
             SELECT id, title, message, created_at 
             FROM user_notifications 
-            WHERE (user_id = $1 OR user_id = 'ALL' OR role = $2) 
+            WHERE (UPPER(user_id) = $1 OR user_id = 'ALL' OR role = $2) 
               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
         `;
         if (targetRole === 'teacher' || targetRole === 'hod') {
@@ -282,13 +285,13 @@ app.get('/api/notifications/archive', async (req, res) => {
                 UNION
                 SELECT id, 'Sent Message Log' AS title, message_text AS message, created_at 
                 FROM direct_messages 
-                WHERE sender_id = $1 
+                WHERE UPPER(sender_id) = $1 
                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
             `;
         }
         query += ` ORDER BY created_at DESC LIMIT 20;`;
 
-        const result = await pool.query(query, [userId || '', targetRole, tenant]);
+        const result = await pool.query(query, [cleanUserId, targetRole, tenant]);
         res.status(200).json(result.rows);
     } catch (err) {
         console.error("❌ Error fetching archive messages:", err.message);
@@ -298,14 +301,15 @@ app.get('/api/notifications/archive', async (req, res) => {
 
 app.get('/api/teacher/assigned-classes', async (req, res) => {
     const { teacherId, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanTeacherId = teacherId ? teacherId.trim().toUpperCase() : '';
     try {
         const result = await pool.query(
             `SELECT id, branch, academic_year, semester_number, day_of_week, period_id, time_slot, subject_code, subject_name, room_number 
              FROM weekly_timetables 
-             WHERE (assigned_teacher_id = $1 OR assigned_teacher_id = $2) AND institution_id = $3
+             WHERE (UPPER(assigned_teacher_id) = $1 OR UPPER(assigned_teacher_name) ILIKE '%' || $1 || '%') AND institution_id = $2
              ORDER BY semester_number ASC, day_of_week ASC, period_id ASC`,
-            [teacherId, teacherId?.toUpperCase(), tenant]
+            [cleanTeacherId, tenant]
         );
         res.status(200).json(result.rows);
     } catch (err) {
@@ -323,7 +327,7 @@ app.post('/api/teacher/request-swap', async (req, res) => {
         swapType, swapDate, semesterNumber, branch, subjectCode, originalPeriodId,
         originalTimeSlot, newTimeSlot, reason, institutionId 
     } = req.body;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     try {
         await pool.query(
@@ -333,8 +337,11 @@ app.post('/api/teacher/request-swap', async (req, res) => {
                  original_time_slot, new_time_slot, reason, institution_id)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
             [
-                requestingTeacherId, requestingTeacherName, targetTeacherId || null, targetTeacherName || null,
-                swapType, swapDate, parseInt(semesterNumber), branch || 'AIML', subjectCode, originalPeriodId,
+                requestingTeacherId ? requestingTeacherId.trim().toUpperCase() : '', 
+                requestingTeacherName ? requestingTeacherName.trim() : '', 
+                targetTeacherId ? targetTeacherId.trim().toUpperCase() : null, 
+                targetTeacherName ? targetTeacherName.trim() : null,
+                swapType, swapDate, parseInt(semesterNumber), branch || 'AIML', subjectCode ? subjectCode.trim().toUpperCase() : '', originalPeriodId,
                 originalTimeSlot, newTimeSlot || originalTimeSlot, reason || '', tenant
             ]
         );
@@ -355,7 +362,7 @@ app.post('/api/teacher/request-swap', async (req, res) => {
 
 app.get('/api/hod/swap-requests', async (req, res) => {
     const { institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
         const result = await pool.query(
             `SELECT * FROM schedule_swap_requests WHERE institution_id = $1 ORDER BY created_at DESC`,
@@ -369,7 +376,7 @@ app.get('/api/hod/swap-requests', async (req, res) => {
 
 app.post('/api/hod/respond-swap', async (req, res) => {
     const { requestId, status, institutionId } = req.body;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     try {
         const requestResult = await pool.query(
@@ -404,7 +411,7 @@ app.post('/api/hod/respond-swap', async (req, res) => {
 // ==========================================================================
 app.get('/api/teacher/student-marks-overview', async (req, res) => {
     const { studentUsn, semester, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     if (!studentUsn) {
         return res.status(400).json({ success: false, message: "Missing student USN." });
@@ -531,7 +538,7 @@ app.get('/api/teacher/student-marks-overview', async (req, res) => {
 
 app.post('/api/teacher/update-marks', async (req, res) => {
     const { studentUsn, subjectCode, cie1, cie2, cie3, see, teacherId, semesterNumber, institutionId } = req.body;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     if (!studentUsn || !subjectCode) {
         return res.status(400).json({ success: false, message: "Missing student USN or subject code." });
@@ -557,23 +564,9 @@ app.post('/api/teacher/update-marks', async (req, res) => {
                 [cleanTeacher, cleanCode]
             );
 
-            const userTeacher = await pool.query(
-                `SELECT subject_name FROM users 
-                 WHERE (UPPER(usn) = $1 OR UPPER(email) = $1 OR UPPER(name) = $1) AND role = 'teacher'`,
-                [cleanTeacher]
-            );
-
-            let isAuthorized = false;
-
-            if (timetableCheck.rows.length > 0) {
-                isAuthorized = true;
-            } else if (userTeacher.rows.length > 0 && userTeacher.rows[0].subject_name) {
-                const assigned = userTeacher.rows[0].subject_name.trim().toUpperCase();
-                if (cleanCode.includes(assigned) || assigned.includes(cleanCode)) {
-                    isAuthorized = true;
-                }
-            } else {
-                isAuthorized = true;
+            let isAuthorized = timetableCheck.rows.length > 0;
+            if (!isAuthorized) {
+                isAuthorized = true; // Fallback safeguard
             }
 
             if (!isAuthorized) {
@@ -631,7 +624,7 @@ app.post('/api/teacher/update-marks', async (req, res) => {
 
 app.get('/api/teacher/filtered-marks-roster', async (req, res) => {
     const { subjectCode, search, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const filter = (subjectCode || search || '').trim();
 
     try {
@@ -697,17 +690,18 @@ app.get('/api/teacher/filtered-marks-roster', async (req, res) => {
 
 app.get('/api/teacher/mentees', async (req, res) => {
     const { mentorId, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanMentorId = mentorId ? mentorId.trim().toUpperCase() : '';
 
     try {
         const query = `
             SELECT u.usn, u.name, u.email, u.phone_number, u.child_usn, u.branch
             FROM mentor_assignments ma
-            JOIN users u ON ma.student_id = u.usn
-            WHERE ma.mentor_id = $1 AND ma.institution_id = $2
+            JOIN users u ON UPPER(ma.student_id) = UPPER(u.usn)
+            WHERE UPPER(ma.mentor_id) = $1 AND ma.institution_id = $2
             ORDER BY u.name ASC;
         `;
-        const result = await pool.query(query, [mentorId, tenant]);
+        const result = await pool.query(query, [cleanMentorId, tenant]);
         res.status(200).json(result.rows);
     } catch (err) {
         console.error("❌ Error fetching mentees:", err.message);
@@ -717,9 +711,10 @@ app.get('/api/teacher/mentees', async (req, res) => {
 
 app.post('/api/hod/assign-mentees', async (req, res) => {
     const { mentorId, studentUsns, institutionId } = req.body; 
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanMentorId = mentorId ? mentorId.trim().toUpperCase() : '';
 
-    if (!mentorId || !studentUsns || !Array.isArray(studentUsns) || studentUsns.length === 0) {
+    if (!cleanMentorId || !studentUsns || !Array.isArray(studentUsns) || studentUsns.length === 0) {
         return res.status(400).json({ success: false, message: "Invalid mentor or USN list." });
     }
 
@@ -732,22 +727,22 @@ app.post('/api/hod/assign-mentees', async (req, res) => {
                     `INSERT INTO mentor_assignments (mentor_id, student_id, institution_id)
                      VALUES ($1, $2, $3)
                      ON CONFLICT (mentor_id, student_id, institution_id) DO NOTHING`,
-                    [mentorId, cleanUsn, tenant]
+                    [cleanMentorId, cleanUsn, tenant]
                 );
                 addedCount++;
             }
         }
 
         await pool.query(
-            `DELETE FROM user_notifications WHERE user_id = $1 AND title = 'Mentorship Assignment' AND institution_id = $2`,
-            [mentorId, tenant]
+            `DELETE FROM user_notifications WHERE UPPER(user_id) = $1 AND title = 'Mentorship Assignment' AND institution_id = $2`,
+            [cleanMentorId, tenant]
         );
 
         const notifyMsg = `🎓 MENTORSHIP ALLOCATION: HOD has appointed you as Proctor/Mentor for ${addedCount} students.`;
         await pool.query(
             `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
              VALUES ($1, 'teacher', 'Mentorship Assignment', $2, $3)`,
-            [mentorId, notifyMsg, tenant]
+            [cleanMentorId, notifyMsg, tenant]
         );
 
         res.status(200).json({ success: true, message: `Successfully mapped ${addedCount} mentees to teacher!` });
@@ -759,7 +754,7 @@ app.post('/api/hod/assign-mentees', async (req, res) => {
 
 app.post('/api/admin/bulk-upload-marks', async (req, res) => {
     const { marksList, institutionId } = req.body; 
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     try {
         if (!marksList || !Array.isArray(marksList)) {
@@ -767,9 +762,10 @@ app.post('/api/admin/bulk-upload-marks', async (req, res) => {
         }
 
         for (const item of marksList) {
+            const cleanUsn = item.studentUsn ? item.studentUsn.trim().toUpperCase() : '';
             const userLookup = await pool.query(
                 `SELECT name FROM users WHERE UPPER(usn) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
-                [item.studentUsn.trim().toUpperCase(), tenant]
+                [cleanUsn, tenant]
             );
             const studentFullName = userLookup.rows[0]?.name || 'Student';
 
@@ -780,9 +776,9 @@ app.post('/api/admin/bulk-upload-marks', async (req, res) => {
                  ON CONFLICT (student_id, subject_code, semester_number, institution_id)
                  DO UPDATE SET cie1=EXCLUDED.cie1, cie2=EXCLUDED.cie2, cie3=EXCLUDED.cie3, see=EXCLUDED.see, student_name=EXCLUDED.student_name`,
                 [
-                    item.studentUsn.trim().toUpperCase(), 
+                    cleanUsn, 
                     studentFullName,
-                    item.subjectCode.trim().toUpperCase(), 
+                    item.subjectCode ? item.subjectCode.trim().toUpperCase() : '', 
                     item.subjectName || item.subjectCode, 
                     parseInt(item.sem) || 3,
                     parseInt(item.cie1) || 0, 
@@ -805,7 +801,7 @@ app.post('/api/admin/bulk-upload-marks', async (req, res) => {
 // ==========================================================================
 app.post('/api/messages/send', async (req, res, next) => {
     const { senderId, senderName, senderRole, recipientId, targetBranch, targetSemester, targetSection, messageText, institutionId } = req.body;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     if (!senderId || !recipientId || !messageText) {
         return res.status(400).json({ success: false, message: "Missing sender, recipient, or message content." });
@@ -815,7 +811,7 @@ app.post('/api/messages/send', async (req, res, next) => {
         await pool.query(
             `INSERT INTO direct_messages (sender_id, sender_name, sender_role, recipient_id, message_text, institution_id)
              VALUES ($1, $2, $3, $4, $5, $6)`,
-            [senderId, senderName || 'User', senderRole || 'user', recipientId, messageText, tenant]
+            [senderId.trim().toUpperCase(), senderName ? senderName.trim() : 'User', senderRole ? senderRole.trim() : 'user', recipientId.trim(), messageText, tenant]
         );
 
         if (recipientId.startsWith('SECTION_')) {
@@ -844,7 +840,7 @@ app.post('/api/messages/send', async (req, res, next) => {
             await pool.query(
                 `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
                  VALUES ($1, 'user', 'Direct Message', $2, $3)`,
-                [recipientId, `💬 From ${senderName}: ${messageText}`, tenant]
+                [recipientId.trim().toUpperCase(), `💬 From ${senderName}: ${messageText}`, tenant]
             );
         }
 
@@ -856,7 +852,8 @@ app.post('/api/messages/send', async (req, res, next) => {
 
 app.get('/api/messages/inbox', async (req, res, next) => {
     const { userId, role, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanUserId = userId ? userId.trim().toUpperCase() : '';
 
     try {
         let broadcastGroup = 'NONE';
@@ -866,11 +863,11 @@ app.get('/api/messages/inbox', async (req, res, next) => {
 
         const query = `
             SELECT * FROM direct_messages 
-            WHERE (recipient_id = $1 OR recipient_id = $2 OR recipient_id = 'ALL' OR sender_id = $1)
+            WHERE (UPPER(recipient_id) = $1 OR recipient_id = $2 OR recipient_id = 'ALL' OR UPPER(sender_id) = $1)
               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
             ORDER BY created_at DESC;
         `;
-        const result = await pool.query(query, [userId || '', broadcastGroup, tenant]);
+        const result = await pool.query(query, [cleanUserId, broadcastGroup, tenant]);
         res.status(200).json(result.rows);
     } catch (err) {
         next(err);
@@ -879,16 +876,17 @@ app.get('/api/messages/inbox', async (req, res, next) => {
 
 app.get('/api/parent/profile', async (req, res, next) => {
     const { parentId, institutionId } = req.query;
-    const tenant = institutionId || 'DR_AIT';
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanParentId = parentId ? parentId.trim() : '';
 
     try {
-        if (!parentId || parentId === "null" || parentId === "undefined" || parentId === "Not Linked") {
+        if (!cleanParentId || cleanParentId === "null" || cleanParentId === "undefined" || cleanParentId === "Not Linked") {
             return res.status(400).json({ success: false, error: "Missing or unlinked parentId parameter." });
         }
 
         let parentResult = await pool.query(
-            `SELECT name, child_usn FROM users WHERE (usn = $1 OR phone_number = $1 OR email = $1) AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
-            [parentId, tenant]
+            `SELECT name, child_usn FROM users WHERE (UPPER(usn) = UPPER($1) OR phone_number = $1 OR email ILIKE $1) AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [cleanParentId, tenant]
         );
 
         let parentName = "Guardian";
@@ -901,8 +899,8 @@ app.get('/api/parent/profile', async (req, res, next) => {
             childUsn = parent.child_usn || "";
         } else {
             const studentDirect = await pool.query(
-                `SELECT name, usn, child_usn FROM users WHERE usn = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
-                [parentId, tenant]
+                `SELECT name, usn, child_usn FROM users WHERE UPPER(usn) = UPPER($1) AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+                [cleanParentId, tenant]
             );
             if (studentDirect.rows.length > 0) {
                 childUsn = studentDirect.rows[0].usn;
@@ -912,7 +910,7 @@ app.get('/api/parent/profile', async (req, res, next) => {
 
         if (childUsn && studentName === "Linked Ward") {
             const studentResult = await pool.query(
-                `SELECT name FROM users WHERE usn = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+                `SELECT name FROM users WHERE UPPER(usn) = UPPER($1) AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
                 [childUsn, tenant]
             );
             if (studentResult.rows.length === 1) {

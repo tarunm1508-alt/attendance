@@ -335,6 +335,52 @@
                         </table>
                     </div>
 
+                    <!-- 📊 REAL-TIME CLASS ATTENDANCE BREAKDOWN ROSTER (Present vs Absent) -->
+                    <div style="background: #ffffff; border: 1px solid var(--bento-border); border-radius: 18px; padding: 22px; margin-top: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">📊 Real-Time Class Attendance Breakdown</h3>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Comprehensive list showing verified attendees versus missing students for the active token.</p>
+                            </div>
+                            <button onclick="fetchTeacherSessionRoster()" class="btn btn-blue" style="padding: 8px 16px; font-size: 12px;">📊 Load Full Roster</button>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 14px; border-radius: 12px; text-align: center;">
+                                <div style="font-size: 11px; font-weight: 800; color: #065f46; text-transform: uppercase;">Total Present</div>
+                                <div id="rosterPresentCount" style="font-size: 24px; font-weight: 800; color: #047857; margin-top: 4px;">0</div>
+                            </div>
+                            <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 14px; border-radius: 12px; text-align: center;">
+                                <div style="font-size: 11px; font-weight: 800; color: #991b1b; text-transform: uppercase;">Total Absent</div>
+                                <div id="rosterAbsentCount" style="font-size: 24px; font-weight: 800; color: #b91c1c; margin-top: 4px;">0</div>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex-wrap: wrap;">
+                            <!-- PRESENT LIST -->
+                            <div class="table-container" style="margin: 0;">
+                                <h4 style="background: #d1fae5; color: #065f46; padding: 10px 14px; font-size: 12px; font-weight: 800; text-transform: uppercase;">✅ Present Students</h4>
+                                <div style="max-height: 250px; overflow-y: auto;">
+                                    <table>
+                                        <thead><tr><th>Name</th><th>USN</th><th>Distance</th></tr></thead>
+                                        <tbody id="rosterPresentTableBody"><tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No records loaded.</td></tr></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- ABSENT LIST -->
+                            <div class="table-container" style="margin: 0;">
+                                <h4 style="background: #fee2e2; color: #991b1b; padding: 10px 14px; font-size: 12px; font-weight: 800; text-transform: uppercase;">❌ Absent Students</h4>
+                                <div style="max-height: 250px; overflow-y: auto;">
+                                    <table>
+                                        <thead><tr><th>Name</th><th>USN</th><th>Parent Phone</th></tr></thead>
+                                        <tbody id="rosterAbsentTableBody"><tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No records loaded.</td></tr></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- ➕ MANUAL ATTENDANCE OVERRIDE BOX FOR STUDENTS WITHOUT PHONES/BIOMETRICS -->
                     <div class="manual-attendance-box" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px;">
                         <h4 style="font-size: 13px; font-weight: 800; color: var(--primary-blue); margin-bottom: 8px;">➕ Manual Attendance Override (For Students Without Phones/Biometrics)</h4>
@@ -347,19 +393,45 @@
 
                 <!-- TAB 2: PAST SESSIONS LOG -->
                 <div id="wrapper_historyLog" style="display: none; text-align: left;">
-                    <div style="margin-bottom: 16px; display: flex; gap: 15px; align-items: center;">
-                        <label style="margin: 0; font-size: 14px; font-weight:700;">Select Previous Session Token:</label>
-                        <select id="historySessionDropdown" onchange="loadHistoricalRecords()"></select>
+                    <div style="margin-bottom: 16px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                        <label style="margin: 0; font-size: 14px; font-weight:700;">Select Previous Session Date:</label>
+                        <select id="historySessionDropdown" onchange="loadHistoricalRecords()" style="padding: 10px 14px; border-radius: 10px; border: 1px solid var(--bento-border); font-weight: 700; font-size: 13px; background: white; flex: 1; max-width: 400px;"></select>
                     </div>
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr><th>Student Name</th><th>USN / ID</th><th>Subject</th><th>Session Token</th><th>Proximity</th><th>Status</th></tr>
-                            </thead>
-                            <tbody id="historyTableBody">
-                                <tr><td colspan="6" style="text-align:center; color: var(--text-muted);">Select a token code from the dropdown block to parse metrics...</td></tr>
-                            </tbody>
-                        </table>
+
+                    <!-- PAST SESSION ROSTER SUMMARY STATS -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px;">
+                        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 14px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 11px; font-weight: 800; color: #065f46; text-transform: uppercase;">Total Present</div>
+                            <div id="historyPresentCount" style="font-size: 24px; font-weight: 800; color: #047857; margin-top: 4px;">0</div>
+                        </div>
+                        <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 14px; border-radius: 12px; text-align: center;">
+                            <div style="font-size: 11px; font-weight: 800; color: #991b1b; text-transform: uppercase;">Total Absent</div>
+                            <div id="historyAbsentCount" style="font-size: 24px; font-weight: 800; color: #b91c1c; margin-top: 4px;">0</div>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; flex-wrap: wrap;">
+                        <!-- PRESENT LIST -->
+                        <div class="table-container" style="margin: 0;">
+                            <h4 style="background: #d1fae5; color: #065f46; padding: 10px 14px; font-size: 12px; font-weight: 800; text-transform: uppercase;">✅ Present Students</h4>
+                            <div style="max-height: 280px; overflow-y: auto;">
+                                <table>
+                                    <thead><tr><th>Name</th><th>USN</th><th>Distance</th></tr></thead>
+                                    <tbody id="historyPresentTableBody"><tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Select a past session to load data.</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- ABSENT LIST -->
+                        <div class="table-container" style="margin: 0;">
+                            <h4 style="background: #fee2e2; color: #991b1b; padding: 10px 14px; font-size: 12px; font-weight: 800; text-transform: uppercase;">❌ Absent Students</h4>
+                            <div style="max-height: 280px; overflow-y: auto;">
+                                <table>
+                                    <thead><tr><th>Name</th><th>USN</th><th>Parent Phone</th></tr></thead>
+                                    <tbody id="historyAbsentTableBody"><tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Select a past session to load data.</td></tr></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -623,13 +695,14 @@
             history.pushState(null, null, location.href);
         });
 
-        // 🌐 ROBUST DYNAMIC API BASE RESOLUTION (Supports Local & Tunnels)
-        let API_BASE = "https://dr-ait-portal-backend.onrender.com";
-
-        if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        // 🌐 ROBUST DYNAMIC API BASE RESOLUTION
+        let API_BASE = window.location.origin;
+        if (API_BASE.includes("-5501.")) {
+            API_BASE = API_BASE.replace("-5501.", "-5000.");
+        } else if (API_BASE.includes(":5501")) {
+            API_BASE = API_BASE.replace(":5501", ":5000");
+        } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
             API_BASE = "http://localhost:5000";
-        } else if (window.location.hostname.includes("loca.lt") || window.location.hostname.includes("ngrok") || window.location.hostname.includes("trycloudflare")) {
-            API_BASE = window.location.origin;
         }
 
         const userRole = localStorage.getItem('userRole') || localStorage.getItem('role') || 'student';
@@ -637,6 +710,7 @@
         const userUsn = localStorage.getItem('userUsn') || localStorage.getItem('parent_usn') || localStorage.getItem('student_id') || localStorage.getItem('usn') || '1DA24AI015';
         let childUsn = localStorage.getItem('childUsn') || localStorage.getItem('student_id') || '';
         let userSubject = localStorage.getItem('userSubject') || 'ml';
+        let userSemester = localStorage.getItem('userSemester') || 3;
         const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
 
         let currentGeneratedSessionToken = ""; 
@@ -706,7 +780,7 @@
             banner.style.display = 'none';
 
             try {
-                const res = await fetch(`${API_BASE}/api/teacher/student-marks-overview?studentUsn=${encodeURIComponent(usn)}&semester=3&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/teacher/student-marks-overview?studentUsn=${encodeURIComponent(usn)}&semester=${userSemester}&institutionId=${institutionId}`);
                 const data = await res.json();
 
                 if (!res.ok || !data.success) {
@@ -728,7 +802,7 @@
                         <td><input type="number" id="modal_cie2_${sub.subject_code}" value="${sub.cie2 ?? 0}" style="width:55px; text-align:center;"></td>
                         <td><input type="number" id="modal_cie3_${sub.subject_code}" value="${sub.cie3 ?? 0}" style="width:55px; text-align:center;"></td>
                         <td><input type="number" id="modal_see_${sub.subject_code}" value="${sub.see ?? 0}" style="width:65px; text-align:center;"></td>
-                        <td><button onclick="saveModalSubjectMarks('${data.student.usn}', '${sub.subject_code}', 3)" class="btn btn-blue" style="padding:6px 14px; font-size:11px;">💾 Save</button></td>
+                        <td><button onclick="saveModalSubjectMarks('${data.student.usn}', '${sub.subject_code}', ${userSemester})" class="btn btn-blue" style="padding:6px 14px; font-size:11px;">💾 Save</button></td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -771,7 +845,7 @@
                 const res = await fetch(`${API_BASE}/api/teacher/update-marks`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ studentUsn, subjectCode, cie1, cie2, cie3, see, teacherId: userUsn, semesterNumber: 3, institutionId })
+                    body: JSON.stringify({ studentUsn, subjectCode, cie1, cie2, cie3, see, teacherId: userUsn, semesterNumber: userSemester, institutionId })
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
@@ -876,7 +950,7 @@
                     const dayTime = slot.day_of_week ? `${slot.day_of_week} ${slot.time_slot || ''}` : (slot.time_slot || 'Regular Slot');
                     const optionText = `Sem ${semNum} [${branch}] - ${subCode} (${dayTime})`;
                     
-                    dropdown.innerHTML += `<option value="${slot.id || subCode}" data-subject="${subCode}" data-text="${optionText}">${optionText}</option>`;
+                    dropdown.innerHTML += `<option value="${slot.id || subCode}" data-subject="${subCode}" data-semester="${semNum}" data-text="${optionText}">${optionText}</option>`;
                 });
             } catch (err) { 
                 console.error("❌ Error fetching teacher slots:", err);
@@ -887,8 +961,16 @@
         function onTeacherClassSlotSelected() {
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const selectedOpt = dropdown.options[dropdown.selectedIndex];
+            
             userSubject = selectedOpt.getAttribute('data-subject') || 'ml';
-            if (document.getElementById('btnLaunchQrSession')) document.getElementById('btnLaunchQrSession').disabled = !dropdown.value;
+            userSemester = selectedOpt.getAttribute('data-semester') || 3;
+            
+            localStorage.setItem('userSubject', userSubject);
+            localStorage.setItem('userSemester', userSemester);
+
+            if (document.getElementById('btnLaunchQrSession')) {
+                document.getElementById('btnLaunchQrSession').disabled = !dropdown.value;
+            }
 
             const notice = document.getElementById('selectedSlotNotice');
             if (notice) {
@@ -898,6 +980,13 @@
                 } else {
                     notice.style.display = 'none';
                 }
+            }
+
+            const activeTabId = document.querySelector('.toggle-tab-btn.active')?.id;
+            if (activeTabId === 'btn_viewHistory') {
+                fetchPastSessionTokens();
+            } else if (activeTabId === 'btn_viewMarks') {
+                fetchStudentMarksRoster();
             }
         }
 
@@ -939,12 +1028,12 @@
             if (!body) return;
 
             try {
-                const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?subjectCode=${encodeURIComponent(filterTerm)}&institutionId=${institutionId}`);
+                const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?subjectCode=${encodeURIComponent(filterTerm)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
                 const data = await response.json();
                 body.innerHTML = "";
 
                 if (!data || data.length === 0) {
-                    body.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No records found for this subject module.</td></tr>";
+                    body.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No records found for this subject module in Semester " + userSemester + ".</td></tr>";
                     return;
                 }
 
@@ -971,7 +1060,7 @@
             const container = document.getElementById('menteesCardsContainer');
             if (!container) return;
             try {
-                const res = await fetch(`${API_BASE}/api/teacher/mentees?mentorId=${userUsn}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/teacher/mentees?mentorId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
                 const mentees = await res.json();
                 if (!mentees || mentees.length === 0) {
                     container.innerHTML = `<div style="text-align:center; grid-column:1/-1;">No mentees mapped.</div>`;
@@ -1027,6 +1116,10 @@
             clearInterval(sessionTimerCountdownReference);
             clearInterval(backgroundPollerReference);
             if (document.getElementById('qrContainer')) document.getElementById('qrContainer').innerHTML = `🚫 LOCKED`;
+            
+            // Automatically fetch present vs absent breakdown upon session lockdown
+            fetchTeacherSessionRoster();
+
             try {
                 fetch(`${API_BASE}/api/auth/end-session`, {
                     method: 'POST',
@@ -1034,6 +1127,52 @@
                     body: JSON.stringify({ sessionCode: currentGeneratedSessionToken, subjectName: userSubject, institutionId: institutionId })
                 }).catch(e => console.error(e));
             } catch (e) { console.error(e); }
+        }
+
+        async function fetchTeacherSessionRoster() {
+            if (!currentGeneratedSessionToken) {
+                firePremiumToastAlert("⚠️ No active session token found.", "var(--accent-red)");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/teacher-session-roster?sessionCode=${currentGeneratedSessionToken}&institutionId=${institutionId}`);
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    document.getElementById('rosterPresentCount').innerText = data.presentCount;
+                    document.getElementById('rosterAbsentCount').innerText = data.absentCount;
+
+                    const presentBody = document.getElementById('rosterPresentTableBody');
+                    const absentBody = document.getElementById('rosterAbsentTableBody');
+
+                    presentBody.innerHTML = "";
+                    absentBody.innerHTML = "";
+
+                    if (data.presentStudents.length === 0) {
+                        presentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">None checked in yet.</td></tr>`;
+                    } else {
+                        data.presentStudents.forEach(st => {
+                            presentBody.innerHTML += `<tr><td><strong>${st.name}</strong></td><td><code>${st.usn}</code></td><td>${st.distance}</td></tr>`;
+                        });
+                    }
+
+                    if (data.absentStudents.length === 0) {
+                        absentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No absences recorded!</td></tr>`;
+                    } else {
+                        data.absentStudents.forEach(st => {
+                            absentBody.innerHTML += `<tr><td>${st.name}</td><td><code>${st.usn}</code></td><td><a href="tel:${st.phone || ''}">📞 ${st.phone || 'N/A'}</a></td></tr>`;
+                        });
+                    }
+
+                    firePremiumToastAlert("📊 Attendance roster breakdown synchronized!");
+                } else {
+                    firePremiumToastAlert(`❌ ${data.error || 'Failed to fetch roster.'}`, "var(--accent-red)");
+                }
+            } catch (err) {
+                console.error("Roster fetch error:", err);
+                firePremiumToastAlert("❌ Network error loading roster breakdown.", "var(--accent-red)");
+            }
         }
 
         async function loadAttendance() {
@@ -1098,23 +1237,72 @@
             try {
                 const res = await fetch(`${API_BASE}/api/auth/distinct-sessions?subject=${userSubject}&institutionId=${institutionId}`);
                 const sessions = await res.json();
-                dropdown.innerHTML = "<option value=''>-- Select a Class Token --</option>";
-                sessions.forEach(s => { dropdown.innerHTML += `<option value="${s.session_code}">${s.session_code}</option>`; });
-            } catch (e) { console.error(e); }
+                
+                dropdown.innerHTML = "<option value=''>-- Select Past Class Date --</option>";
+                
+                if (Array.isArray(sessions)) {
+                    sessions.forEach(s => {
+                        const formattedDate = s.created_at 
+                            ? new Date(s.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                            : s.session_code;
+                        
+                        dropdown.innerHTML += `<option value="${s.session_code}">📅 ${formattedDate} [${s.session_code}]</option>`;
+                    });
+                }
+            } catch (e) { 
+                console.error("Error fetching past sessions:", e); 
+            }
         }
 
         async function loadHistoricalRecords() {
             const token = document.getElementById('historySessionDropdown')?.value;
-            const historyBody = document.getElementById('historyTableBody');
-            if(!token || !historyBody) return;
+            const presentBody = document.getElementById('historyPresentTableBody');
+            const absentBody = document.getElementById('historyAbsentTableBody');
+            
+            if(!token) {
+                if(presentBody) presentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Select a past session to load data.</td></tr>`;
+                if(absentBody) absentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Select a past session to load data.</td></tr>`;
+                document.getElementById('historyPresentCount').innerText = "0";
+                document.getElementById('historyAbsentCount').innerText = "0";
+                return;
+            }
+            
             try {
-                const res = await fetch(`${API_BASE}/api/auth/attendance-records?sessionCode=${token}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/auth/teacher-session-roster?sessionCode=${token}&institutionId=${institutionId}`);
                 const data = await res.json();
-                historyBody.innerHTML = "";
-                data.forEach(row => {
-                    historyBody.innerHTML += `<tr><td>${row.student_full_name}</td><td><code>${row.student_id}</code></td><td>${row.subject_name}</td><td><code>${row.session_code}</code></td><td>${row.distance}</td><td>LOGGED</td></tr>`;
-                });
-            } catch (e) { console.error(e); }
+                
+                if (!res.ok || !data.success) {
+                    firePremiumToastAlert("❌ Failed to load past session roster.", "var(--accent-red)");
+                    return;
+                }
+
+                document.getElementById('historyPresentCount').innerText = data.presentCount;
+                document.getElementById('historyAbsentCount').innerText = data.absentCount;
+
+                presentBody.innerHTML = "";
+                absentBody.innerHTML = "";
+
+                if (data.presentStudents.length === 0) {
+                    presentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No attendance recorded.</td></tr>`;
+                } else {
+                    data.presentStudents.forEach(st => {
+                        presentBody.innerHTML += `<tr><td><strong>${st.name}</strong></td><td><code>${st.usn}</code></td><td>${st.distance}</td></tr>`;
+                    });
+                }
+
+                if (data.absentStudents.length === 0) {
+                    absentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No absences recorded!</td></tr>`;
+                } else {
+                    data.absentStudents.forEach(st => {
+                        absentBody.innerHTML += `<tr><td>${st.name}</td><td><code>${st.usn}</code></td><td><a href="tel:${st.phone || ''}">📞 ${st.phone || 'N/A'}</a></td></tr>`;
+                    });
+                }
+
+                firePremiumToastAlert("📅 Past session breakdown loaded!");
+            } catch (e) { 
+                console.error("Error loading historical records:", e); 
+                firePremiumToastAlert("❌ Network error loading past records.", "var(--accent-red)");
+            }
         }
 
         // =========================================================================
@@ -1219,7 +1407,7 @@
             gridKeys.forEach(id => { const b = document.getElementById(id); if (b) b.innerHTML = ""; });
 
             try {
-                const res = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${userUsn}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
                 const result = await res.json();
                 const metrics = Array.isArray(result.ai_predictions) ? result.ai_predictions : [];
 
@@ -1349,7 +1537,7 @@
             const badge = document.getElementById('unreadBadge');
             if (!feed || !badge) return;
             try {
-                const res = await fetch(`${API_BASE}/api/notifications?userId=${userUsn}&role=${userRole}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/notifications?userId=${encodeURIComponent(userUsn)}&role=${userRole}&institutionId=${institutionId}`);
                 const messages = await res.json();
                 if (!messages || messages.length === 0) {
                     feed.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px;">📬 No messages or alerts at this time.</div>`;
@@ -1383,7 +1571,7 @@
             if (!feed) return;
             feed.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px;">Loading past archived messages...</div>`;
             try {
-                const res = await fetch(`${API_BASE}/api/notifications/archive?userId=${userUsn}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/notifications/archive?userId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
                 const archiveList = await res.json();
                 if (!archiveList || archiveList.length === 0) {
                     feed.innerHTML = `<div style="text-align: center; color: #64748b; font-size: 13px; padding: 16px;">📂 No past messages found.</div>`;
@@ -1409,7 +1597,7 @@
             const feed = document.getElementById('messagesFeed');
             if (!feed) return;
             try {
-                const res = await fetch(`${API_BASE}/api/messages/inbox?userId=${userUsn}&role=${userRole}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/messages/inbox?userId=${encodeURIComponent(userUsn)}&role=${userRole}&institutionId=${institutionId}`);
                 const directMsgs = await res.json();
                 if (directMsgs && directMsgs.length > 0) {
                     directMsgs.forEach(m => {
@@ -1437,7 +1625,7 @@
         }
 
         // ==========================================================================
-        // 🎙️ SPEECH AI GATEWAY & VOICE COMMAND CONTROLLER (ADDED)
+        // 🎙️ SPEECH AI GATEWAY & VOICE COMMAND CONTROLLER
         // ==========================================================================
         let recognitionInstance = null;
         let isVoiceActive = false;
