@@ -709,8 +709,8 @@
         const userName = localStorage.getItem('userName') || localStorage.getItem('user_name') || 'Academic User';
         const userUsn = localStorage.getItem('userUsn') || localStorage.getItem('parent_usn') || localStorage.getItem('student_id') || localStorage.getItem('usn') || '1DA24AI015';
         let childUsn = localStorage.getItem('childUsn') || localStorage.getItem('student_id') || '';
-        let userSubject = localStorage.getItem('userSubject') || 'ml';
-        let userSemester = localStorage.getItem('userSemester') || 3;
+        let userSubject = localStorage.getItem('userSubject') || '';
+        let userSemester = localStorage.getItem('userSemester') || 5;
         const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
 
         let currentGeneratedSessionToken = ""; 
@@ -780,7 +780,8 @@
             banner.style.display = 'none';
 
             try {
-                const res = await fetch(`${API_BASE}/api/teacher/student-marks-overview?studentUsn=${encodeURIComponent(usn)}&semester=${userSemester}&institutionId=${institutionId}`);
+                // 🔧 FIX: Pass teacherId so the backend restricts subjects strictly to this teacher's assignment
+                const res = await fetch(`${API_BASE}/api/teacher/student-marks-overview?studentUsn=${encodeURIComponent(usn)}&semester=${userSemester}&teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
                 const data = await res.json();
 
                 if (!res.ok || !data.success) {
@@ -962,8 +963,8 @@
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const selectedOpt = dropdown.options[dropdown.selectedIndex];
             
-            userSubject = selectedOpt.getAttribute('data-subject') || 'ml';
-            userSemester = selectedOpt.getAttribute('data-semester') || 3;
+            userSubject = selectedOpt.getAttribute('data-subject') || '';
+            userSemester = selectedOpt.getAttribute('data-semester') || 5;
             
             localStorage.setItem('userSubject', userSubject);
             localStorage.setItem('userSemester', userSemester);
@@ -1020,26 +1021,23 @@
             const body = document.getElementById('marksTableBody');
             const filterInput = document.getElementById('marksFilterSubject');
 
-            let filterTerm = filterInput ? filterInput.value.trim() : '';
-            if (!filterTerm && userSubject) {
-                filterTerm = userSubject;
-            }
-
+            let searchFilter = filterInput ? filterInput.value.trim() : '';
             if (!body) return;
 
             try {
-                const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?subjectCode=${encodeURIComponent(filterTerm)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
+                // 🔧 FIX: Pass teacherId so the server returns ONLY this teacher's assigned subjects (RMIPR, SEPM)
+                const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?teacherId=${encodeURIComponent(userUsn)}&semesterNumber=${userSemester}&search=${encodeURIComponent(searchFilter)}&institutionId=${institutionId}`);
                 const data = await response.json();
                 body.innerHTML = "";
 
                 if (!data || data.length === 0) {
-                    body.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No records found for this subject module in Semester " + userSemester + ".</td></tr>";
+                    body.innerHTML = "<tr><td colspan='9' style='text-align:center;'>No records found for your assigned subject modules in Semester " + userSemester + ".</td></tr>";
                     return;
                 }
 
                 data.forEach(st => {
                     const tr = document.createElement('tr');
-                    const subCode = (st.subject_code || userSubject || 'ML').trim();
+                    const subCode = (st.subject_code || 'SUB').trim();
                     tr.innerHTML = `
                         <td><strong>${st.name}</strong></td>
                         <td><code>${st.usn}</code></td>

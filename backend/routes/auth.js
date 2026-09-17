@@ -342,7 +342,6 @@ router.get("/teacher-session-roster", async (req, res) => {
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
     try {
-        // 1. Find the branch and semester for this session from weekly timetables
         const slotInfoQuery = await pool.query(
             `SELECT t.branch, t.semester_number, t.subject_code 
              FROM class_sessions cs
@@ -360,7 +359,6 @@ router.get("/teacher-session-roster", async (req, res) => {
             targetSemester = slotInfoQuery.rows[0].semester_number || 5;
         }
 
-        // 2. Fetch all students filtered strictly by matching branch/USN pattern and semester
         const allStudentsResult = await pool.query(
             `SELECT usn, name, phone_number, branch, semester_number 
              FROM users 
@@ -457,7 +455,7 @@ router.get("/teacher-student-roster", async (req, res) => {
     }
 });
 
-// 6.3 HOD MANUAL ATTENDANCE OVERRIDE (Excuse/Mark Absent Student Present)
+// 6.3 HOD MANUAL ATTENDANCE OVERRIDE
 router.post("/hod/override-attendance", async (req, res) => {
     const { studentUsn, sessionCode, subjectName, institutionId } = req.body;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -497,6 +495,7 @@ router.get("/teacher/student-marks-overview", async (req, res) => {
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const cleanUsn = studentUsn ? studentUsn.trim().toUpperCase() : '';
     const cleanTeacherId = teacherId ? teacherId.trim() : '';
+    const semNum = semester ? parseInt(semester) : 5;
 
     try {
         const studentRes = await pool.query(
@@ -509,39 +508,41 @@ router.get("/teacher/student-marks-overview", async (req, res) => {
         }
         const student = studentRes.rows[0];
 
-        // Find ONLY subjects mapped to this specific teacher in the HOD timetable
+        // 🔒 STRICT TIMETABLE ISOLATION: Fetch ONLY subjects mapped to this specific teacher
         const teacherSubjectsRes = await pool.query(
-            `SELECT DISTINCT subject_code, subject_name 
+            `SELECT DISTINCT UPPER(subject_code) AS subject_code, 
+                    COALESCE(NULLIF(subject_name, ''), subject_code) AS subject_name
              FROM weekly_timetables 
              WHERE (LOWER(TRIM(assigned_teacher_id)) = LOWER(TRIM($1)) OR LOWER(TRIM(assigned_teacher_name)) ILIKE LOWER(TRIM($1)))
-               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2
+               AND subject_code IS NOT NULL AND TRIM(subject_code) != ''`,
             [cleanTeacherId, tenant]
         );
 
-        const allowedSubjects = teacherSubjectsRes.rows;
+        let allowedSubjects = teacherSubjectsRes.rows;
 
         if (allowedSubjects.length === 0) {
             return res.status(403).json({ success: false, message: "You have no HOD-assigned subjects mapped in the timetable to evaluate." });
         }
 
-        const allowedCodes = allowedSubjects.map(s => s.subject_code || s.subject_name);
+        const allowedCodes = allowedSubjects.map(s => s.subject_code);
         
         const marksRes = await pool.query(
             `SELECT subject_code, subject_name, cie1, cie2, cie3, see 
              FROM student_marks 
              WHERE UPPER(student_id) = UPPER($1) 
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $2
-               AND (subject_code = ANY($3::text[]) OR subject_name = ANY($3::text[]))`,
+               AND UPPER(COALESCE(subject_code, subject)) = ANY($3::text[])`,
             [cleanUsn, tenant, allowedCodes]
         );
 
         const marksMap = new Map();
         marksRes.rows.forEach(m => {
-            marksMap.set((m.subject_code || m.subject_name).toUpperCase(), m);
+            marksMap.set((m.subject_code || m.subject_name || '').toUpperCase(), m);
         });
 
         let subjectsPayload = allowedSubjects.map(sub => {
-            const code = sub.subject_code || sub.subject_name;
+            const code = sub.subject_code;
             const existing = marksMap.get(code.toUpperCase()) || {};
             return {
                 subject_code: code,
@@ -618,11 +619,24 @@ router.get("/student-subject-metrics", async (req, res) => {
 router.get("/distinct-sessions", async (req, res) => {
     const { subject, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanSubject = subject ? subject.trim() : '';
+
     try {
-        const result = await pool.query(
-            "SELECT session_code, created_at FROM class_sessions WHERE subject_name = $1 AND institution_id = $2 ORDER BY created_at DESC", 
-            [subject || 'AI', tenant]
-        );
+        let queryStr = `
+            SELECT session_code, created_at, subject_name 
+            FROM class_sessions 
+            WHERE COALESCE(institution_id, 'DR_AIT') ILIKE $1
+        `;
+        let params = [tenant];
+
+        if (cleanSubject && cleanSubject.toLowerCase() !== 'all' && cleanSubject.toLowerCase() !== 'ml') {
+            queryStr += ` AND (subject_name ILIKE $2 OR subject_code ILIKE $2) `;
+            params.push(`%${cleanSubject}%`);
+        }
+
+        queryStr += ` ORDER BY created_at DESC LIMIT 50`;
+
+        const result = await pool.query(queryStr, params);
         return res.json(result.rows);
     } catch (err) { 
         console.error("💥 DISTINCT SESSIONS ERROR:", err);
@@ -649,7 +663,7 @@ router.get("/student-marks-roster", async (req, res, next) => {
     }
 });
 
-// 10. FETCH HOD-MAPPED CLASS SLOTS FOR TEACHER (STRICTLY ISOLATED TO ASSIGNED TEACHER)
+// 10. FETCH HOD-MAPPED CLASS SLOTS FOR TEACHER
 router.get("/teacher-mapped-slots", async (req, res) => {
     const { teacherId, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -661,7 +675,6 @@ router.get("/teacher-mapped-slots", async (req, res) => {
 
         const cleanId = teacherId.trim();
 
-        // STRICT MATCH: Only return rows where the HOD explicitly mapped this teacher ID or name
         const result = await pool.query(
             `SELECT * FROM weekly_timetables 
              WHERE (
@@ -679,7 +692,7 @@ router.get("/teacher-mapped-slots", async (req, res) => {
         });
     } catch (err) {
         console.error("💥 TEACHER MAPPED SLOTS ERROR:", err);
-        return res.status(500).json({ success: false, slots: [] });
+        return res.status(500).json({ success: false, slots: [], error: err.message });
     }
 });
 
