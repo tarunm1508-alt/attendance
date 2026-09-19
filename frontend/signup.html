@@ -252,6 +252,12 @@
                 <input type="email" id="email" placeholder="example@domain.com" autocomplete="off" required>
             </div>
 
+            <!-- 📱 PHONE NUMBER FIELD (Visible for Parents & General Profiles) -->
+            <div class="form-group" id="phoneGroup">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel" id="phoneNumber" placeholder="+919876543210" autocomplete="off">
+            </div>
+
             <div class="form-group">
                 <label for="password">Create Password</label>
                 <input type="password" id="password" placeholder="••••••••" autocomplete="new-password" required>
@@ -303,16 +309,13 @@
 
         window.onload = function() {
             toggleRoleFields();
-            // Pre-initialize and cache the device fingerprint on load
             getOrCreateDeviceFingerprint();
         };
 
-        // 🔒 PERSISTENT DEVICE FINGERPRINT (Stored in LocalStorage + 1-Year Cookie to Survive Cache Clears)
         function getOrCreateDeviceFingerprint() {
             let deviceId = localStorage.getItem("dr_ait_persistent_device_id");
             
             if (!deviceId) {
-                // Check if it exists in cookies as a fallback
                 const cookieMatch = document.cookie.match(/(^|;) ?deviceFingerprint=([^;]*)(;|$)/);
                 if (cookieMatch) {
                     deviceId = decodeURIComponent(cookieMatch[2]);
@@ -325,7 +328,6 @@
                 localStorage.setItem("dr_ait_persistent_device_id", deviceId);
             }
 
-            // Save/Refresh persistent 1-year cookie to protect against mobile browser cache wipes
             document.cookie = `deviceFingerprint=${deviceId}; path=/; max-age=31536000; SameSite=Strict`;
             return deviceId;
         }
@@ -340,6 +342,7 @@
             const childUsnInput = document.getElementById('childUsn');
             const branchGroup = document.getElementById('branchGroup');
             const bioBox = document.getElementById('studentBiometricBox');
+            const phoneGroup = document.getElementById('phoneGroup');
 
             if (role === 'parent') {
                 nameLabel.innerText = "Parent Full Name";
@@ -348,7 +351,8 @@
                 usernameInput.placeholder = "Create a Parent ID";
                 parentLinkGroup.style.display = 'block';
                 branchGroup.style.display = 'none';
-                bioBox.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for parents
+                phoneGroup.style.display = 'block';
                 childUsnInput.required = true;
             } else if (role === 'teacher') {
                 nameLabel.innerText = "Teacher Full Name";
@@ -357,7 +361,8 @@
                 usernameInput.placeholder = "Enter Teacher Employee ID";
                 parentLinkGroup.style.display = 'none';
                 branchGroup.style.display = 'block';
-                bioBox.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for teachers
+                phoneGroup.style.display = 'block';
                 childUsnInput.required = false;
                 childUsnInput.value = "";
             } else if (role === 'hod') {
@@ -367,23 +372,24 @@
                 usernameInput.placeholder = "Enter HOD Employee ID";
                 parentLinkGroup.style.display = 'none';
                 branchGroup.style.display = 'block';
-                bioBox.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for HODs
+                phoneGroup.style.display = 'block';
                 childUsnInput.required = false;
                 childUsnInput.value = "";
-            } else {
+            } else if (role === 'student') {
                 nameLabel.innerText = "Full Name";
                 fullNameInput.placeholder = "Enter full name";
                 idLabel.innerText = "University USN";
                 usernameInput.placeholder = "Enter College USN (e.g., 1DA24AI015)";
                 parentLinkGroup.style.display = 'none';
                 branchGroup.style.display = 'none';
-                bioBox.style.display = 'block';
+                bioBox.style.display = 'block'; // ✅ Shown ONLY for students
+                phoneGroup.style.display = 'block';
                 childUsnInput.required = false;
                 childUsnInput.value = "";
             }
         }
 
-        // TRIGGER PHONE'S BUILT-IN FINGERPRINT SENSOR VIA WEBAUTHN
         async function registerHardwareFingerprint() {
             const usn = document.getElementById('username').value.trim();
             const fullName = document.getElementById('fullName').value.trim();
@@ -424,7 +430,7 @@
                             { type: "public-key", alg: -257 } // RS256
                         ],
                         authenticatorSelection: {
-                            authenticatorAttachment: "platform", // FORCES PHONE'S BUILT-IN FINGERPRINT SENSOR
+                            authenticatorAttachment: "platform",
                             userVerification: "required"
                         },
                         timeout: 60000,
@@ -463,6 +469,7 @@
             const name = document.getElementById('fullName').value.trim();
             const usn = document.getElementById('username').value.trim().toUpperCase();
             const email = document.getElementById('email').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
             const password = document.getElementById('password').value;
             const childUsn = document.getElementById('childUsn').value.trim();
             const branch = document.getElementById('branch').value;
@@ -489,6 +496,7 @@
                         name, 
                         childUsn, 
                         branch, 
+                        phoneNumber, 
                         institutionId: 'DR_AIT',
                         deviceFingerprint: deviceFingerprint
                     })

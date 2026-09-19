@@ -179,12 +179,15 @@ router.post("/signup", async (req, res) => {
     }
 });
 
-// 3. TEACHER REGISTER A NEW CLASS SESSION INSTANCE
+// 3. TEACHER REGISTER A NEW CLASS SESSION INSTANCE (Supports subject_code)
 router.post("/create-session", async (req, res) => {
-    const { sessionCode, subjectName, institutionId } = req.body;
+    const { sessionCode, subjectName, subjectCode, institutionId } = req.body;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
-        await pool.query("INSERT INTO class_sessions (session_code, subject_name, institution_id, created_at) VALUES ($1, $2, $3, NOW())", [sessionCode, subjectName || 'AI', tenant]);
+        await pool.query(
+            "INSERT INTO class_sessions (session_code, subject_name, subject_code, institution_id, created_at) VALUES ($1, $2, $3, $4, NOW())", 
+            [sessionCode, subjectName || 'AI', subjectCode || subjectName || 'AI', tenant]
+        );
         return res.status(200).json({ success: true });
     } catch (err) { 
         console.error("💥 CREATE SESSION ERROR:", err);
@@ -336,7 +339,7 @@ router.get("/attendance-records", async (req, res) => {
     }
 });
 
-// 6.1 TEACHER REAL-TIME CLASS ATTENDANCE ROSTER (USN Smart-Decoding & Branch/Semester Isolation)
+// 6.1 TEACHER REAL-TIME CLASS ATTENDANCE ROSTER
 router.get("/teacher-session-roster", async (req, res) => {
     const { sessionCode, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -428,7 +431,7 @@ router.get("/teacher-session-roster", async (req, res) => {
     }
 });
 
-// 6.2 FETCH STUDENT ROSTER FOR TEACHER MARKS ENTRY (Filtered by Branch & Semester)
+// 6.2 FETCH STUDENT ROSTER FOR TEACHER MARKS ENTRY
 router.get("/teacher-student-roster", async (req, res) => {
     const { branch, semesterNumber, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -489,13 +492,12 @@ router.post("/hod/override-attendance", async (req, res) => {
     }
 });
 
-// 6.4 FETCH STUDENT MARKS OVERVIEW (Strictly Filtered by Teacher's HOD-Assigned Subjects)
+// 6.4 FETCH STUDENT MARKS OVERVIEW
 router.get("/teacher/student-marks-overview", async (req, res) => {
     const { studentUsn, semester, teacherId, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const cleanUsn = studentUsn ? studentUsn.trim().toUpperCase() : '';
     const cleanTeacherId = teacherId ? teacherId.trim() : '';
-    const semNum = semester ? parseInt(semester) : 5;
 
     try {
         const studentRes = await pool.query(
@@ -508,7 +510,6 @@ router.get("/teacher/student-marks-overview", async (req, res) => {
         }
         const student = studentRes.rows[0];
 
-        // 🔒 STRICT TIMETABLE ISOLATION: Fetch ONLY subjects mapped to this specific teacher
         const teacherSubjectsRes = await pool.query(
             `SELECT DISTINCT UPPER(subject_code) AS subject_code, 
                     COALESCE(NULLIF(subject_name, ''), subject_code) AS subject_name
@@ -566,6 +567,55 @@ router.get("/teacher/student-marks-overview", async (req, res) => {
     }
 });
 
+// 6.5 TEACHER: EXPORT COMPLETE MASTER ATTENDANCE REGISTER PDF
+router.get("/teacher/export-attendance-pdf", async (req, res) => {
+    const { branch, institutionId } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const targetBranch = branch || 'AIML';
+
+    try {
+        const studentsRes = await pool.query(
+            `SELECT usn, name FROM users 
+             WHERE LOWER(role) = 'student' 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $1 
+               AND (branch ILIKE $2 OR branch = 'AIML')
+             ORDER BY usn ASC`,
+            [tenant, targetBranch]
+        );
+
+        const sessionsRes = await pool.query(
+            `SELECT session_code, subject_name, created_at 
+             FROM class_sessions 
+             WHERE COALESCE(institution_id, 'DR_AIT') ILIKE $1 
+             ORDER BY created_at ASC`,
+            [tenant]
+        );
+
+        const attendanceRes = await pool.query(
+            `SELECT student_id, session_code 
+             FROM users_attendance 
+             WHERE COALESCE(institution_id, 'DR_AIT') ILIKE $1`,
+            [tenant]
+        );
+
+        const attendanceMap = new Set();
+        attendanceRes.rows.forEach(r => {
+            attendanceMap.add(`${r.student_id.toUpperCase()}_${r.session_code}`);
+        });
+
+        return res.json({
+            success: true,
+            students: studentsRes.rows,
+            sessions: sessionsRes.rows,
+            attendanceRecords: Array.from(attendanceMap)
+        });
+
+    } catch (err) {
+        console.error("💥 PDF EXPORT ERROR:", err);
+        return res.status(500).json({ success: false, message: err.message });
+    }
+});
+
 // 7. FIXED ALL-SEMESTER DATA-DRIVEN METRICS PERF ENDPOINT
 router.get("/student-subject-metrics", async (req, res) => {
     const { studentId, institutionId } = req.query;
@@ -615,7 +665,7 @@ router.get("/student-subject-metrics", async (req, res) => {
     }
 });
 
-// 8. DISTINCT HISTORICAL SESSIONS WITH TIMESTAMPS
+// 8. DISTINCT HISTORICAL SESSIONS WITH TIMESTAMPS (Fixed to use subject_name safely)
 router.get("/distinct-sessions", async (req, res) => {
     const { subject, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -630,7 +680,7 @@ router.get("/distinct-sessions", async (req, res) => {
         let params = [tenant];
 
         if (cleanSubject && cleanSubject.toLowerCase() !== 'all' && cleanSubject.toLowerCase() !== 'ml') {
-            queryStr += ` AND (subject_name ILIKE $2 OR subject_code ILIKE $2) `;
+            queryStr += ` AND subject_name ILIKE $2 `;
             params.push(`%${cleanSubject}%`);
         }
 

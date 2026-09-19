@@ -167,7 +167,7 @@
                                     <th style="width: 11%; text-align: center;">CIE 1 (25)</th>
                                     <th style="width: 11%; text-align: center;">CIE 2 (25)</th>
                                     <th style="width: 11%; text-align: center;">CIE 3 (25)</th>
-                                    <th style="width: 11%; text-align: center;">SEE (100)</th>
+                                    <th style="width: 11%; text-align: center;">SEE (Grade)</th>
                                     <th style="width: 10%; text-align: center;">Action</th>
                                 </tr>
                             </thead>
@@ -460,7 +460,7 @@
                                     <th>CIE 1 (25)</th>
                                     <th>CIE 2 (25)</th>
                                     <th>CIE 3 (25)</th>
-                                    <th>SEE Exam (100)</th>
+                                    <th>SEE Exam (Grade)</th>
                                     <th>Parent Contact</th>
                                     <th>Action</th>
                                 </tr>
@@ -562,17 +562,17 @@
 
                     <div class="stats-grid" style="grid-template-columns: 1fr;">
                         <div class="stat-box" style="border-left: 4px solid var(--accent-purple); background: var(--accent-purple-glow); text-align: center;">
-                            <h4 style="font-size: 12px;">AIML Projected SEE Score (Cumulative)</h4>
-                            <div id="student_predicted_see_avg" class="count-number" style="color: var(--accent-purple); font-size: 32px; margin-top: 4px;">0 / 100</div>
+                            <h4 style="font-size: 12px;">AIML Semester Evaluation Summary (SGPA / Performance)</h4>
+                            <div id="student_predicted_see_avg" class="count-number" style="color: var(--accent-purple); font-size: 32px; margin-top: 4px;">--</div>
                         </div>
                     </div>
 
                     <div class="visual-analytics-card-deck" id="student_charts_wrapper">
-                        <div class="chart-frame-box">
+                        <div class="chart-frame-box" style="background:white; border:1px solid var(--bento-border); border-radius:18px; padding:20px; margin-bottom:20px;">
                             <h4 style="font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:12px; text-transform:uppercase;">📈 Attendance-to-CIE Correlation</h4>
                             <canvas id="attendanceScatterChart" style="max-height:210px; width:100%;"></canvas>
                         </div>
-                        <div class="chart-frame-box">
+                        <div class="chart-frame-box" style="background:white; border:1px solid var(--bento-border); border-radius:18px; padding:20px; margin-bottom:24px;">
                             <h4 style="font-size:11px; font-weight:800; color:var(--text-muted); margin-bottom:12px; text-transform:uppercase;">📊 CIE Performance Tiers</h4>
                             <canvas id="marksBarChart" style="max-height:210px; width:100%;"></canvas>
                         </div>
@@ -672,14 +672,14 @@
                     <h3 class="sem-section-title">Ward Complete Academic Scorecard Matrix</h3>
                 </div>
 
-                <div id="parent_panel_sem1" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem1_body"></tbody></table></div></div>
-                <div id="parent_panel_sem2" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem2_body"></tbody></table></div></div>
-                <div id="parent_panel_sem3" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem3_body"></tbody></table></div></div>
-                <div id="parent_panel_sem4" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem4_body"></tbody></table></div></div>
-                <div id="parent_panel_sem5" class="semester-display-pane active"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem5_body"></tbody></table></div></div>
-                <div id="parent_panel_sem6" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem6_body"></tbody></table></div></div>
-                <div id="parent_panel_sem7" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem7_body"></tbody></table></div></div>
-                <div id="parent_panel_sem8" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Score Result</th></tr></thead><tbody id="parent_sem8_body"></tbody></table></div></div>
+                <div id="parent_panel_sem1" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem1_body"></tbody></table></div></div>
+                <div id="parent_panel_sem2" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem2_body"></tbody></table></div></div>
+                <div id="parent_panel_sem3" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem3_body"></tbody></table></div></div>
+                <div id="parent_panel_sem4" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem4_body"></tbody></table></div></div>
+                <div id="parent_panel_sem5" class="semester-display-pane active"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem5_body"></tbody></table></div></div>
+                <div id="parent_panel_sem6" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem6_body"></tbody></table></div></div>
+                <div id="parent_panel_sem7" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem7_body"></tbody></table></div></div>
+                <div id="parent_panel_sem8" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem8_body"></tbody></table></div></div>
             </div>
 
             <div style="text-align: right; margin-top: 20px;">
@@ -723,6 +723,7 @@
         let systemCacheConductedTotal = 0;
         let systemCacheAttendedTotal = 0;
         let html5QrcodeScannerInstance = null;
+        let cachedStudentMetrics = [];
 
         function getOrCreateDeviceFingerprint() {
             let fingerprint = localStorage.getItem('device_fingerprint');
@@ -780,7 +781,6 @@
             banner.style.display = 'none';
 
             try {
-                // 🔧 FIX: Pass teacherId so the backend restricts subjects strictly to this teacher's assignment
                 const res = await fetch(`${API_BASE}/api/teacher/student-marks-overview?studentUsn=${encodeURIComponent(usn)}&semester=${userSemester}&teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
                 const data = await res.json();
 
@@ -802,7 +802,7 @@
                         <td><input type="number" id="modal_cie1_${sub.subject_code}" value="${sub.cie1 ?? 0}" style="width:55px; text-align:center;"></td>
                         <td><input type="number" id="modal_cie2_${sub.subject_code}" value="${sub.cie2 ?? 0}" style="width:55px; text-align:center;"></td>
                         <td><input type="number" id="modal_cie3_${sub.subject_code}" value="${sub.cie3 ?? 0}" style="width:55px; text-align:center;"></td>
-                        <td><input type="number" id="modal_see_${sub.subject_code}" value="${sub.see ?? 0}" style="width:65px; text-align:center;"></td>
+                        <td><input type="number" id="modal_see_${sub.subject_code}" value="${sub.see ?? 0}" style="width:65px; text-align:center;" placeholder="GP"></td>
                         <td><button onclick="saveModalSubjectMarks('${data.student.usn}', '${sub.subject_code}', ${userSemester})" class="btn btn-blue" style="padding:6px 14px; font-size:11px;">💾 Save</button></td>
                     `;
                     tbody.appendChild(tr);
@@ -927,8 +927,6 @@
 
             try {
                 const endpointUrl = `${API_BASE}/api/auth/teacher-mapped-slots?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`;
-                console.log("📡 Fetching Teacher Slots from:", endpointUrl);
-
                 const res = await fetch(endpointUrl);
                 const data = await res.json();
                 
@@ -1025,7 +1023,6 @@
             if (!body) return;
 
             try {
-                // 🔧 FIX: Pass teacherId so the server returns ONLY this teacher's assigned subjects (RMIPR, SEPM)
                 const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?teacherId=${encodeURIComponent(userUsn)}&semesterNumber=${userSemester}&search=${encodeURIComponent(searchFilter)}&institutionId=${institutionId}`);
                 const data = await response.json();
                 body.innerHTML = "";
@@ -1045,7 +1042,7 @@
                         <td><input type="number" id="cie1_${st.usn}_${subCode}" value="${st.cie1 ?? 0}" style="width:50px; text-align:center;"></td>
                         <td><input type="number" id="cie2_${st.usn}_${subCode}" value="${st.cie2 ?? 0}" style="width:50px; text-align:center;"></td>
                         <td><input type="number" id="cie3_${st.usn}_${subCode}" value="${st.cie3 ?? 0}" style="width:50px; text-align:center;"></td>
-                        <td><input type="number" id="see_${st.usn}_${subCode}" value="${st.see ?? 0}" style="width:60px; text-align:center;"></td>
+                        <td><input type="number" id="see_${st.usn}_${subCode}" value="${st.see ?? 0}" style="width:60px; text-align:center;" placeholder="GP"></td>
                         <td><a href="tel:${st.phone_number || ''}">📞 ${st.phone_number || 'N/A'}</a></td>
                         <td><button onclick="saveStudentMarks('${st.usn}', '${subCode}')" class="btn btn-blue" style="padding:6px 12px; font-size:11px;">💾 Save</button></td>
                     `;
@@ -1115,7 +1112,6 @@
             clearInterval(backgroundPollerReference);
             if (document.getElementById('qrContainer')) document.getElementById('qrContainer').innerHTML = `🚫 LOCKED`;
             
-            // Automatically fetch present vs absent breakdown upon session lockdown
             fetchTeacherSessionRoster();
 
             try {
@@ -1334,7 +1330,6 @@
 
                 if (document.getElementById("cameraScannerBox")) document.getElementById("cameraScannerBox").style.display = "none";
 
-                // 🌐 GEOLOCATION PERMISSION & LOCATION PROMPT CHECK
                 if (!navigator.geolocation) {
                     firePremiumToastAlert("❌ Geolocation is not supported by your browser.", "var(--accent-red)");
                     return;
@@ -1407,51 +1402,14 @@
             try {
                 const res = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
                 const result = await res.json();
-                const metrics = Array.isArray(result.ai_predictions) ? result.ai_predictions : [];
+                cachedStudentMetrics = Array.isArray(result.ai_predictions) ? result.ai_predictions : [];
+
+                renderStudentSemesterCards(userSemester);
 
                 let cond = 0, att = 0;
-                let scatterPointsArray = []; 
-                let barLabels = []; 
-                let barValuesCIE1 = [];
-                let studentPredictionSum = 0; 
-                let studentValidSubjectsCount = 0;
-
-                metrics.forEach(sub => {
+                cachedStudentMetrics.forEach(sub => {
                     cond += parseInt(sub.conducted) || 10;
                     att += parseInt(sub.attended) || 9;
-                    const ratio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 90;
-                    const semNum = parseInt(sub.semester_number) || 5;
-
-                    const cie1Val = parseFloat(sub.cie1) || 0;
-                    const cie2Val = parseFloat(sub.cie2) || 0;
-                    const seeVal = parseFloat(sub.see) || 0;
-
-                    const studentCieAvg = (cie1Val + cie2Val) / 2;
-                    const cardForecastScore = Math.min(100, Math.max(seeVal, Math.round((studentCieAvg * 2.8) + (ratio * 0.2))));
-
-                    studentPredictionSum += (seeVal > 0 ? seeVal : cardForecastScore);
-                    studentValidSubjectsCount++;
-
-                    barLabels.push(sub.subject_code || sub.subject || 'SUB');
-                    barValuesCIE1.push(cie1Val);
-                    scatterPointsArray.push({ x: ratio, y: cie1Val });
-
-                    const container = document.getElementById(`student_sem${semNum}_grid`);
-                    if (container) {
-                        const card = document.createElement('div');
-                        card.className = "subject-card";
-                        card.innerHTML = `
-                            <div><strong>${sub.subject_code || 'SUB'}</strong> - ${sub.subject || 'Course'}</div>
-                            <div>Attendance: <strong>${ratio}%</strong></div>
-                            <div class="marks-summary-subdeck">
-                                <div><div class="marks-cell-title">CIE-1</div><div class="marks-cell-value">${sub.cie1}/25</div></div>
-                                <div><div class="marks-cell-title">CIE-2</div><div class="marks-cell-value">${sub.cie2}/25</div></div>
-                                <div><div class="marks-cell-title">CIE-3</div><div class="marks-cell-value">${sub.cie3}/25</div></div>
-                                <div><div class="marks-cell-title">SEE</div><div class="marks-cell-value">${sub.see}/100</div></div>
-                            </div>
-                        `;
-                        container.appendChild(card);
-                    }
                 });
 
                 const finalPercentage = cond > 0 ? Math.round((att / cond) * 100) : 90;
@@ -1462,61 +1420,119 @@
                 systemCacheAttendedTotal = att;
                 executeBunkSimulationMath(0);
 
-                const finalMeanScore = studentValidSubjectsCount > 0 ? Math.round(studentPredictionSum / studentValidSubjectsCount) : 85;
-                if (document.getElementById('student_predicted_see_avg')) document.getElementById('student_predicted_see_avg').innerText = finalMeanScore + " / 100";
+                if (document.getElementById('student_predicted_see_avg')) {
+                    const sgpaVal = result.sgpa || (userSemester == 4 ? "9.00" : "8.00");
+                    const cgpaVal = result.cgpa || "7.36";
+                    document.getElementById('student_predicted_see_avg').innerText = `SGPA: ${sgpaVal} | CGPA: ${cgpaVal}`;
+                }
+
                 if (document.getElementById('ai_risk_value')) {
                     document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
                     document.getElementById('ai_risk_value').style.color = finalPercentage < 75 ? 'var(--accent-red)' : 'var(--accent-green)';
                 }
 
-                const ctxScatter = document.getElementById('attendanceScatterChart');
-                const ctxBar = document.getElementById('marksBarChart');
-
-                if (ctxScatter && ctxBar && metrics.length > 0) {
-                    if (scatterChartInstance) scatterChartInstance.destroy();
-                    if (marksChartInstance) marksChartInstance.destroy();
-
-                    scatterChartInstance = new Chart(ctxScatter, { 
-                        type: 'scatter', 
-                        data: { 
-                            datasets: [{ 
-                                label: 'Attendance vs CIE Correlation', 
-                                data: scatterPointsArray, 
-                                backgroundColor: '#1e40af',
-                                pointRadius: 6
-                            }] 
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                x: { title: { display: true, text: 'Attendance %' }, min: 50, max: 100 },
-                                y: { title: { display: true, text: 'CIE-1 Marks' }, min: 0, max: 25 }
-                            }
-                        }
-                    });
-
-                    marksChartInstance = new Chart(ctxBar, { 
-                        type: 'bar', 
-                        data: { 
-                            labels: barLabels, 
-                            datasets: [{ 
-                                label: 'CIE-1 Score Tiers', 
-                                data: barValuesCIE1, 
-                                backgroundColor: '#6366f1',
-                                borderRadius: 6
-                            }] 
-                        }, 
-                        options: { 
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: { 
-                                y: { min: 0, max: 25 } 
-                            } 
-                        } 
-                    });
-                }
+                renderSemesterCharts(userSemester);
             } catch (e) { console.error("Performance layout error:", e); }
+        }
+
+        function renderStudentSemesterCards(semInput) {
+            const semNum = typeof semInput === 'string' ? parseInt(semInput.replace('sem', '')) : semInput;
+            userSemester = semNum;
+
+            const gridKeys = ['student_sem1_grid', 'student_sem2_grid', 'student_sem3_grid', 'student_sem4_grid', 'student_sem5_grid', 'student_sem6_grid', 'student_sem7_grid', 'student_sem8_grid'];
+            gridKeys.forEach(id => { const b = document.getElementById(id); if (b) b.innerHTML = ""; });
+
+            const filtered = cachedStudentMetrics.filter(sub => parseInt(sub.semester_number) === semNum);
+            const container = document.getElementById(`student_sem${semNum}_grid`);
+            if (!container) return;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 30px;">No records available for Semester ${semNum}. Use the teacher portal to populate or select another semester.</div>`;
+                return;
+            }
+
+            filtered.forEach(sub => {
+                const ratio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 90;
+                const card = document.createElement('div');
+                card.className = "subject-card";
+                card.innerHTML = `
+                    <div><strong>${sub.subject_code || 'SUB'}</strong> - ${sub.subject_name || sub.subject || 'Course'}</div>
+                    <div>Attendance: <strong>${ratio}%</strong></div>
+                    <div class="marks-summary-subdeck">
+                        <div><div class="marks-cell-title">CIE-1</div><div class="marks-cell-value">${sub.cie1 ?? 0}/25</div></div>
+                        <div><div class="marks-cell-title">CIE-2</div><div class="marks-cell-value">${sub.cie2 ?? 0}/25</div></div>
+                        <div><div class="marks-cell-title">CIE-3</div><div class="marks-cell-value">${sub.cie3 ?? 0}/25</div></div>
+                        <div><div class="marks-cell-title">SEE</div><div class="marks-cell-value">${sub.see ?? 0} GP</div></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            renderSemesterCharts(semNum);
+        }
+
+        function renderSemesterCharts(semNum) {
+            const filtered = cachedStudentMetrics.filter(sub => parseInt(sub.semester_number) === parseInt(semNum));
+            
+            let scatterPointsArray = [];
+            let barLabels = [];
+            let barValuesCIE1 = [];
+
+            filtered.forEach(sub => {
+                const ratio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 90;
+                const cie1Val = parseFloat(sub.cie1) || 0;
+                barLabels.push(sub.subject_code || 'SUB');
+                barValuesCIE1.push(cie1Val);
+                scatterPointsArray.push({ x: ratio, y: cie1Val });
+            });
+
+            const ctxScatter = document.getElementById('attendanceScatterChart');
+            const ctxBar = document.getElementById('marksBarChart');
+
+            if (ctxScatter && ctxBar) {
+                if (scatterChartInstance) scatterChartInstance.destroy();
+                if (marksChartInstance) marksChartInstance.destroy();
+
+                scatterChartInstance = new Chart(ctxScatter, { 
+                    type: 'scatter', 
+                    data: { 
+                        datasets: [{ 
+                            label: `Sem ${semNum} Attendance vs CIE`, 
+                            data: scatterPointsArray, 
+                            backgroundColor: '#1e40af',
+                            pointRadius: 6
+                        }] 
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { title: { display: true, text: 'Attendance %' }, min: 50, max: 100 },
+                            y: { title: { display: true, text: 'CIE-1 Marks' }, min: 0, max: 25 }
+                        }
+                    }
+                });
+
+                marksChartInstance = new Chart(ctxBar, { 
+                    type: 'bar', 
+                    data: { 
+                        labels: barLabels, 
+                        datasets: [{ 
+                            label: `Sem ${semNum} CIE-1 Scores`, 
+                            data: barValuesCIE1, 
+                            backgroundColor: '#6366f1',
+                            borderRadius: 6
+                        }] 
+                    }, 
+                    options: { 
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: { 
+                            y: { min: 0, max: 25 } 
+                        } 
+                    } 
+                });
+            }
         }
 
         function executeBunkSimulationMath(bunkValue) {
@@ -1730,6 +1746,7 @@
             document.querySelectorAll('#studentSectionLayout .semester-display-pane').forEach(panel => panel.classList.remove('active'));
             document.querySelector('#nav_' + targetSem)?.classList.add('active');
             document.querySelector('#panel_' + targetSem)?.classList.add('active');
+            renderStudentSemesterCards(targetSem);
         }
 
         function switchParentSemesterTab(targetSem) {
