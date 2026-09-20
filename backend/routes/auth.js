@@ -100,12 +100,10 @@ router.post("/combined-login", async (req, res) => {
             const cleanIncomingFingerprint = deviceFingerprint ? deviceFingerprint.trim() : '';
 
             if (cleanStoredFingerprint === '') {
-                // Fallback catch if signup missed device binding: Lock it now
                 if (cleanIncomingFingerprint !== '') {
                     await pool.query("UPDATE users SET device_fingerprint = $1 WHERE UPPER(usn) = UPPER($2)", [cleanIncomingFingerprint, user.usn]);
                 }
             } else {
-                // Already bound: If a different phone tries to log in, block it and flag a proxy attempt!
                 if (cleanStoredFingerprint !== cleanIncomingFingerprint) {
                     console.warn(`🚨 [COMBINED LOGIN PROXY ATTEMPT] Student USN ${user.usn} attempted login from an unauthorized device!`);
                     return res.status(403).json({ 
@@ -179,7 +177,7 @@ router.post("/signup", async (req, res) => {
     }
 });
 
-// 3. TEACHER REGISTER A NEW CLASS SESSION INSTANCE (Supports subject_code)
+// 3. TEACHER REGISTER A NEW CLASS SESSION INSTANCE
 router.post("/create-session", async (req, res) => {
     const { sessionCode, subjectName, subjectCode, institutionId } = req.body;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -306,7 +304,7 @@ router.post("/end-session", async (req, res) => {
     }
 });
 
-// 6. STREAM REGISTRY DATA FEEDS (Teacher Live Feed Polling)
+// 6. STREAM REGISTRY DATA FEEDS
 router.get("/attendance-records", async (req, res) => {
     const { sessionCode, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -318,7 +316,7 @@ router.get("/attendance-records", async (req, res) => {
             LEFT JOIN users u ON UPPER(a.student_id) = UPPER(u.usn)
             WHERE a.institution_id = $1
         `;
-        const params = [tenant];
+        let params = [tenant];
         if (sessionCode) { queryStr += " AND a.session_code = $2 "; params.push(sessionCode); }
         queryStr += " ORDER BY a.created_at DESC";
         const result = await pool.query(queryStr, params);
@@ -531,7 +529,7 @@ router.get("/teacher/student-marks-overview", async (req, res) => {
         const marksRes = await pool.query(
             `SELECT subject_code, subject_name, cie1, cie2, cie3, see 
              FROM student_marks 
-             WHERE UPPER(student_id) = UPPER($1) 
+             WHERE UPPER(usn) = UPPER($1) 
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $2
                AND UPPER(COALESCE(subject_code, subject)) = ANY($3::text[])`,
             [cleanUsn, tenant, allowedCodes]
@@ -616,23 +614,39 @@ router.get("/teacher/export-attendance-pdf", async (req, res) => {
     }
 });
 
-// 7. FIXED ALL-SEMESTER DATA-DRIVEN METRICS PERF ENDPOINT
+// 7. FIXED ALL-SEMESTER DATA-DRIVEN METRICS PERF ENDPOINT (WITH SECURE USN & SEMESTER GPA ISOLATION)
 router.get("/student-subject-metrics", async (req, res) => {
-    const { studentId, institutionId } = req.query;
+    const { studentId, semester, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
-    const cleanStudentId = studentId ? studentId.trim() : '';
+    const cleanStudentId = studentId ? studentId.trim().toUpperCase() : '';
+    const semNumber = semester ? parseInt(semester) : 5;
+
+    // 🔒 Enforce strict validation so that requests missing a studentId are rejected instead of defaulting/leaking
+    if (!cleanStudentId) {
+        return res.status(400).json({ success: false, error: "Student ID (USN) is required." });
+    }
 
     try {
         const totalConducted = await pool.query("SELECT subject_name, COUNT(*) as conducted FROM class_sessions WHERE institution_id = $1 GROUP BY subject_name", [tenant]);
-        const totalAttended = await pool.query("SELECT subject_name, COUNT(*) as attended FROM users_attendance WHERE student_id = $1 AND institution_id = $2 GROUP BY subject_name", [cleanStudentId, tenant]);
-        const logsHistory = await pool.query("SELECT subject_name, created_at FROM users_attendance WHERE student_id = $1 AND institution_id = $2 ORDER BY created_at DESC", [cleanStudentId, tenant]);
+        const totalAttended = await pool.query("SELECT subject_name, COUNT(*) as attended FROM users_attendance WHERE UPPER(student_id) = UPPER($1) AND institution_id = $2 GROUP BY subject_name", [cleanStudentId, tenant]);
+        const logsHistory = await pool.query("SELECT subject_name, created_at FROM users_attendance WHERE UPPER(student_id) = UPPER($1) AND institution_id = $2 ORDER BY created_at DESC", [cleanStudentId, tenant]);
 
-        const realMarksResult = await pool.query("SELECT * FROM student_marks WHERE student_id = $1 AND institution_id = $2", [cleanStudentId, tenant]);
+        const realMarksResult = await pool.query(
+            "SELECT * FROM student_marks WHERE UPPER(usn) = UPPER($1) AND semester_number = $2 AND institution_id = $3", 
+            [cleanStudentId, semNumber, tenant]
+        );
+
+        const semSummaryResult = await pool.query(
+            "SELECT sgpa, cgpa FROM student_semesters WHERE UPPER(usn) = UPPER($1) AND semester_number = $2 AND institution_id = $3", 
+            [cleanStudentId, semNumber, tenant]
+        );
+
+        const summaryRow = semSummaryResult.rows[0] || { sgpa: null, cgpa: null };
 
         let aiPredictions = [];
         realMarksResult.rows.forEach(markRow => {
-            const condObj = totalConducted.rows.find(c => c.subject_name.toUpperCase() === markRow.subject_name.toUpperCase()) || { conducted: 0 };
-            const attObj = totalAttended.rows.find(a => a.subject_name.toUpperCase() === markRow.subject_name.toUpperCase()) || { attended: 0 };
+            const condObj = totalConducted.rows.find(c => c.subject_name.toUpperCase() === (markRow.subject_name || '').toUpperCase()) || { conducted: 0 };
+            const attObj = totalAttended.rows.find(a => a.subject_name.toUpperCase() === (markRow.subject_name || '').toUpperCase()) || { attended: 0 };
 
             const conductedCount = parseInt(condObj.conducted) || 0;
             const attendedCount = parseInt(attObj.attended) || 0;
@@ -647,6 +661,7 @@ router.get("/student-subject-metrics", async (req, res) => {
             aiPredictions.push({
                 subject: markRow.subject_name,
                 subject_code: markRow.subject_code,
+                semester_number: markRow.semester_number,
                 conducted: conductedCount,
                 attended: attendedCount,
                 absent: absentCount,
@@ -658,14 +673,23 @@ router.get("/student-subject-metrics", async (req, res) => {
                 see: markRow.see
             });
         });
-        return res.json({ conducted: totalConducted.rows, attended: totalAttended.rows, history: logsHistory.rows, ai_predictions: aiPredictions });
+
+        return res.json({ 
+            success: true,
+            conducted: totalConducted.rows, 
+            attended: totalAttended.rows, 
+            history: logsHistory.rows, 
+            ai_predictions: aiPredictions,
+            sgpa: summaryRow.sgpa,
+            cgpa: summaryRow.cgpa
+        });
     } catch (err) { 
         console.error("💥 METRICS ERROR:", err);
-        return res.status(500).json({ error: err.message }); 
+        return res.status(500).json({ success: false, error: err.message }); 
     }
 });
 
-// 8. DISTINCT HISTORICAL SESSIONS WITH TIMESTAMPS (Fixed to use subject_name safely)
+// 8. DISTINCT HISTORICAL SESSIONS WITH TIMESTAMPS
 router.get("/distinct-sessions", async (req, res) => {
     const { subject, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -700,9 +724,9 @@ router.get("/student-marks-roster", async (req, res, next) => {
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
         const result = await pool.query(`
-            SELECT u.name, m.student_id AS usn, u.phone_number, m.subject_code, m.subject_name, m.cie1, m.cie2, m.cie3, m.see
+            SELECT u.name, m.usn, u.phone_number, m.subject_code, m.subject_name, m.cie1, m.cie2, m.cie3, m.see
             FROM student_marks m
-            JOIN users u ON m.student_id = u.usn
+            JOIN users u ON m.usn = u.usn
             WHERE m.institution_id = $1
             ORDER BY u.name ASC, m.subject_code ASC
         `, [tenant]);

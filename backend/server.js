@@ -20,21 +20,25 @@ app.use(express.static(path.join(__dirname, "frontend")));
 app.use("/frontend", express.static(path.join(__dirname, "frontend")));
 
 // ==========================================================================
-// 🎯 100% PURE DATABASE-DRIVEN STUDENT MARKS ENDPOINT (Zero Hardcoding)
+// 🎯 100% PURE DATABASE-DRIVEN STUDENT MARKS & METRICS ENDPOINT (Multi-User & GPA Isolated)
 // ==========================================================================
 app.get('/api/auth/student-subject-metrics', async (req, res) => {
     const studentId = req.query.studentId || req.query.usn || req.query.id || req.query.student_id;
     const institutionId = req.query.institutionId || req.query.tenant || 'DR_AIT';
+    const semesterNumber = req.query.semester ? parseInt(req.query.semester) : null;
 
     try {
         if (!studentId || studentId === 'Not Linked' || studentId === 'undefined' || studentId === 'null') {
-            return res.status(200).json({ success: true, ai_predictions: [], marks: [], data: [] });
+            return res.status(200).json({ success: true, ai_predictions: [], marks: [], data: [], sgpa: null, cgpa: null });
         }
 
-        const query = `
+        const cleanStudentId = studentId.trim().toUpperCase();
+        const tenant = institutionId.trim();
+
+        let queryStr = `
             SELECT 
                 COALESCE(subject_code, subject) AS subject_code,
-                COALESCE(subject_name, subject, subject_code) AS subject,
+                COALESCE(subject_name, subject, subject_code) AS subject_name,
                 COALESCE(semester_number, 1) AS semester_number,
                 COALESCE(cie1, 0) AS cie1,
                 COALESCE(cie2, 0) AS cie2,
@@ -46,22 +50,118 @@ app.get('/api/auth/student-subject-metrics', async (req, res) => {
             FROM student_marks
             WHERE (student_id::text ILIKE $1 OR usn::text ILIKE $1)
               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2
-            ORDER BY semester_number ASC, subject_code ASC;
         `;
+        let queryParams = [cleanStudentId, tenant];
 
-        const result = await pool.query(query, [studentId.trim(), institutionId.trim()]);
+        if (semesterNumber) {
+            queryStr += ` AND semester_number = $3 `;
+            queryParams.push(semesterNumber);
+        }
+        queryStr += ` ORDER BY semester_number ASC, subject_code ASC;`;
 
-        console.log(`📊 LIVE DB FETCH: Found ${result.rows.length} marks rows for student: ${studentId}`);
+        const result = await pool.query(queryStr, queryParams);
+
+        // 🛠️ Fetch exact SGPA & CGPA for this specific student and semester from student_semesters table
+        let summaryRow = { sgpa: null, cgpa: null };
+        if (semesterNumber) {
+            const semSummaryResult = await pool.query(
+                "SELECT sgpa, cgpa FROM student_semesters WHERE UPPER(usn) = UPPER($1) AND semester_number = $2 AND COALESCE(institution_id, 'DR_AIT') ILIKE $3", 
+                [cleanStudentId, semesterNumber, tenant]
+            );
+            if (semSummaryResult.rows.length > 0) {
+                summaryRow = semSummaryResult.rows[0];
+            }
+        }
 
         return res.status(200).json({ 
             success: true, 
             ai_predictions: result.rows || [],
             marks: result.rows || [],
-            data: result.rows || []
+            data: result.rows || [],
+            sgpa: summaryRow.sgpa,
+            cgpa: summaryRow.cgpa
         });
 
     } catch (err) {
         console.error("❌ Database Error fetching student metrics:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================================================
+// 📱 STUDENT PERSONAL ATTENDANCE LEDGER ENDPOINT (SEMESTER & SUBJECT ALIGNED)
+// ==========================================================================
+app.get('/api/auth/student-attendance-ledger', async (req, res) => {
+    const { studentId, semesterNumber, institutionId } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanUsn = studentId ? studentId.trim().toUpperCase() : '';
+    const sem = parseInt(semesterNumber) || 5;
+
+    try {
+        if (!cleanUsn) {
+            return res.status(400).json({ success: false, message: "Missing student USN parameter." });
+        }
+
+        // 1. Fetch conducted sessions matching this institution and semester from weekly_timetables / class_sessions
+        const sessionsRes = await pool.query(
+            `SELECT DISTINCT cs.session_code, 
+                    COALESCE(cs.subject_code, cs.subject_name, 'General') as subject_name, 
+                    TO_CHAR(cs.created_at, 'YYYY-MM-DD') as session_date 
+             FROM class_sessions cs
+             LEFT JOIN weekly_timetables wt ON (UPPER(wt.subject_code) = UPPER(cs.subject_code) OR UPPER(wt.subject_name) = UPPER(cs.subject_name))
+             WHERE COALESCE(cs.institution_id, 'DR_AIT') ILIKE $1 
+               AND (wt.semester_number = $2 OR wt.semester_number IS NULL)
+             ORDER BY session_date ASC`,
+            [tenant, sem]
+        );
+        let conductedSessions = sessionsRes.rows;
+
+        // Fallback: If filtered sessions are empty, pull all institution sessions or timetable slots for this sem
+        if (conductedSessions.length === 0) {
+            const fallbackRes = await pool.query(
+                `SELECT DISTINCT session_code, COALESCE(subject_code, subject_name, 'General') as subject_name, TO_CHAR(created_at, 'YYYY-MM-DD') as session_date 
+                 FROM class_sessions 
+                 WHERE COALESCE(institution_id, 'DR_AIT') ILIKE $1 
+                 ORDER BY session_date ASC`,
+                [tenant]
+            );
+            conductedSessions = fallbackRes.rows;
+        }
+
+        if (conductedSessions.length === 0) {
+            const timetableRes = await pool.query(
+                `SELECT DISTINCT subject_code as session_code, subject_code as subject_name, TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD') as session_date
+                 FROM weekly_timetables 
+                 WHERE semester_number = $1 AND institution_id = $2`,
+                [sem, tenant]
+            );
+            conductedSessions = timetableRes.rows;
+        }
+
+        // 2. Fetch all attendance records scanned by this specific student
+        const attendanceRes = await pool.query(
+            `SELECT DISTINCT session_code, TO_CHAR(created_at, 'YYYY-MM-DD') as session_date 
+             FROM users_attendance 
+             WHERE UPPER(student_id) = $1 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [cleanUsn, tenant]
+        );
+
+        // Map student's present sessions: "SESSION_CODE" -> true
+        const studentScanMap = {};
+        attendanceRes.rows.forEach(r => {
+            if (r.session_code) {
+                studentScanMap[r.session_code.trim().toUpperCase()] = true;
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            conductedSessions,
+            studentScanMap
+        });
+    } catch (err) {
+        console.error("❌ Error fetching student attendance ledger:", err.message);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -315,6 +415,72 @@ app.get('/api/teacher/assigned-classes', async (req, res) => {
     } catch (err) {
         console.error("❌ Error fetching teacher assigned classes:", err.message);
         res.status(500).json({ success: false, error: "Failed to fetch assigned classes." });
+    }
+});
+
+// ==========================================================================
+// 📊 ATTENDANCE REGISTER MATRIX ENDPOINT (UNIQUE DATE GROUPING FIX)
+// ==========================================================================
+app.get('/api/teacher/attendance-register', async (req, res, next) => {
+    const { teacherId, subjectCode, semesterNumber, institutionId } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const sub = subjectCode ? subjectCode.trim().toUpperCase() : '';
+
+    try {
+        // 1. Fetch all students for the institution
+        const studentsRes = await pool.query(
+            `SELECT usn, name FROM users 
+             WHERE role ILIKE 'student' 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $1 
+             ORDER BY usn ASC`,
+            [tenant]
+        );
+        const students = studentsRes.rows;
+
+        // 2. Fetch distinct calendar dates conducted for this subject (grouping by date so dates never repeat)
+        const sessionsRes = await pool.query(
+            `SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as session_date, MIN(session_code) as session_code
+             FROM class_sessions 
+             WHERE (UPPER(CAST(subject_name AS TEXT)) ILIKE '%' || $1 || '%' OR UPPER(CAST(session_code AS TEXT)) ILIKE '%' || $1 || '%') 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 
+             GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
+             ORDER BY session_date ASC`,
+            [sub, tenant]
+        );
+        const dates = sessionsRes.rows.map(s => s.session_date);
+
+        // 3. Fetch all attendance records tied to these dates
+        let attendanceRows = [];
+        if (dates.length > 0) {
+            const attendanceRes = await pool.query(
+                `SELECT DISTINCT UPPER(student_id) as student_id, TO_CHAR(created_at, 'YYYY-MM-DD') as session_date 
+                 FROM users_attendance 
+                 WHERE TO_CHAR(created_at, 'YYYY-MM-DD') = ANY($1::text[])
+                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+                [dates, tenant]
+            );
+            attendanceRows = attendanceRes.rows;
+        }
+
+        // Map attendance lookup: "USN_DATE" -> true
+        const attendanceMap = {};
+        if (Array.isArray(attendanceRows)) {
+            attendanceRows.forEach(r => {
+                if (r.student_id && r.session_date) {
+                    attendanceMap[`${r.student_id.trim().toUpperCase()}_${r.session_date}`] = true;
+                }
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            students,
+            dates,
+            attendanceMap
+        });
+    } catch (err) {
+        console.error("❌ Error generating attendance register:", err.message);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 

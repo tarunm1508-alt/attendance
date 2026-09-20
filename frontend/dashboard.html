@@ -91,6 +91,10 @@
 
         .scanner-zone { display: none; margin: 0 auto; padding: 16px; background: #0f172a; border-radius: 16px; max-width: 340px; text-align: center; }
         
+        /* 🛠️ CAMERA RENDERING STYLES */
+        #previewVideo { width: 100%; max-width: 260px; min-height: 220px; border-radius: 8px; overflow: hidden; background: #000; margin: 0 auto; position: relative; }
+        #previewVideo video { width: 100% !important; height: auto !important; min-height: 220px !important; object-fit: cover !important; }
+
         .toast-popup-notification { position: fixed; top: 30px; right: 30px; background: #0f172a; color: white; padding: 16px 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); font-size: 13px; font-weight: 700; z-index: 1000000; display: none; border-left: 4px solid var(--accent-green); animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
@@ -263,7 +267,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <h3 style="font-size: 15px; font-weight: 800; color: var(--primary-blue);">🎯 Select HOD-Assigned Class Slot</h3>
-                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Pick a mapped class slot to unlock the 3-minute QR Attendance Generator.</p>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Pick a mapped class slot to unlock the 5-minute QR Attendance Generator.</p>
                         </div>
                         <span id="assignedClassesCountBadge" style="background: var(--primary-blue); color: white; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px;">0 Slots Mapped</span>
                     </div>
@@ -283,7 +287,7 @@
                         <div id="totalPresentCount" class="count-number">0</div>
                     </div>
                     <div class="stat-box" style="border-left: 4px solid var(--accent-green);">
-                        <h4>Active Live Token <span id="countdownTimerReadout" class="countdown-ticker-box">03:00</span></h4>
+                        <h4>Active Live Token <span id="countdownTimerReadout" class="countdown-ticker-box">05:00</span></h4>
                         <div id="currentActiveSessionCode" class="count-number" style="font-size: 20px; font-family: monospace; margin-top: 4px; color: var(--primary-blue);">NONE</div>
                     </div>
                     <div class="stat-box" style="border-left: 4px solid var(--accent-purple);">
@@ -296,9 +300,9 @@
 
                 <div class="control-panel-grid">
                     <div class="panel-box">
-                        <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 8px; color: var(--primary-blue);">3-MINUTE DISPATCH CONTROLLER</h3>
-                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Generates a stable cryptographic token for a fixed 3-minute check-in window.</p>
-                        <button class="btn btn-green" id="btnLaunchQrSession" disabled onclick="initializeFixedThreeMinuteSession()">⚡ Launch 3-Min Class Session</button>
+                        <h3 style="font-size: 15px; font-weight: 800; margin-bottom: 8px; color: var(--primary-blue);">5-MINUTE DISPATCH CONTROLLER</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Generates a stable cryptographic token for a fixed 5-minute check-in window.</p>
+                        <button class="btn btn-green" id="btnLaunchQrSession" disabled onclick="initializeFixedThreeMinuteSession()">⚡ Launch 5-Min Class Session</button>
                     </div>
 
                     <div class="panel-box" style="overflow: hidden;">
@@ -316,6 +320,7 @@
                     <button class="toggle-tab-btn" id="btn_viewHistory" onclick="switchTeacherView('history')">🕒 Past Sessions Log</button>
                     <button class="toggle-tab-btn" id="btn_viewMarks" onclick="switchTeacherView('marks')">📝 Subject Marks Roster</button>
                     <button class="toggle-tab-btn" id="btn_viewMentorship" onclick="switchTeacherView('mentorship')">🎓 Faculty Mentorship</button>
+                    <button class="toggle-tab-btn" id="btn_viewRegister" onclick="switchTeacherView('register')">📊 Attendance Register PDF</button>
                 </div>
 
                 <!-- TAB 1: LIVE CLASS STREAM -->
@@ -487,6 +492,38 @@
                     </div>
                 </div>
 
+                <!-- TAB 5: ATTENDANCE REGISTER MATRIX & PDF EXPORT -->
+                <div id="wrapper_registerView" style="display: none; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">📋 Monthly Attendance Register Matrix</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Traditional register log tracking daily P (Present) and AB (Absent) records per student.</p>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <!-- 🎯 MULTI-SUBJECT SELECTOR DROPDOWN FOR TEACHERS WITH MULTIPLE SUBS -->
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-labels); text-transform: uppercase;">Subject:</label>
+                                <select id="registerSubjectDropdown" onchange="onRegisterSubjectSelected()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 12px; background: white; color: var(--text-dark);">
+                                    <option value="">-- Select Subject --</option>
+                                </select>
+                            </div>
+                            <button onclick="loadAttendanceRegisterMatrix()" class="btn btn-blue" style="padding: 8px 14px; font-size: 12px;">🔄 Refresh Matrix</button>
+                            <button onclick="window.print()" class="btn btn-green" style="padding: 8px 14px; font-size: 12px;">📥 Download / Print PDF</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container" style="max-height: 500px; overflow: auto;">
+                        <table id="registerMatrixTable">
+                            <thead id="registerTableHead">
+                                <tr><th>USN / ID</th><th>Student Name</th><th>Loading dates...</th></tr>
+                            </thead>
+                            <tbody id="registerTableBody">
+                                <tr><td colspan="3" style="text-align:center; color: var(--text-muted);">Select a class slot or subject above to load the register matrix.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
 
             <!-- ==========================================================================
@@ -549,8 +586,15 @@
                         <div class="panel-box" style="background: #0f172a; border-color: var(--bento-border); position: relative;">
                             <div class="scanner-zone" id="cameraScannerBox">
                                 <h4 style="margin-top:0; color:#fff; font-size: 12px; margin-bottom: 10px;">🎥 Place QR Code Inside Camera Lens</h4>
-                                <div id="previewVideo" style="width: 100%; max-width: 260px; border-radius: 8px; overflow: hidden; background: #000; margin: 0 auto;"></div>
-                                <button class="btn btn-dark" style="width:100%; padding:8px; margin-top:12px; font-size:11px;" onclick="stopStudentScannerCamera()">Terminate Stream</button>
+                                <div id="previewVideo"></div>
+                                
+                                <!-- 🔍 LAST-BENCH ZOOM SLIDER -->
+                                <div style="margin: 10px 0; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;">
+                                    <span style="color: #cbd5e1; font-size: 11px; font-weight: 700;">Zoom Lens</span>
+                                    <input type="range" id="cameraZoomRange" min="1" max="4" step="0.5" value="1" style="width: 150px; cursor: pointer;" oninput="adjustCameraZoom(this.value)">
+                                </div>
+
+                                <button class="btn btn-dark" style="width:100%; padding:8px; margin-top:8px; font-size:11px;" onclick="stopStudentScannerCamera()">Terminate Stream</button>
                             </div>
                             <div id="scannerFeedbackLog" style="font-size: 12px; font-weight: 700; color: #64748b; font-family: monospace; text-transform: uppercase;">SCANNER STANDBY</div>
                         </div>
@@ -564,6 +608,28 @@
                         <div class="stat-box" style="border-left: 4px solid var(--accent-purple); background: var(--accent-purple-glow); text-align: center;">
                             <h4 style="font-size: 12px;">AIML Semester Evaluation Summary (SGPA / Performance)</h4>
                             <div id="student_predicted_see_avg" class="count-number" style="color: var(--accent-purple); font-size: 32px; margin-top: 4px;">--</div>
+                        </div>
+                    </div>
+
+                    <!-- 📅 STUDENT PERSONAL ATTENDANCE REGISTER MATRIX -->
+                    <div style="background: white; border: 1px solid var(--bento-border); border-radius: 18px; padding: 24px; margin-bottom: 24px; text-align: left;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">📋 My Personal Attendance Register</h3>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Subjects across the top with your verified daily attendance status (P / AB).</p>
+                            </div>
+                            <button onclick="loadStudentPersonalAttendanceMatrix()" class="btn btn-blue" style="padding: 8px 14px; font-size: 12px;">🔄 Refresh Matrix</button>
+                        </div>
+
+                        <div class="table-container" style="max-height: 400px; overflow: auto;">
+                            <table id="studentPersonalMatrixTable">
+                                <thead id="studentMatrixHead">
+                                    <tr><th>Class Date</th><th>Loading personal register...</th></tr>
+                                </thead>
+                                <tbody id="studentMatrixBody">
+                                    <tr><td colspan="2" style="text-align: center; color: var(--text-muted);">Querying database records...</td></tr>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -677,9 +743,9 @@
                 <div id="parent_panel_sem3" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem3_body"></tbody></table></div></div>
                 <div id="parent_panel_sem4" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem4_body"></tbody></table></div></div>
                 <div id="parent_panel_sem5" class="semester-display-pane active"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem5_body"></tbody></table></div></div>
-                <div id="parent_panel_sem6" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem6_body"></tbody></table></div></div>
-                <div id="parent_panel_sem7" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem7_body"></tbody></table></div></div>
-                <div id="parent_panel_sem8" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem8_body"></tbody></table></div></div>
+                <div id="parent_panel_sem6" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_panel_sem6_body"></tbody></table></div></div>
+                <div id="parent_panel_sem7" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_panel_sem7_body"></tbody></table></div></div>
+                <div id="parent_panel_sem8" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_panel_sem8_body"></tbody></table></div></div>
             </div>
 
             <div style="text-align: right; margin-top: 20px;">
@@ -707,14 +773,21 @@
 
         const userRole = localStorage.getItem('userRole') || localStorage.getItem('role') || 'student';
         const userName = localStorage.getItem('userName') || localStorage.getItem('user_name') || 'Academic User';
-        const userUsn = localStorage.getItem('userUsn') || localStorage.getItem('parent_usn') || localStorage.getItem('student_id') || localStorage.getItem('usn') || '1DA24AI015';
+        
+        // 🔒 SECURE MULTI-USER ISOLATION: Dynamically pull logged-in USN without hardcoded overrides
+        const userUsn = localStorage.getItem('userUsn') || localStorage.getItem('parent_usn') || localStorage.getItem('student_id') || localStorage.getItem('usn');
+        if (!userUsn && userRole === 'student') {
+            alert("Session error: Active profile identity not found. Please log in again.");
+            window.location.href = "index.html";
+        }
+
         let childUsn = localStorage.getItem('childUsn') || localStorage.getItem('student_id') || '';
         let userSubject = localStorage.getItem('userSubject') || '';
         let userSemester = localStorage.getItem('userSemester') || 5;
         const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
 
         let currentGeneratedSessionToken = ""; 
-        let secondsRemainingInSession = 180; 
+        let secondsRemainingInSession = 300; // ⏱️ 5 minutes
         let sessionTimerCountdownReference = null;
         let backgroundPollerReference = null;
         let scatterChartInstance = null;
@@ -873,7 +946,7 @@
                 if (document.getElementById('teacherSectionLayout')) document.getElementById('teacherSectionLayout').style.display = 'block';
                 if (document.getElementById('directMessagingDesk')) document.getElementById('directMessagingDesk').style.display = 'block';
                 if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 ${role.toUpperCase()}: ${userName} | TENANT: ${institutionId}`;
-                fetchTeacherAssignedClasses();
+                await fetchTeacherAssignedClasses();
                 loadAttendance();
             } else if (role === 'parent') {
                 if (document.getElementById('parentSectionLayout')) document.getElementById('parentSectionLayout').style.display = 'block';
@@ -922,6 +995,7 @@
 
         async function fetchTeacherAssignedClasses() {
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
+            const regDropdown = document.getElementById('registerSubjectDropdown');
             const badge = document.getElementById('assignedClassesCountBadge');
             if (!dropdown) return;
 
@@ -934,6 +1008,7 @@
 
                 if (!slots || slots.length === 0) {
                     dropdown.innerHTML = `<option value="">⚠️ No classes mapped by HOD yet for ID: ${userUsn}</option>`;
+                    if (regDropdown) regDropdown.innerHTML = `<option value="">⚠️ No subjects assigned</option>`;
                     if (badge) badge.innerText = "0 Slots Mapped";
                     if (document.getElementById('btnLaunchQrSession')) document.getElementById('btnLaunchQrSession').disabled = true;
                     return;
@@ -941,7 +1016,10 @@
 
                 if (badge) badge.innerText = `${slots.length} Slots Mapped`;
                 dropdown.innerHTML = `<option value="">-- Choose Assigned Class Slot --</option>`;
+                if (regDropdown) regDropdown.innerHTML = `<option value="">-- Select Subject --</option>`;
                 
+                const uniqueSubjects = new Set();
+
                 slots.forEach(slot => {
                     const subCode = slot.subject_code || slot.subject_name || 'AI';
                     const semNum = slot.semester_number || slot.semester || 5;
@@ -950,7 +1028,22 @@
                     const optionText = `Sem ${semNum} [${branch}] - ${subCode} (${dayTime})`;
                     
                     dropdown.innerHTML += `<option value="${slot.id || subCode}" data-subject="${subCode}" data-semester="${semNum}" data-text="${optionText}">${optionText}</option>`;
+                    
+                    if (!uniqueSubjects.has(subCode)) {
+                        uniqueSubjects.add(subCode);
+                        if (regDropdown) {
+                            regDropdown.innerHTML += `<option value="${subCode}" data-semester="${semNum}">${subCode} (Sem ${semNum})</option>`;
+                        }
+                    }
                 });
+
+                if (slots.length > 0 && regDropdown && regDropdown.options.length > 1) {
+                    regDropdown.selectedIndex = 1;
+                    userSubject = regDropdown.value;
+                    userSemester = regDropdown.options[regDropdown.selectedIndex].getAttribute('data-semester') || 5;
+                    localStorage.setItem('userSubject', userSubject);
+                    localStorage.setItem('userSemester', userSemester);
+                }
             } catch (err) { 
                 console.error("❌ Error fetching teacher slots:", err);
                 dropdown.innerHTML = `<option value="">❌ Connection error loading slots</option>`; 
@@ -986,6 +1079,20 @@
                 fetchPastSessionTokens();
             } else if (activeTabId === 'btn_viewMarks') {
                 fetchStudentMarksRoster();
+            } else if (activeTabId === 'btn_viewRegister') {
+                loadAttendanceRegisterMatrix();
+            }
+        }
+
+        function onRegisterSubjectSelected() {
+            const regDropdown = document.getElementById('registerSubjectDropdown');
+            const selectedOpt = regDropdown.options[regDropdown.selectedIndex];
+            if (regDropdown.value) {
+                userSubject = regDropdown.value;
+                userSemester = selectedOpt.getAttribute('data-semester') || userSemester;
+                localStorage.setItem('userSubject', userSubject);
+                localStorage.setItem('userSemester', userSemester);
+                loadAttendanceRegisterMatrix();
             }
         }
 
@@ -995,6 +1102,7 @@
             if (document.getElementById('wrapper_historyLog')) document.getElementById('wrapper_historyLog').style.display = 'none';
             if (document.getElementById('wrapper_marksLedger')) document.getElementById('wrapper_marksLedger').style.display = 'none';
             if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'none';
+            if (document.getElementById('wrapper_registerView')) document.getElementById('wrapper_registerView').style.display = 'none';
 
             if (targetView === 'live') {
                 document.getElementById('btn_viewLive')?.classList.add('active');
@@ -1012,6 +1120,153 @@
                 document.getElementById('btn_viewMentorship')?.classList.add('active');
                 if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'block';
                 loadMenteeList();
+            } else if (targetView === 'register') {
+                document.getElementById('btn_viewRegister')?.classList.add('active');
+                if (document.getElementById('wrapper_registerView')) document.getElementById('wrapper_registerView').style.display = 'block';
+                loadAttendanceRegisterMatrix();
+            }
+        }
+
+        async function loadAttendanceRegisterMatrix() {
+            const head = document.getElementById('registerTableHead');
+            const body = document.getElementById('registerTableBody');
+            if (!head || !body) return;
+
+            if (!userSubject) {
+                body.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--accent-red);">⚠️ Please choose a subject from the dropdown above or select a class slot.</td></tr>`;
+                return;
+            }
+
+            head.innerHTML = `<tr><th style="position:sticky; left:0; background:#f1f5f9; z-index:2;">USN / ID</th><th style="position:sticky; left:120px; background:#f1f5f9; z-index:2;">Student Name</th><th>Loading register matrix for ${userSubject}...</th></tr>`;
+            body.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Querying database records...</td></tr>";
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/attendance-register?teacherId=${encodeURIComponent(userUsn)}&subjectCode=${encodeURIComponent(userSubject)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    body.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>Failed to compile attendance register.</td></tr>";
+                    return;
+                }
+
+                const { students, dates, attendanceMap } = data;
+
+                let headerHTML = `<tr><th style="position:sticky; left:0; background:#f1f5f9; z-index:2; min-width:130px;">USN / ID</th><th style="position:sticky; left:130px; background:#f1f5f9; z-index:2; min-width:180px;">Student Name</th>`;
+                if (!dates || dates.length === 0) {
+                    headerHTML += `<th style="text-align:center;">No Class Sessions Conducted Yet for ${userSubject}</th></tr>`;
+                } else {
+                    dates.forEach(d => {
+                        headerHTML += `<th style="text-align:center; min-width:100px;">📅 ${d}</th>`;
+                    });
+                    headerHTML += `</tr>`;
+                }
+                head.innerHTML = headerHTML;
+
+                body.innerHTML = "";
+                if (!students || students.length === 0) {
+                    body.innerHTML = `<tr><td colspan="${(dates ? dates.length : 0) + 2}" style="text-align:center;">No students registered in database.</td></tr>`;
+                    return;
+                }
+
+                students.forEach(st => {
+                    let rowHTML = `<tr><td style="position:sticky; left:0; background:#ffffff; font-weight:700;"><code>${st.usn}</code></td><td style="position:sticky; left:130px; background:#ffffff; font-weight:700;">${st.name}</td>`;
+                    
+                    if (!dates || dates.length === 0) {
+                        rowHTML += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
+                    } else {
+                        dates.forEach(d => {
+                            const lookupKey = `${st.usn.trim().toUpperCase()}_${d}`;
+                            const isPresent = attendanceMap[lookupKey];
+                            const status = isPresent 
+                                ? '<span style="background:#d1fae5; color:#065f46; padding:4px 10px; border-radius:6px; font-weight:800;">P</span>' 
+                                : '<span style="background:#fee2e2; color:#991b1b; padding:4px 8px; border-radius:6px; font-weight:800;">AB</span>';
+                            rowHTML += `<td style="text-align:center;">${status}</td>`;
+                        });
+                    }
+                    rowHTML += `</tr>`;
+                    body.innerHTML += rowHTML;
+                });
+
+                firePremiumToastAlert("📊 Attendance register matrix compiled successfully!");
+            } catch (err) {
+                console.error(err);
+                body.innerHTML = "<tr><td colspan='3' style='text-align:center; color:red;'>Network error loading register.</td></tr>";
+            }
+        }
+
+        // ==========================================================================
+        // 📅 STUDENT PERSONAL ATTENDANCE MATRIX (Subjects Across Top, Dates Downwards)
+        // ==========================================================================
+        async function loadStudentPersonalAttendanceMatrix() {
+            const head = document.getElementById('studentMatrixHead');
+            const body = document.getElementById('studentMatrixBody');
+            if (!head || !body) return;
+
+            head.innerHTML = `<tr><th>Class Date</th><th>Loading personal register for Sem ${userSemester}...</th></tr>`;
+            body.innerHTML = `<tr><td colspan="2" style="text-align: center;">Fetching database records...</td></tr>`;
+
+            try {
+                const ledgerRes = await fetch(`${API_BASE}/api/auth/student-attendance-ledger?studentId=${encodeURIComponent(userUsn)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
+                const ledgerData = await ledgerRes.json();
+
+                if (!ledgerRes.ok || !ledgerData.success) {
+                    body.innerHTML = `<tr><td colspan="2" style="text-align: center; color: red;">Failed to load attendance ledger.</td></tr>`;
+                    return;
+                }
+
+                const { conductedSessions, studentScanMap } = ledgerData;
+
+                if (!conductedSessions || conductedSessions.length === 0) {
+                    head.innerHTML = `<tr><th>Class Date</th><th>Status</th></tr>`;
+                    body.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">No classes conducted yet for Semester ${userSemester}.</td></tr>`;
+                    return;
+                }
+
+                const subjectSet = new Set();
+                conductedSessions.forEach(s => {
+                    if (s.subject_name) subjectSet.add(s.subject_name.trim());
+                });
+                const subjectsArray = Array.from(subjectSet);
+
+                let headerHTML = `<tr><th style="position: sticky; left: 0; background: #f1f5f9; z-index: 2; min-width: 140px;">📅 Class Date / Session</th>`;
+                subjectsArray.forEach(sub => {
+                    headerHTML += `<th style="text-align: center; min-width: 150px;">${sub}</th>`;
+                });
+                headerHTML += `</tr>`;
+                head.innerHTML = headerHTML;
+
+                const datesMap = {};
+                conductedSessions.forEach(s => {
+                    if (!datesMap[s.session_date]) datesMap[s.session_date] = {};
+                    datesMap[s.session_date][(s.subject_name || '').trim().toUpperCase()] = s.session_code;
+                });
+
+                const sortedDates = Object.keys(datesMap).sort().reverse();
+
+                body.innerHTML = "";
+                sortedDates.forEach(dateStr => {
+                    let rowHTML = `<tr><td style="font-weight: 700; position: sticky; left: 0; background: #ffffff; z-index: 1;">📅 ${dateStr}</td>`;
+                    
+                    subjectsArray.forEach(sub => {
+                        const subKey = sub.trim().toUpperCase();
+                        const sessionCode = datesMap[dateStr][subKey] || '';
+                        const isPresent = sessionCode ? studentScanMap[sessionCode.trim().toUpperCase()] : false;
+                        
+                        const badge = isPresent 
+                            ? '<span style="background:#d1fae5; color:#065f46; padding:4px 12px; border-radius:6px; font-weight:800;">P</span>' 
+                            : '<span style="background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:6px; font-weight:800;">AB</span>';
+                        
+                        rowHTML += `<td style="text-align: center;">${sessionCode ? badge : '<span style="color:#cbd5e1;">-</span>'}</td>`;
+                    });
+
+                    rowHTML += `</tr>`;
+                    body.innerHTML += rowHTML;
+                });
+
+                firePremiumToastAlert(`📋 Personal attendance register loaded for Sem ${userSemester}!`);
+            } catch (err) {
+                console.error("Personal matrix error:", err);
+                body.innerHTML = `<tr><td colspan="2" style="text-align: center; color: red;">Network error loading personal register.</td></tr>`;
             }
         }
 
@@ -1074,7 +1329,7 @@
                 if (backgroundPollerReference) clearInterval(backgroundPollerReference);
 
                 scannedStudentUsnsCache = []; 
-                secondsRemainingInSession = 180; 
+                secondsRemainingInSession = 300; // ⏱️ Reset to 5 minutes
 
                 currentGeneratedSessionToken = "AIT_" + Math.floor(100000 + Math.random() * 900000);
                 if (document.getElementById('currentActiveSessionCode')) document.getElementById('currentActiveSessionCode').innerText = currentGeneratedSessionToken;
@@ -1103,7 +1358,7 @@
                     if (secondsRemainingInSession <= 0) executeSessionLockdownAndReconciliation();
                 }, 1000);
 
-                firePremiumToastAlert("⚡ 3-Minute Session Launched!");
+                firePremiumToastAlert("⚡ 5-Minute Session Launched!");
             } catch (err) { console.error(err); }
         };
 
@@ -1229,18 +1484,22 @@
             const dropdown = document.getElementById('historySessionDropdown');
             if(!dropdown) return;
             try {
-                const res = await fetch(`${API_BASE}/api/auth/distinct-sessions?subject=${userSubject}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/auth/distinct-sessions?subject=${encodeURIComponent(userSubject)}&institutionId=${encodeURIComponent(institutionId)}`);
                 const sessions = await res.json();
                 
                 dropdown.innerHTML = "<option value=''>-- Select Past Class Date --</option>";
                 
                 if (Array.isArray(sessions)) {
+                    const seenDates = new Set();
                     sessions.forEach(s => {
-                        const formattedDate = s.created_at 
-                            ? new Date(s.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-                            : s.session_code;
-                        
-                        dropdown.innerHTML += `<option value="${s.session_code}">📅 ${formattedDate} [${s.session_code}]</option>`;
+                        const dateOnly = s.created_at ? new Date(s.created_at).toISOString().split('T')[0] : s.session_code;
+                        if (!seenDates.has(dateOnly)) {
+                            seenDates.add(dateOnly);
+                            const formattedDate = s.created_at 
+                                ? new Date(s.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                                : s.session_code;
+                            dropdown.innerHTML += `<option value="${s.session_code}">📅 ${formattedDate} [${s.subject_name || userSubject}]</option>`;
+                        }
                     });
                 }
             } catch (e) { 
@@ -1300,7 +1559,7 @@
         }
 
         // =========================================================================
-        // 📱 ROBUST HTML5-QRCODE STUDENT SCANNER ENGINE WITH LOCATION PROMPT
+        // 📱 ROBUST HTML5-QRCODE STUDENT SCANNER ENGINE WITH CSS ZOOM SCALE
         // =========================================================================
         function toggleStudentScannerBox() {
             const scannerZone = document.getElementById("cameraScannerBox");
@@ -1370,15 +1629,29 @@
                 }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
             };
 
+            const cameraConfig = { facingMode: "environment" };
+            const qrboxConfig = { fps: 20, qrbox: { width: 300, height: 300 }, aspectRatio: 1.0 };
+
             html5QrcodeScannerInstance.start(
-                { facingMode: "environment" },
-                { fps: 15, qrbox: { width: 220, height: 220 } },
+                cameraConfig,
+                qrboxConfig,
                 qrSuccessCallback,
-                () => {}
+                (errorMessage) => {}
             ).catch(err => {
                 console.error("Camera start error:", err);
                 alert("Could not access camera device. Ensure camera permissions are granted.");
             });
+        }
+
+        // 🔍 Reliable CSS-Based Zoom Control for Last-Benchers
+        function adjustCameraZoom(zoomVal) {
+            const videoElement = document.querySelector('#previewVideo video');
+            if (videoElement) {
+                const scale = parseFloat(zoomVal);
+                videoElement.style.transform = `scale(${scale})`;
+                videoElement.style.transformOrigin = 'center center';
+                videoElement.style.transition = 'transform 0.1s ease-out';
+            }
         }
 
         function stopStudentScannerCamera() {
@@ -1400,11 +1673,13 @@
             gridKeys.forEach(id => { const b = document.getElementById(id); if (b) b.innerHTML = ""; });
 
             try {
-                const res = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${encodeURIComponent(userUsn)}&semester=${userSemester}&institutionId=${institutionId}`);
                 const result = await res.json();
                 cachedStudentMetrics = Array.isArray(result.ai_predictions) ? result.ai_predictions : [];
 
                 renderStudentSemesterCards(userSemester);
+
+                loadStudentPersonalAttendanceMatrix();
 
                 let cond = 0, att = 0;
                 cachedStudentMetrics.forEach(sub => {
@@ -1420,11 +1695,7 @@
                 systemCacheAttendedTotal = att;
                 executeBunkSimulationMath(0);
 
-                if (document.getElementById('student_predicted_see_avg')) {
-                    const sgpaVal = result.sgpa || (userSemester == 4 ? "9.00" : "8.00");
-                    const cgpaVal = result.cgpa || "7.36";
-                    document.getElementById('student_predicted_see_avg').innerText = `SGPA: ${sgpaVal} | CGPA: ${cgpaVal}`;
-                }
+                updateSemesterSummaryDisplay(result);
 
                 if (document.getElementById('ai_risk_value')) {
                     document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
@@ -1435,12 +1706,19 @@
             } catch (e) { console.error("Performance layout error:", e); }
         }
 
-        function renderStudentSemesterCards(semInput) {
+        async function renderStudentSemesterCards(semInput) {
             const semNum = typeof semInput === 'string' ? parseInt(semInput.replace('sem', '')) : semInput;
             userSemester = semNum;
 
             const gridKeys = ['student_sem1_grid', 'student_sem2_grid', 'student_sem3_grid', 'student_sem4_grid', 'student_sem5_grid', 'student_sem6_grid', 'student_sem7_grid', 'student_sem8_grid'];
             gridKeys.forEach(id => { const b = document.getElementById(id); if (b) b.innerHTML = ""; });
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${encodeURIComponent(userUsn)}&semester=${semNum}&institutionId=${institutionId}`);
+                const result = await res.json();
+                cachedStudentMetrics = Array.isArray(result.ai_predictions) ? result.ai_predictions : cachedStudentMetrics;
+                updateSemesterSummaryDisplay(result);
+            } catch (err) { console.error(err); }
 
             const filtered = cachedStudentMetrics.filter(sub => parseInt(sub.semester_number) === semNum);
             const container = document.getElementById(`student_sem${semNum}_grid`);
@@ -1469,6 +1747,21 @@
             });
 
             renderSemesterCharts(semNum);
+        }
+
+        // 🛠️ CRITICAL FIX: Robust SGPA/CGPA formatting to prevent fallback mismatches
+        function updateSemesterSummaryDisplay(result) {
+            const summaryNode = document.getElementById('student_predicted_see_avg');
+            if (!summaryNode) return;
+
+            const sgpa = (result.sgpa !== null && result.sgpa !== undefined) ? result.sgpa : "N/A";
+            const cgpa = (result.cgpa !== null && result.cgpa !== undefined) ? result.cgpa : "N/A";
+
+            if (sgpa === "N/A" && cgpa === "N/A") {
+                summaryNode.innerHTML = `<span style="font-size: 18px; color: var(--text-muted);">No GPA record for Sem ${userSemester}</span>`;
+            } else {
+                summaryNode.innerHTML = `SGPA: ${sgpa} | CGPA: ${cgpa}`;
+            }
         }
 
         function renderSemesterCharts(semNum) {
@@ -1746,7 +2039,13 @@
             document.querySelectorAll('#studentSectionLayout .semester-display-pane').forEach(panel => panel.classList.remove('active'));
             document.querySelector('#nav_' + targetSem)?.classList.add('active');
             document.querySelector('#panel_' + targetSem)?.classList.add('active');
-            renderStudentSemesterCards(targetSem);
+            
+            const semNum = parseInt(targetSem.replace('sem', '')) || 5;
+            userSemester = semNum;
+            localStorage.setItem('userSemester', userSemester);
+
+            renderStudentSemesterCards(semNum);
+            loadStudentPersonalAttendanceMatrix();
         }
 
         function switchParentSemesterTab(targetSem) {
