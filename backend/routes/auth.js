@@ -253,15 +253,22 @@ router.post("/submit-attendance", async (req, res) => {
         const studentLookup = await pool.query("SELECT name FROM users WHERE UPPER(usn) = UPPER($1) AND institution_id = $2", [cleanStudentId, tenant]);
         const studentFullName = studentLookup.rows[0]?.name || 'Student';
 
-        const duplicateCheck = await pool.query("SELECT * FROM users_attendance WHERE student_id = $1 AND session_code = $2 AND institution_id = $3", [cleanStudentId, sessionCode, tenant]);
-        if (duplicateCheck.rows.length > 0) {
-            return res.status(400).json({ success: false, message: "Attendance duplicate flagged for this session." });
-        }
+        // 📱 LOG SUCCESSFUL SUBMISSION USN IN TERMINAL
+        console.log(`📱 [ATTENDANCE SCAN] Student USN: ${cleanStudentId} (${studentFullName}) | Subject: ${subjectName || 'AI'} | Session: ${sessionCode} | Distance: ${roundedDistance}m`);
 
-        await pool.query(
-            "INSERT INTO users_attendance (student_id, student_full_name, subject_name, session_code, distance, latitude, longitude, institution_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())", 
-            [cleanStudentId, studentFullName, subjectName || 'AI', sessionCode, `${roundedDistance}m`, studentLat, studentLon, tenant]
-        );
+        try {
+            await pool.query(
+                `INSERT INTO users_attendance (student_id, student_full_name, subject_name, session_code, distance, latitude, longitude, institution_id, created_at) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+                 ON CONFLICT (student_id, session_code) DO NOTHING`, 
+                [cleanStudentId, studentFullName, subjectName || 'AI', sessionCode, `${roundedDistance}m`, studentLat, studentLon, tenant]
+            );
+        } catch (dbErr) {
+            if (dbErr.code === '23505') {
+                return res.status(200).json({ success: true, message: "Attendance already marked for this session." });
+            }
+            throw dbErr;
+        }
 
         return res.status(200).json({ 
             success: true, 

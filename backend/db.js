@@ -10,8 +10,8 @@ const pool = new Pool({
     connectionString: connectionString,
     ssl: isCloud ? { rejectUnauthorized: false } : false, // Required for Cloud DBs (Neon / Supabase / Render)
     max: 10,
-    idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 10000 // Increased to 10 seconds to handle cloud cold starts smoothly
+    idleTimeoutMillis: 30000, // Increased to 30 seconds for better idle stability
+    connectionTimeoutMillis: 10000 // 10 seconds to handle cloud cold starts smoothly
 });
 
 pool.on('connect', () => {
