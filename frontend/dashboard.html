@@ -91,9 +91,9 @@
 
         .scanner-zone { display: none; margin: 0 auto; padding: 16px; background: #0f172a; border-radius: 16px; max-width: 340px; text-align: center; }
         
-        /* 🛠️ CAMERA RENDERING STYLES */
+        /* 🛠️ CAMERA RENDERING STYLES FOR LAST-BENCHERS */
         #previewVideo { width: 100%; max-width: 260px; min-height: 220px; border-radius: 8px; overflow: hidden; background: #000; margin: 0 auto; position: relative; }
-        #previewVideo video { width: 100% !important; height: auto !important; min-height: 220px !important; object-fit: cover !important; }
+        #previewVideo video { width: 100% !important; height: auto !important; min-height: 220px !important; object-fit: cover !important; transform-origin: center center; }
 
         .toast-popup-notification { position: fixed; top: 30px; right: 30px; background: #0f172a; color: white; padding: 16px 24px; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); font-size: 13px; font-weight: 700; z-index: 1000000; display: none; border-left: 4px solid var(--accent-green); animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -117,6 +117,67 @@
         
         .mentee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
         .mentee-card { background: white; border: 1px solid var(--bento-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-premium); }
+
+        /* ==========================================================================
+            🖨️ PERFECTED PRINT STYLING FIX (Eliminates Blank Leading Pages)
+            ========================================================================== */
+        @media print {
+            @page {
+                size: landscape;
+                margin: 10mm;
+            }
+            body, html {
+                background: white !important;
+                color: #000 !important;
+                height: auto !important;
+                min-height: 0 !important;
+                display: block !important;
+                overflow: visible !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            body * {
+                visibility: hidden;
+            }
+            #mainDashboardContainer, #mainDashboardContainer * {
+                visibility: hidden;
+            }
+            #wrapper_registerView, #wrapper_registerView * {
+                visibility: visible;
+            }
+            #wrapper_registerView {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+            #wrapper_registerView button, #wrapper_registerView select {
+                display: none !important;
+            }
+            .table-container {
+                max-height: none !important;
+                height: auto !important;
+                overflow: visible !important;
+                border: none !important;
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            table {
+                width: 100% !important;
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            thead {
+                display: table-header-group;
+            }
+        }
     </style>
 </head>
 <body>
@@ -537,7 +598,7 @@
                     <button class="toggle-tab-btn" id="btn_studentMarksTab" onclick="switchStudentTab('marks')">📝 Academic Marks & AI Analytics</button>
                 </div>
 
-                <!-- 📱 TAB 1: DAILY ATTENDANCE & SCANNER (ROBUST HTML5-QRCODE SCANNER) -->
+                <!-- 📱 TAB 1: DAILY ATTENDANCE & SCANNER (OPTIMIZED FOR LAST-BENCHERS) -->
                 <div id="wrapper_studentScanView">
                     <!-- BUNK SIMULATOR -->
                     <div class="simulator-bento-box">
@@ -590,8 +651,8 @@
                                 
                                 <!-- 🔍 LAST-BENCH ZOOM SLIDER -->
                                 <div style="margin: 10px 0; display: flex; align-items: center; justify-content: space-between; padding: 0 10px;">
-                                    <span style="color: #cbd5e1; font-size: 11px; font-weight: 700;">Zoom Lens</span>
-                                    <input type="range" id="cameraZoomRange" min="1" max="4" step="0.5" value="1" style="width: 150px; cursor: pointer;" oninput="adjustCameraZoom(this.value)">
+                                    <span style="color: #cbd5e1; font-size: 11px; font-weight: 700;">Zoom Lens (1.5x - 4x)</span>
+                                    <input type="range" id="cameraZoomRange" min="1" max="4" step="0.5" value="1.5" style="width: 150px; cursor: pointer;" oninput="adjustCameraZoom(this.value)">
                                 </div>
 
                                 <button class="btn btn-dark" style="width:100%; padding:8px; margin-top:8px; font-size:11px;" onclick="stopStudentScannerCamera()">Terminate Stream</button>
@@ -743,9 +804,9 @@
                 <div id="parent_panel_sem3" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem3_body"></tbody></table></div></div>
                 <div id="parent_panel_sem4" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem4_body"></tbody></table></div></div>
                 <div id="parent_panel_sem5" class="semester-display-pane active"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem5_body"></tbody></table></div></div>
-                <div id="parent_panel_sem6" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_panel_sem6_body"></tbody></table></div></div>
-                <div id="parent_panel_sem7" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_panel_sem7_body"></tbody></table></div></div>
-                <div id="parent_panel_sem8" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_panel_sem8_body"></tbody></table></div></div>
+                <div id="parent_panel_sem6" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem6_body"></tbody></table></div></div>
+                <div id="parent_panel_sem7" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem7_body"></tbody></table></div></div>
+                <div id="parent_panel_sem8" class="semester-display-pane"><div class="table-container"><table><thead><tr><th>Subject Course</th><th>Course Code</th><th>Attendance Ratio</th><th>CIE 1 Marks</th><th>CIE 2 Marks</th><th>CIE 3 Marks</th><th>SEE Grade</th></tr></thead><tbody id="parent_sem8_body"></tbody></table></div></div>
             </div>
 
             <div style="text-align: right; margin-top: 20px;">
@@ -1559,7 +1620,7 @@
         }
 
         // =========================================================================
-        // 📱 ROBUST HTML5-QRCODE STUDENT SCANNER ENGINE WITH CSS ZOOM SCALE
+        // 📱 OPTIMIZED HTML5-QRCODE SCANNER FOR LAST-BENCHERS (Zoom & Larger Box)
         // =========================================================================
         function toggleStudentScannerBox() {
             const scannerZone = document.getElementById("cameraScannerBox");
@@ -1629,28 +1690,54 @@
                 }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
             };
 
+            // 🔍 Optimized camera configuration for projector distance & back-benchers
             const cameraConfig = { facingMode: "environment" };
-            const qrboxConfig = { fps: 20, qrbox: { width: 300, height: 300 }, aspectRatio: 1.0 };
+            const qrboxConfig = { 
+                fps: 30, // Higher FPS for rapid lock-on
+                qrbox: { width: 450, height: 450 }, // Larger capture frame for distance scanning
+                aspectRatio: 1.0,
+                experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+            };
 
             html5QrcodeScannerInstance.start(
                 cameraConfig,
                 qrboxConfig,
                 qrSuccessCallback,
                 (errorMessage) => {}
-            ).catch(err => {
+            ).then(() => {
+                // Apply initial default zoom (1.5x) to assist back-benchers immediately
+                setTimeout(() => adjustCameraZoom(1.5), 500);
+            }).catch(err => {
                 console.error("Camera start error:", err);
                 alert("Could not access camera device. Ensure camera permissions are granted.");
             });
         }
 
-        // 🔍 Reliable CSS-Based Zoom Control for Last-Benchers
-        function adjustCameraZoom(zoomVal) {
+        // 🔍 Robust Native Hardware Zoom + CSS Scaling for Last-Benchers
+        async function adjustCameraZoom(zoomVal) {
+            const scale = parseFloat(zoomVal);
             const videoElement = document.querySelector('#previewVideo video');
+            
+            // 1. Apply smooth visual CSS zoom
             if (videoElement) {
-                const scale = parseFloat(zoomVal);
                 videoElement.style.transform = `scale(${scale})`;
                 videoElement.style.transformOrigin = 'center center';
                 videoElement.style.transition = 'transform 0.1s ease-out';
+            }
+
+            // 2. Apply true optical zoom to the device camera sensor if supported by the browser
+            try {
+                if (html5QrcodeScannerInstance && html5QrcodeScannerInstance._activeVideoTrack) {
+                    const track = html5QrcodeScannerInstance._activeVideoTrack;
+                    const capabilities = track.getCapabilities();
+                    if (capabilities && capabilities.zoom) {
+                        await track.applyConstraints({
+                            advanced: [{ zoom: scale }]
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn("Optical zoom constraint not supported on this device, using CSS scale fallback.", err);
             }
         }
 

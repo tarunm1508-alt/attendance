@@ -34,12 +34,21 @@
         input { width: 100%; padding: 14px; background: #ffffff; border: 1px solid var(--border-clean); border-radius: 12px; font-size: 14px; outline: none; }
         input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px var(--primary-glow); }
 
+        /* 👁️ Password toggle wrapper styling */
+        .password-field-wrapper { position: relative; width: 100%; }
+        .password-field-wrapper input { padding-right: 45px; }
+        .password-toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-muted); padding: 4px; }
+
         .btn { width: 100%; padding: 14px; background: var(--primary-blue); border: none; border-radius: 12px; color: #ffffff; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         .btn:hover { background: var(--primary-hover); }
 
         .footer-links { margin-top: 20px; font-size: 13px; color: var(--text-muted); }
         .footer-links a { color: var(--primary-blue); text-decoration: none; font-weight: 700; }
         .alert { padding: 12px 14px; border-radius: 12px; margin-bottom: 18px; font-size: 13px; display: none; text-align: center; background-color: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; font-weight: 600; line-height: 1.4; }
+
+        /* Forgot password helper alignment */
+        .forgot-pass-row { display: flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 16px; }
+        .forgot-pass-row a { font-size: 12px; color: var(--primary-blue); text-decoration: none; font-weight: 700; }
     </style>
 </head>
 <body>
@@ -63,7 +72,14 @@
 
             <div class="form-group">
                 <label for="password">Account Password</label>
-                <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+                <div class="password-field-wrapper">
+                    <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password', this)" title="Show/Hide Password">👁️</button>
+                </div>
+            </div>
+
+            <div class="forgot-pass-row">
+                <a href="#" onclick="openForgotPasswordModal(event)">Forgot Password?</a>
             </div>
 
             <div class="form-group" id="parentLinkGroup" style="display: none;">
@@ -85,6 +101,30 @@
 
         <div class="footer-links">
             Don't have an account? <a href="signup.html">Sign Up</a>
+        </div>
+    </div>
+
+    <!-- 🔑 FORGOT PASSWORD RECOVERY MODAL -->
+    <div id="forgotPasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 100000; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: 22px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); text-align: left;">
+            <h3 style="font-size: 18px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">🔑 Reset Portal Password</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Enter your USN/ID to update your login credentials.</p>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-labels); display: block; margin-bottom: 6px;">USN / Username</label>
+                    <input type="text" id="resetUsnInput" placeholder="e.g., 1DA24AI001" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-clean); font-size: 13px;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-labels); display: block; margin-bottom: 6px;">New Password</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="resetNewPasswordInput" placeholder="Enter new secure password" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-clean); font-size: 13px;">
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('resetNewPasswordInput', this)" title="Show/Hide Password">👁️</button>
+                    </div>
+                </div>
+                <button onclick="executePasswordReset()" class="btn" style="margin-top: 4px;">Update Password 🔒</button>
+                <button onclick="closeForgotPasswordModal()" class="btn" style="background: #e2e8f0; color: var(--text-dark); margin-top: 0;">Cancel</button>
+            </div>
         </div>
     </div>
 
@@ -141,14 +181,26 @@
                     activePortalRole = 'student';
                 }
 
-                // Cache fingerprint cookie on load
                 getOrCreateDeviceFingerprint();
             } catch (e) {
                 console.error("Init error:", e);
             }
         });
 
-        // 🔒 PERSISTENT DEVICE FINGERPRINT (Synced with LocalStorage & 1-Year Cookie fallback)
+        // 👁️ Show / Hide password toggle handler
+        function togglePasswordVisibility(fieldId, toggleBtn) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            if (field.type === "password") {
+                field.type = "text";
+                toggleBtn.innerText = "🙈";
+            } else {
+                field.type = "password";
+                toggleBtn.innerText = "👁️";
+            }
+        }
+
+        // 🔒 PERSISTENT DEVICE FINGERPRINT
         function getOrCreateDeviceFingerprint() {
             let deviceId = localStorage.getItem("dr_ait_persistent_device_id");
             
@@ -167,6 +219,44 @@
 
             document.cookie = `deviceFingerprint=${deviceId}; path=/; max-age=31536000; SameSite=Strict`;
             return deviceId;
+        }
+
+        function openForgotPasswordModal(e) {
+            e.preventDefault();
+            document.getElementById('forgotPasswordModal').style.display = 'flex';
+        }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').style.display = 'none';
+        }
+
+        async function executePasswordReset() {
+            const usn = document.getElementById('resetUsnInput').value.trim();
+            const newPassword = document.getElementById('resetNewPasswordInput').value.trim();
+
+            if (!usn || !newPassword) {
+                alert("Please fill in both fields.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/reset-password-confirm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usn, newPassword, institutionId: 'DR_AIT' })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert("✅ " + data.message);
+                    closeForgotPasswordModal();
+                    document.getElementById('resetUsnInput').value = '';
+                    document.getElementById('resetNewPasswordInput').value = '';
+                } else {
+                    alert("❌ " + (data.message || "Failed to reset password."));
+                }
+            } catch (e) {
+                alert("❌ Network error connecting to server.");
+            }
         }
 
         async function handleFormSubmit(event) {
