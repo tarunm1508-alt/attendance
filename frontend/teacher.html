@@ -296,11 +296,11 @@
     let API_BASE = "https://dr-ait-portal-backend.onrender.com";
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
         if (window.location.port === "5501" || window.location.origin.includes("-5501.")) {
-            API_BASE = "http://localhost:5000";
+                    API_BASE = "https://dr-ait-portal-backend.onrender.com";
         } else if (window.location.port === "5000") {
             API_BASE = window.location.origin;
         } else {
-            API_BASE = "http://localhost:5000";
+            API_BASE = "https://dr-ait-portal-backend.onrender.com";
         }
     }
 

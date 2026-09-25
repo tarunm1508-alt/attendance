@@ -52,7 +52,7 @@
     if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
     else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
     else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-        API_BASE = "http://localhost:5000";
+        API_BASE = "https://dr-ait-portal-backend.onrender.com";
     }
 
     const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';

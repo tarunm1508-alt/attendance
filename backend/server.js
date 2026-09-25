@@ -167,6 +167,169 @@ app.get('/api/auth/student-attendance-ledger', async (req, res) => {
 });
 
 // ==========================================================================
+// 📊 SESSION ROSTER ENDPOINT (STRICT BRANCH & SEMESTER ISOLATION)
+// ==========================================================================
+app.get('/api/auth/teacher-session-roster', async (req, res) => {
+    try {
+        const { sessionCode, institutionId } = req.query;
+        const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+
+        // 1. Get the session details to know which subject code it belongs to
+        const sessionRes = await pool.query(
+            `SELECT subject_code, subject_name, institution_id FROM class_sessions WHERE session_code = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [sessionCode, tenant]
+        );
+
+        if (sessionRes.rows.length === 0) {
+            return res.status(404).json({ success: false, error: "Active session not found." });
+        }
+
+        const session = sessionRes.rows[0];
+
+        // 2. Find which branch and semester are mapped to this subject in teacher slots or timetable
+        const slotRes = await pool.query(
+            `SELECT branch, semester_number FROM weekly_timetables WHERE (UPPER(subject_code) = UPPER($1) OR UPPER(subject_name) ILIKE '%' || UPPER($1) || '%') AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 LIMIT 1`,
+            [session.subject_code || session.subject_name, tenant]
+        );
+
+        const branch = slotRes.rows.length > 0 ? slotRes.rows[0].branch : 'AIML';
+        const semesterNumber = slotRes.rows.length > 0 ? slotRes.rows[0].semester_number : 3;
+
+        // 3. Fetch students strictly belonging to THIS specific branch and semester
+        const studentsRes = await pool.query(
+            `SELECT usn, name, phone_number FROM users 
+             WHERE role ILIKE 'student' 
+               AND UPPER(branch) = UPPER($1) 
+               AND semester_number = $2 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
+            [branch, semesterNumber, tenant]
+        );
+
+        const allBranchStudents = studentsRes.rows;
+
+        // 4. Fetch students who successfully scanned the QR code for this session
+        const scannedRes = await pool.query(
+            `SELECT student_id, distance, created_at FROM users_attendance 
+             WHERE session_code = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [sessionCode, tenant]
+        );
+
+        const presentUsns = new Set(scannedRes.rows.map(log => log.student_id.trim().toUpperCase()));
+
+        let presentStudents = [];
+        let absentStudents = [];
+
+        allBranchStudents.forEach(st => {
+            const cleanUsn = st.usn.trim().toUpperCase();
+            if (presentUsns.has(cleanUsn)) {
+                const log = scannedRes.rows.find(l => l.student_id.trim().toUpperCase() === cleanUsn);
+                presentStudents.push({
+                    usn: st.usn,
+                    name: st.name,
+                    distance: log ? log.distance : '0.00'
+                });
+            } else {
+                absentStudents.push({
+                    usn: st.usn,
+                    name: st.name,
+                    phone: st.phone_number
+                });
+            }
+        });
+
+        res.json({
+            success: true,
+            branch: branch,
+            semester: semesterNumber,
+            presentCount: presentStudents.length,
+            absentCount: absentStudents.length,
+            presentStudents,
+            absentStudents
+        });
+
+    } catch (err) {
+        console.error("Error fetching session roster:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================================================
+// 📊 BATCH MARKS ROSTER ENDPOINT FOR MULTI-TIER EXCEL GRID
+// ==========================================================================
+app.get('/api/teacher/batch-marks-roster', async (req, res) => {
+    try {
+        const { branch, semester, subjectCode, institutionId } = req.query;
+        const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+        const cleanBranch = (branch || '').trim();
+        const cleanSub = (subjectCode || '').trim();
+        const semNum = parseInt(semester) || 3;
+
+        let studentsRes;
+        const foundationalBranches = ['MATHS', 'PHYSICS', 'CHEM', 'BIOLOGY', 'MATHEMATICS', 'CHEMISTRY'];
+
+        if (foundationalBranches.includes(cleanBranch.toUpperCase())) {
+            // Foundation subjects span across multiple branches, so pull all students in that semester
+            studentsRes = await pool.query(
+                `SELECT usn, name FROM users 
+                 WHERE role ILIKE 'student' 
+                   AND semester_number = $1 
+                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 
+                 ORDER BY usn ASC`,
+                [semNum, tenant]
+            );
+        } else {
+            // Core technical branch students
+            studentsRes = await pool.query(
+                `SELECT usn, name FROM users 
+                 WHERE role ILIKE 'student' 
+                   AND UPPER(branch) ILIKE UPPER($1) 
+                   AND semester_number = $2 
+                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $3 
+                 ORDER BY usn ASC`,
+                [cleanBranch, semNum, tenant]
+            );
+        }
+
+        const students = studentsRes.rows;
+
+        // Fetch existing marks for this subject and semester
+        const marksRes = await pool.query(
+            `SELECT UPPER(usn) as usn, cie1, cie2, cie3, see FROM student_marks 
+             WHERE (UPPER(subject_code) = UPPER($1) OR UPPER(subject) = UPPER($1))
+               AND semester_number = $2 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
+            [cleanSub, semNum, tenant]
+        );
+
+        const marksMap = {};
+        marksRes.rows.forEach(m => {
+            if (m.usn) {
+                marksMap[m.usn.trim().toUpperCase()] = m;
+            }
+        });
+
+        // Merge students with recorded marks
+        const consolidated = students.map(st => {
+            const cleanUsnKey = (st.usn || '').trim().toUpperCase();
+            const m = marksMap[cleanUsnKey] || {};
+            return {
+                usn: st.usn,
+                name: st.name,
+                cie1: m.cie1 ?? 0,
+                cie2: m.cie2 ?? 0,
+                cie3: m.cie3 ?? 0,
+                see: m.see ?? 0
+            };
+        });
+
+        res.json({ success: true, students: consolidated });
+    } catch (err) {
+        console.error("Batch roster error:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================================================
 // 2. IMPORT EXISTING ROUTE MODULES
 // ==========================================================================
 const authRoutes = require("./routes/auth");
@@ -185,8 +348,57 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/marks", marksRoutes);
 
 // ==========================================================================
-// 👔 4. HOD EXECUTIVE PORTAL ENDPOINTS (/api/hod)
+// 👔 4. HOD EXECUTIVE PORTAL ENDPOINTS (/api/hod) WITH DEPARTMENT SCOPING
 // ==========================================================================
+
+// 🎓 Fetch HOD Department Staff & Mapped Slots with Core vs Foundation Scoping
+app.get('/api/hod/department-data', async (req, res) => {
+    try {
+        const { hodBranch, institutionId } = req.query;
+
+        if (!hodBranch) {
+            return res.status(400).json({ success: false, error: "HOD branch identifier missing." });
+        }
+
+        const cleanBranch = hodBranch.toUpperCase().trim();
+        const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+
+        // Define foundational/science departments that span across multiple engineering branches
+        const foundationalDepartments = ['MATHS', 'CHEM', 'PHYSICS', 'BIOLOGY', 'MATHEMATICS', 'CHEMISTRY'];
+
+        let staffQuery, staffParams;
+        let slotsQuery, slotsParams;
+
+        if (foundationalDepartments.includes(cleanBranch)) {
+            staffQuery = `SELECT * FROM users WHERE role = 'teacher' AND (UPPER(branch) = ANY($1) OR UPPER(branch) LIKE '%MATHS%' OR UPPER(branch) LIKE '%PHYSICS%' OR UPPER(branch) LIKE '%CHEM%') AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`;
+            staffParams = [['MATHS', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'HAT', 'CDN'], tenant];
+
+            slotsQuery = `SELECT * FROM weekly_timetables WHERE (UPPER(branch) = ANY($1) OR UPPER(subject_code) LIKE '22MAT%' OR UPPER(subject_code) LIKE '22PHY%' OR UPPER(subject_code) LIKE '22CHE%' OR UPPER(subject_code) LIKE 'BIT%') AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`;
+            slotsParams = [['MATHS', 'PHYSICS', 'CHEMISTRY', 'BIOLOGY', 'HAT', 'CDN'], tenant];
+        } else {
+            staffQuery = `SELECT * FROM users WHERE role = 'teacher' AND UPPER(branch) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`;
+            staffParams = [cleanBranch, tenant];
+
+            slotsQuery = `SELECT * FROM weekly_timetables WHERE UPPER(branch) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`;
+            slotsParams = [cleanBranch, tenant];
+        }
+
+        const staffResult = await pool.query(staffQuery, staffParams);
+        const slotsResult = await pool.query(slotsQuery, slotsParams);
+
+        res.json({
+            success: true,
+            branchScope: cleanBranch,
+            isFoundational: foundationalDepartments.includes(cleanBranch),
+            staff: staffResult.rows,
+            slots: slotsResult.rows
+        });
+
+    } catch (err) {
+        console.error("Error loading HOD departmental scope data:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
 
 // 📍 GET: Fetch Faculty/Teachers list strictly isolated by HOD's specific branch
 app.get("/api/hod/teachers", async (req, res) => {
@@ -1099,7 +1311,7 @@ app.get('/api/parent/profile', async (req, res, next) => {
 // 8. BASE ROUTE & GLOBAL ERROR HANDLER
 // ==========================================================================
 app.get("/", (req, res) => {
-    res.status(200).send("Attendance & Academic Management System Server is Live! 🚀");
+    res.sendFile(path.join(__dirname, "frontend", "index.html"));
 });
 
 app.use((err, req, res, next) => {

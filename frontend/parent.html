@@ -200,7 +200,7 @@
         if (BACKEND_URL.includes("-5501.")) BACKEND_URL = BACKEND_URL.replace("-5501.", "-5000.");
         else if (BACKEND_URL.includes(":5501")) BACKEND_URL = BACKEND_URL.replace(":5501", ":5000");
         else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-            BACKEND_URL = "http://localhost:5000";
+            BACKEND_URL = "https://dr-ait-portal-backend.onrender.com";
         }
 
         const parentUsn = localStorage.getItem("userUsn") || localStorage.getItem("parent_usn") || localStorage.getItem("parentUsn") || "";

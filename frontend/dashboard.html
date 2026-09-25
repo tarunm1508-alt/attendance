@@ -511,38 +511,76 @@
                     </div>
                 </div>
 
-                <!-- TAB 3: CONTEXT-FILTERED & LIVE EDITABLE SUBJECT MARKS ROSTER -->
+                <!-- TAB 3: MULTI-TIER EXCEL-LIKE BATCH SUBJECT MARKS ROSTER -->
                 <div id="wrapper_marksLedger" style="display: none; text-align: left;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <h3 style="font-size: 15px; font-weight: 800; color: var(--primary-blue);">Subject Performance Roster</h3>
-                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
-                                Evaluation access is strictly permitted for your assigned module. Other subject columns are locked in read-only mode.
-                            </p>
-                        </div>
-                        <div style="display: flex; gap: 10px;">
-                            <button onclick="openMarksEntryModal()" class="btn btn-blue" style="padding: 8px 14px; font-size: 12px;">➕ Enter Marks by USN</button>
-                            <input type="text" id="marksFilterSubject" placeholder="Filter Subject or USN" oninput="fetchStudentMarksRoster()" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12px; font-weight: 700;">
+                    <div style="background: white; border: 1px solid var(--bento-border); border-radius: 18px; padding: 20px; margin-bottom: 20px;">
+                        <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue); margin-bottom: 4px;">📝 Multi-Class & Cross-Branch Batch Evaluation Grid</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Select the target Semester, Branch/Domain, and Subject module to load the student spreadsheet.</p>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 120px; gap: 12px; align-items: flex-end;">
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-labels); text-transform: uppercase; margin-bottom: 6px;">1. Select Semester</label>
+                                <select id="filterSemesterSelect" onchange="onFilterSemesterChanged()" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; background: white;">
+                                    <option value="">-- Choose Semester --</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5" selected>Semester 5</option>
+                                    <option value="6">Semester 6</option>
+                                    <option value="7">Semester 7</option>
+                                    <option value="8">Semester 8</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-labels); text-transform: uppercase; margin-bottom: 6px;">2. Select Branch / Domain</label>
+                                <select id="filterBranchSelect" onchange="onFilterBranchChanged()" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; background: white;">
+                                    <option value="">-- Choose Branch --</option>
+                                    <option value="AIML">AIML</option>
+                                    <option value="CSBS">CSBS</option>
+                                    <option value="CSE">CSE</option>
+                                    <option value="ISE">ISE</option>
+                                    <option value="ECE">ECE</option>
+                                    <option value="EEE">EEE</option>
+                                    <option value="MECH">MECH</option>
+                                    <option value="CIVIL">CIVIL</option>
+                                    <option value="MATHS">Mathematics (Common)</option>
+                                    <option value="PHYSICS">Physics (Common)</option>
+                                    <option value="CHEM">Chemistry (Common)</option>
+                                    <option value="BIOLOGY">Biology (Common)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label style="display: block; font-size: 11px; font-weight: 800; color: var(--text-labels); text-transform: uppercase; margin-bottom: 6px;">3. Select Subject Code</label>
+                                <select id="filterSubjectSelect" onchange="loadMultiTierBatchGrid()" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 13px; background: white;">
+                                    <option value="">-- Choose Subject --</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <button onclick="loadMultiTierBatchGrid()" class="btn btn-blue" style="width: 100%; height: 42px; justify-content: center; font-size: 12px;">🔍 Load Grid</button>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="table-container">
+                    <!-- EXCEL SPREADSHEET CONTAINER -->
+                    <div class="table-container" style="max-height: 500px; overflow: auto;">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Student Name</th>
-                                    <th>USN / ID</th>
-                                    <th>Subject Module</th>
-                                    <th>CIE 1 (25)</th>
-                                    <th>CIE 2 (25)</th>
-                                    <th>CIE 3 (25)</th>
-                                    <th>SEE Exam (Grade)</th>
-                                    <th>Parent Contact</th>
-                                    <th>Action</th>
+                                    <th style="position: sticky; left: 0; background: #f1f5f9; z-index: 2;">USN / ID</th>
+                                    <th style="position: sticky; left: 120px; background: #f1f5f9; z-index: 2;">Student Name</th>
+                                    <th style="text-align: center;">CIE 1 (25)</th>
+                                    <th style="text-align: center;">CIE 2 (25)</th>
+                                    <th style="text-align: center;">CIE 3 (25)</th>
+                                    <th style="text-align: center;">SEE (Grade)</th>
+                                    <th style="text-align: center;">Action</th>
                                 </tr>
                             </thead>
-                            <tbody id="marksTableBody">
-                                <tr><td colspan="9" style="text-align:center; color: var(--text-muted);">Loading database profiles...</td></tr>
+                            <tbody id="multiTierBatchTableBody">
+                                <tr><td colspan="7" style="text-align:center; color: var(--text-muted);">Select Semester, Branch, and Subject above to load student sheet.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -839,7 +877,7 @@
         } else if (API_BASE.includes(":5501")) {
             API_BASE = API_BASE.replace(":5501", ":5000");
         } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-            API_BASE = "http://localhost:5000";
+            API_BASE = "https://dr-ait-portal-backend.onrender.com";
         }
 
         const userRole = localStorage.getItem('userRole') || localStorage.getItem('role') || 'student';
@@ -940,14 +978,15 @@
                 tbody.innerHTML = "";
                 data.subjects.forEach(sub => {
                     const tr = document.createElement('tr');
+                    const cleanSubCode = (sub.subject_code || '').trim();
                     tr.innerHTML = `
                         <td>${sub.subject_name}</td>
                         <td><span style="background:#dbeafe; color:#1e40af; padding:4px 8px; border-radius:6px; font-weight:800; font-size:11px;">Active</span></td>
-                        <td><input type="number" id="modal_cie1_${sub.subject_code}" value="${sub.cie1 ?? 0}" style="width:55px; text-align:center;"></td>
-                        <td><input type="number" id="modal_cie2_${sub.subject_code}" value="${sub.cie2 ?? 0}" style="width:55px; text-align:center;"></td>
-                        <td><input type="number" id="modal_cie3_${sub.subject_code}" value="${sub.cie3 ?? 0}" style="width:55px; text-align:center;"></td>
-                        <td><input type="number" id="modal_see_${sub.subject_code}" value="${sub.see ?? 0}" style="width:65px; text-align:center;" placeholder="GP"></td>
-                        <td><button onclick="saveModalSubjectMarks('${data.student.usn}', '${sub.subject_code}', ${userSemester})" class="btn btn-blue" style="padding:6px 14px; font-size:11px;">💾 Save</button></td>
+                        <td><input type="number" id="modal_cie1_${cleanSubCode}" value="${sub.cie1 ?? 0}" style="width:55px; text-align:center;"></td>
+                        <td><input type="number" id="modal_cie2_${cleanSubCode}" value="${sub.cie2 ?? 0}" style="width:55px; text-align:center;"></td>
+                        <td><input type="number" id="modal_cie3_${cleanSubCode}" value="${sub.cie3 ?? 0}" style="width:55px; text-align:center;"></td>
+                        <td><input type="number" id="modal_see_${cleanSubCode}" value="${sub.see ?? 0}" style="width:65px; text-align:center;" placeholder="GP"></td>
+                        <td><button onclick="saveModalSubjectMarks('${data.student.usn}', '${cleanSubCode}', ${userSemester})" class="btn btn-blue" style="padding:6px 14px; font-size:11px;">💾 Save</button></td>
                     `;
                     tbody.appendChild(tr);
                 });
@@ -958,16 +997,17 @@
         }
 
         async function saveModalSubjectMarks(studentUsn, subjectCode, semNumber) {
-            const cie1 = document.getElementById(`modal_cie1_${subjectCode}`)?.value || 0;
-            const cie2 = document.getElementById(`modal_cie2_${subjectCode}`)?.value || 0;
-            const cie3 = document.getElementById(`modal_cie3_${subjectCode}`)?.value || 0;
-            const see = document.getElementById(`modal_see_${subjectCode}`)?.value || 0;
+            const cleanSub = (subjectCode || '').trim();
+            const cie1 = document.getElementById(`modal_cie1_${cleanSub}`)?.value || 0;
+            const cie2 = document.getElementById(`modal_cie2_${cleanSub}`)?.value || 0;
+            const cie3 = document.getElementById(`modal_cie3_${cleanSub}`)?.value || 0;
+            const see = document.getElementById(`modal_see_${cleanSub}`)?.value || 0;
 
             try {
                 const res = await fetch(`${API_BASE}/api/teacher/update-marks`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ studentUsn, subjectCode, cie1, cie2, cie3, see, teacherId: userUsn, semesterNumber: semNumber, institutionId })
+                    body: JSON.stringify({ studentUsn, subjectCode: cleanSub, cie1, cie2, cie3, see, teacherId: userUsn, semesterNumber: semNumber, institutionId })
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
@@ -981,16 +1021,17 @@
         }
 
         async function saveStudentMarks(studentUsn, subjectCode) {
-            const cie1 = document.getElementById(`cie1_${studentUsn}_${subjectCode}`)?.value || 0;
-            const cie2 = document.getElementById(`cie2_${studentUsn}_${subjectCode}`)?.value || 0;
-            const cie3 = document.getElementById(`cie3_${studentUsn}_${subjectCode}`)?.value || 0;
-            const see = document.getElementById(`see_${studentUsn}_${subjectCode}`)?.value || 0;
+            const cleanSub = (subjectCode || '').trim();
+            const cie1 = document.getElementById(`cie1_${studentUsn}_${cleanSub}`)?.value || 0;
+            const cie2 = document.getElementById(`cie2_${studentUsn}_${cleanSub}`)?.value || 0;
+            const cie3 = document.getElementById(`cie3_${studentUsn}_${cleanSub}`)?.value || 0;
+            const see = document.getElementById(`see_${studentUsn}_${cleanSub}`)?.value || 0;
 
             try {
                 const res = await fetch(`${API_BASE}/api/teacher/update-marks`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ studentUsn, subjectCode, cie1, cie2, cie3, see, teacherId: userUsn, semesterNumber: userSemester, institutionId })
+                    body: JSON.stringify({ studentUsn, subjectCode: cleanSub, cie1, cie2, cie3, see, teacherId: userUsn, semesterNumber: userSemester, institutionId })
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
@@ -1092,9 +1133,9 @@
                 const uniqueSubjects = new Set();
 
                 slots.forEach(slot => {
-                    const subCode = slot.subject_code || slot.subject_name || 'AI';
+                    const subCode = (slot.subject_code || slot.subject_name || 'AI').trim();
                     const semNum = slot.semester_number || slot.semester || 5;
-                    const branch = slot.branch || 'AIML';
+                    const branch = (slot.branch || 'AIML').trim();
                     const dayTime = slot.day_of_week ? `${slot.day_of_week} ${slot.time_slot || ''}` : (slot.time_slot || 'Regular Slot');
                     const optionText = `Sem ${semNum} [${branch}] - ${subCode} (${dayTime})`;
                     
@@ -1110,7 +1151,7 @@
 
                 if (slots.length > 0 && regDropdown && regDropdown.options.length > 1) {
                     regDropdown.selectedIndex = 1;
-                    userSubject = regDropdown.value;
+                    userSubject = (regDropdown.value || '').trim();
                     userSemester = regDropdown.options[regDropdown.selectedIndex].getAttribute('data-semester') || 5;
                     localStorage.setItem('userSubject', userSubject);
                     localStorage.setItem('userSemester', userSemester);
@@ -1125,7 +1166,7 @@
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const selectedOpt = dropdown.options[dropdown.selectedIndex];
             
-            userSubject = selectedOpt.getAttribute('data-subject') || '';
+            userSubject = (selectedOpt.getAttribute('data-subject') || '').trim();
             userSemester = selectedOpt.getAttribute('data-semester') || 5;
             
             localStorage.setItem('userSubject', userSubject);
@@ -1159,7 +1200,7 @@
             const regDropdown = document.getElementById('registerSubjectDropdown');
             const selectedOpt = regDropdown.options[regDropdown.selectedIndex];
             if (regDropdown.value) {
-                userSubject = regDropdown.value;
+                userSubject = (regDropdown.value || '').trim();
                 userSemester = selectedOpt.getAttribute('data-semester') || userSemester;
                 localStorage.setItem('userSubject', userSubject);
                 localStorage.setItem('userSemester', userSemester);
@@ -1186,7 +1227,7 @@
             } else if (targetView === 'marks') {
                 document.getElementById('btn_viewMarks')?.classList.add('active');
                 if (document.getElementById('wrapper_marksLedger')) document.getElementById('wrapper_marksLedger').style.display = 'block';
-                fetchStudentMarksRoster();
+                onFilterBranchChanged();
             } else if (targetView === 'mentorship') {
                 document.getElementById('btn_viewMentorship')?.classList.add('active');
                 if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'block';
@@ -1198,21 +1239,146 @@
             }
         }
 
+        // ==========================================================================
+        // 📝 MULTI-TIER EXCEL-LIKE BATCH MARKS ENGINE
+        // ==========================================================================
+        async function onFilterSemesterChanged() {
+            await onFilterBranchChanged();
+        }
+
+        async function onFilterBranchChanged() {
+            const sem = document.getElementById('filterSemesterSelect')?.value;
+            const branch = document.getElementById('filterBranchSelect')?.value;
+            const subDropdown = document.getElementById('filterSubjectSelect');
+
+            if (!subDropdown) return;
+            if (!sem || !branch) {
+                subDropdown.innerHTML = `<option value="">-- Choose Subject --</option>`;
+                return;
+            }
+
+            subDropdown.innerHTML = `<option value="">-- Loading Subjects... --</option>`;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/teacher-mapped-slots?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
+                const data = await res.json();
+                const slots = Array.isArray(data) ? data : (data.slots || data.data || []);
+
+                subDropdown.innerHTML = `<option value="">-- Choose Subject --</option>`;
+                const addedSubs = new Set();
+
+                slots.forEach(slot => {
+                    const slotSem = String(slot.semester_number || slot.semester);
+                    const slotBranch = (slot.branch || '').toUpperCase();
+                    
+                    if (slotSem === String(sem) && (slotBranch === branch.toUpperCase() || ['MATHS', 'PHYSICS', 'CHEM', 'BIOLOGY'].includes(branch.toUpperCase()))) {
+                        const subCode = (slot.subject_code || slot.subject_name || '').trim();
+                        if (subCode && !addedSubs.has(subCode)) {
+                            addedSubs.add(subCode);
+                            subDropdown.innerHTML += `<option value="${subCode}">${subCode} - ${(slot.subject_name || '').trim()}</option>`;
+                        }
+                    }
+                });
+
+                if (addedSubs.size === 0) {
+                    subDropdown.innerHTML += `<option value="GENERAL_MOD">General Evaluation Module</option>`;
+                }
+            } catch (err) {
+                console.error("Subject filter error:", err);
+                subDropdown.innerHTML = `<option value="">Error loading subjects</option>`;
+            }
+        }
+
+        async function loadMultiTierBatchGrid() {
+            const sem = document.getElementById('filterSemesterSelect')?.value;
+            const branch = document.getElementById('filterBranchSelect')?.value;
+            const subjectCode = document.getElementById('filterSubjectSelect')?.value;
+            const tbody = document.getElementById('multiTierBatchTableBody');
+
+            if (!tbody) return;
+            if (!sem || !branch || !subjectCode) {
+                firePremiumToastAlert("⚠️ Please select Semester, Branch, and Subject first.", "var(--accent-red)");
+                return;
+            }
+
+            const cleanSub = subjectCode.trim();
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Loading student roster for ${branch} Sem ${sem} (${cleanSub})...</td></tr>`;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/batch-marks-roster?branch=${encodeURIComponent(branch)}&semester=${encodeURIComponent(sem)}&subjectCode=${encodeURIComponent(cleanSub)}&institutionId=${institutionId}`);
+                const data = await res.json();
+
+                if (!res.ok || !data.success || !data.students || data.students.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: var(--accent-red);">No students found registered for ${branch} Semester ${sem}.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = "";
+                data.students.forEach(st => {
+                    const cleanUsn = (st.usn || '').trim();
+                    const cleanName = (st.name || '').trim();
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="position: sticky; left: 0; background: #ffffff; font-weight: 700;"><code>${cleanUsn}</code></td>
+                            <td style="position: sticky; left: 120px; background: #ffffff; font-weight: 700;">${cleanName}</td>
+                            <td style="text-align: center;"><input type="number" class="multi-input-${cleanUsn}" data-usn="${cleanUsn}" data-field="cie1" value="${st.cie1 ?? 0}" style="width: 60px; text-align: center; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1;"></td>
+                            <td style="text-align: center;"><input type="number" class="multi-input-${cleanUsn}" data-usn="${cleanUsn}" data-field="cie2" value="${st.cie2 ?? 0}" style="width: 60px; text-align: center; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1;"></td>
+                            <td style="text-align: center;"><input type="number" class="multi-input-${cleanUsn}" data-usn="${cleanUsn}" data-field="cie3" value="${st.cie3 ?? 0}" style="width: 60px; text-align: center; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1;"></td>
+                            <td style="text-align: center;"><input type="number" class="multi-input-${cleanUsn}" data-usn="${cleanUsn}" data-field="see" value="${st.see ?? 0}" style="width: 70px; text-align: center; padding: 6px; border-radius: 6px; border: 1px solid #cbd5e1;" placeholder="GP"></td>
+                            <td style="text-align: center;"><button onclick="saveMultiTierRow('${cleanUsn}', '${cleanSub}', ${sem})" class="btn btn-blue" style="padding: 6px 12px; font-size: 11px;">💾 Save</button></td>
+                        </tr>
+                    `;
+                });
+                firePremiumToastAlert(`📊 Loaded ${data.students.length} students for ${cleanSub}!`);
+            } catch (err) {
+                console.error("Multi-tier load error:", err);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: red;">Network error loading student roster.</td></tr>`;
+            }
+        }
+
+        async function saveMultiTierRow(usn, subjectCode, semester) {
+            const cleanUsn = (usn || '').trim();
+            const cleanSub = (subjectCode || '').trim();
+            const inputs = document.querySelectorAll(`.multi-input-${cleanUsn}`);
+            let payload = { studentUsn: cleanUsn, subjectCode: cleanSub, semesterNumber: semester, teacherId: userUsn, institutionId };
+
+            inputs.forEach(input => {
+                payload[input.getAttribute('data-field')] = input.value;
+            });
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/update-marks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    firePremiumToastAlert(`✅ Saved evaluation for ${cleanUsn}!`);
+                } else {
+                    firePremiumToastAlert(`⛔ ${data.message || 'Failed'}`, "var(--accent-red)");
+                }
+            } catch (err) {
+                firePremiumToastAlert("❌ Network error.", "var(--accent-red)");
+            }
+        }
+
         async function loadAttendanceRegisterMatrix() {
             const head = document.getElementById('registerTableHead');
             const body = document.getElementById('registerTableBody');
             if (!head || !body) return;
 
-            if (!userSubject) {
+            const cleanSub = (userSubject || '').trim();
+            if (!cleanSub) {
                 body.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--accent-red);">⚠️ Please choose a subject from the dropdown above or select a class slot.</td></tr>`;
                 return;
             }
 
-            head.innerHTML = `<tr><th style="position:sticky; left:0; background:#f1f5f9; z-index:2;">USN / ID</th><th style="position:sticky; left:120px; background:#f1f5f9; z-index:2;">Student Name</th><th>Loading register matrix for ${userSubject}...</th></tr>`;
+            head.innerHTML = `<tr><th style="position:sticky; left:0; background:#f1f5f9; z-index:2;">USN / ID</th><th style="position:sticky; left:120px; background:#f1f5f9; z-index:2;">Student Name</th><th>Loading register matrix for ${cleanSub}...</th></tr>`;
             body.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Querying database records...</td></tr>";
 
             try {
-                const res = await fetch(`${API_BASE}/api/teacher/attendance-register?teacherId=${encodeURIComponent(userUsn)}&subjectCode=${encodeURIComponent(userSubject)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/teacher/attendance-register?teacherId=${encodeURIComponent(userUsn)}&subjectCode=${encodeURIComponent(cleanSub)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
                 const data = await res.json();
 
                 if (!res.ok || !data.success) {
@@ -1224,7 +1390,7 @@
 
                 let headerHTML = `<tr><th style="position:sticky; left:0; background:#f1f5f9; z-index:2; min-width:130px;">USN / ID</th><th style="position:sticky; left:130px; background:#f1f5f9; z-index:2; min-width:180px;">Student Name</th>`;
                 if (!dates || dates.length === 0) {
-                    headerHTML += `<th style="text-align:center;">No Class Sessions Conducted Yet for ${userSubject}</th></tr>`;
+                    headerHTML += `<th style="text-align:center;">No Class Sessions Conducted Yet for ${cleanSub}</th></tr>`;
                 } else {
                     dates.forEach(d => {
                         headerHTML += `<th style="text-align:center; min-width:100px;">📅 ${d}</th>`;
@@ -1265,9 +1431,6 @@
             }
         }
 
-        // ==========================================================================
-        // 📅 STUDENT PERSONAL ATTENDANCE MATRIX (Subjects Across Top, Dates Downwards)
-        // ==========================================================================
         async function loadStudentPersonalAttendanceMatrix() {
             const head = document.getElementById('studentMatrixHead');
             const body = document.getElementById('studentMatrixBody');
@@ -1348,8 +1511,10 @@
             let searchFilter = filterInput ? filterInput.value.trim() : '';
             if (!body) return;
 
+            const cleanSubFilter = (userSubject || searchFilter || '').trim();
+
             try {
-                const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?teacherId=${encodeURIComponent(userUsn)}&semesterNumber=${userSemester}&search=${encodeURIComponent(searchFilter)}&institutionId=${institutionId}`);
+                const response = await fetch(`${API_BASE}/api/teacher/filtered-marks-roster?teacherId=${encodeURIComponent(userUsn)}&semesterNumber=${userSemester}&subjectCode=${encodeURIComponent(cleanSubFilter)}&search=${encodeURIComponent(searchFilter)}&institutionId=${institutionId}`);
                 const data = await response.json();
                 body.innerHTML = "";
 
@@ -1410,10 +1575,12 @@
                     document.getElementById('qrContainer').innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${currentGeneratedSessionToken}" alt="QR Matrix" />`;
                 }
 
+                const cleanSubjectName = (userSubject || 'AI').trim();
+
                 await fetch(`${API_BASE}/api/auth/create-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionCode: currentGeneratedSessionToken, subjectName: userSubject, institutionId: institutionId })
+                    body: JSON.stringify({ sessionCode: currentGeneratedSessionToken, subjectName: cleanSubjectName, institutionId: institutionId })
                 });
 
                 loadAttendance();
@@ -1441,10 +1608,11 @@
             fetchTeacherSessionRoster();
 
             try {
+                const cleanSub = (userSubject || '').trim();
                 fetch(`${API_BASE}/api/auth/end-session`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ sessionCode: currentGeneratedSessionToken, subjectName: userSubject, institutionId: institutionId })
+                    body: JSON.stringify({ sessionCode: currentGeneratedSessionToken, subjectName: cleanSub, institutionId: institutionId })
                 }).catch(e => console.error(e));
             } catch (e) { console.error(e); }
         }
@@ -1509,7 +1677,8 @@
                     if(!scannedStudentUsnsCache.includes(row.student_id.toUpperCase())) {
                         scannedStudentUsnsCache.push(row.student_id.toUpperCase());
                     }
-                    tableBody.innerHTML += `<tr><td><strong>${row.student_full_name || 'Verified'}</strong></td><td><code>${row.student_id}</code></td><td>${row.subject_name}</td><td><code>${row.session_code}</code></td><td>${row.distance}</td><td><span class="status-badge">VERIFIED ✓</span></td><td>${new Date(row.created_at).toLocaleTimeString()}</td></tr>`;
+                    const cleanSubRow = (row.subject_name || '').trim();
+                    tableBody.innerHTML += `<tr><td><strong>${row.student_full_name || 'Verified'}</strong></td><td><code>${row.student_id}</code></td><td>${cleanSubRow}</td><td><code>${row.session_code}</code></td><td>${row.distance}</td><td><span class="status-badge">VERIFIED ✓</span></td><td>${new Date(row.created_at).toLocaleTimeString()}</td></tr>`;
                 });
             } catch (e) { console.error(e); }
         }
@@ -1517,7 +1686,7 @@
         async function submitManualAttendance() {
             const studentId = document.getElementById('manualStudentUsn')?.value.trim();
             const sessionCode = currentGeneratedSessionToken;
-            const subjectName = userSubject || 'AI';
+            const subjectName = (userSubject || 'AI').trim();
 
             if (!studentId || !sessionCode) {
                 alert("Please ensure an active session is running and enter a valid Student USN.");
@@ -1555,7 +1724,8 @@
             const dropdown = document.getElementById('historySessionDropdown');
             if(!dropdown) return;
             try {
-                const res = await fetch(`${API_BASE}/api/auth/distinct-sessions?subject=${encodeURIComponent(userSubject)}&institutionId=${encodeURIComponent(institutionId)}`);
+                const cleanSub = (userSubject || '').trim();
+                const res = await fetch(`${API_BASE}/api/auth/distinct-sessions?subject=${encodeURIComponent(cleanSub)}&institutionId=${encodeURIComponent(institutionId)}`);
                 const sessions = await res.json();
                 
                 dropdown.innerHTML = "<option value=''>-- Select Past Class Date --</option>";
@@ -1569,7 +1739,7 @@
                             const formattedDate = s.created_at 
                                 ? new Date(s.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
                                 : s.session_code;
-                            dropdown.innerHTML += `<option value="${s.session_code}">📅 ${formattedDate} [${s.subject_name || userSubject}]</option>`;
+                            dropdown.innerHTML += `<option value="${s.session_code}">📅 ${formattedDate} [${(s.subject_name || cleanSub).trim()}]</option>`;
                         }
                     });
                 }
@@ -1693,6 +1863,7 @@
                 navigator.geolocation.getCurrentPosition(async (position) => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
+                    const cleanSubScan = (userSubject || '').trim();
 
                     try {
                         const res = await fetch(`${API_BASE}/api/auth/submit-attendance`, {
@@ -1700,7 +1871,7 @@
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({ 
                                 studentId: userUsn, 
-                                subjectName: userSubject, 
+                                subjectName: cleanSubScan, 
                                 sessionCode: decodedText, 
                                 distance: "0.14", 
                                 latitude: lat, 
@@ -1856,7 +2027,7 @@
                 const card = document.createElement('div');
                 card.className = "subject-card";
                 card.innerHTML = `
-                    <div><strong>${sub.subject_code || 'SUB'}</strong> - ${sub.subject_name || sub.subject || 'Course'}</div>
+                    <div><strong>${(sub.subject_code || 'SUB').trim()}</strong> - ${(sub.subject_name || sub.subject || 'Course').trim()}</div>
                     <div>Attendance: <strong>${ratio}%</strong></div>
                     <div class="marks-summary-subdeck">
                         <div><div class="marks-cell-title">CIE-1</div><div class="marks-cell-value">${sub.cie1 ?? 0}/25</div></div>
@@ -1896,7 +2067,7 @@
             filtered.forEach(sub => {
                 const ratio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 90;
                 const cie1Val = parseFloat(sub.cie1) || 0;
-                barLabels.push(sub.subject_code || 'SUB');
+                barLabels.push((sub.subject_code || 'SUB').trim());
                 barValuesCIE1.push(cie1Val);
                 scatterPointsArray.push({ x: ratio, y: cie1Val });
             });
@@ -1990,7 +2161,7 @@
                 }
 
                 activeMessages.forEach(msg => {
-                    feed.innerHTML += `<div style="background:#f8fafc; border-left:4px solid #1e40af; padding:8px 12px; border-radius:6px; font-size:12px;"><strong>${msg.title || 'ALERT'}:</strong> ${msg.message}</div>`;
+                    feed.innerHTML += `<div style="background:#f8fafc; border-left:4px solid #1e40af; padding:8px 12px; border-radius:6px; font-size:12px;"><strong>${(msg.title || 'ALERT').trim()}:</strong> ${(msg.message || '').trim()}</div>`;
                 });
             } catch (e) { console.error(e); }
         }
@@ -2012,10 +2183,10 @@
                     feed.innerHTML += `
                         <div style="background: #f1f5f9; border-left: 4px solid #64748b; padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 6px;">
                             <div style="display: flex; justify-content: space-between; color: #475569; font-size: 10px; font-weight: 700; margin-bottom: 2px;">
-                                <span>${msg.title || 'ARCHIVED LOG'}</span>
+                                <span>${(msg.title || 'ARCHIVED LOG').trim()}</span>
                                 <span>${dateFormatted}</span>
                             </div>
-                            <div style="color: #0f172a; font-weight: 500;">${msg.message}</div>
+                            <div style="color: #0f172a; font-weight: 500;">${(msg.message || '').trim()}</div>
                         </div>
                     `;
                 });
@@ -2030,7 +2201,7 @@
                 const directMsgs = await res.json();
                 if (directMsgs && directMsgs.length > 0) {
                     directMsgs.forEach(m => {
-                        feed.innerHTML += `<div style="background: #f8fafc; border-left: 4px solid var(--primary-blue); padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-top: 6px;"><strong>💬 Direct Message from ${m.sender_name} (${m.sender_role.toUpperCase()}):</strong> ${m.message_text}</div>`;
+                        feed.innerHTML += `<div style="background: #f8fafc; border-left: 4px solid var(--primary-blue); padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-top: 6px;"><strong>💬 Direct Message from ${(m.sender_name || '').trim()} (${(m.sender_role || '').toUpperCase()}):</strong> ${(m.message_text || '').trim()}</div>`;
                     });
                 }
             } catch (e) { console.error(e); }
