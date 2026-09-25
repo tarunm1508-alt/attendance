@@ -20,56 +20,44 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         body { background-color: var(--bg-canvas); color: var(--text-dark); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; }
-
         .login-container { background: var(--surface-card); border: 1px solid var(--border-clean); padding: 36px 24px; border-radius: 24px; box-shadow: var(--shadow-mobile); width: 100%; max-width: 400px; text-align: center; }
         .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 700; margin-bottom: 16px; text-align: left; width: 100%; }
-
         .auth-card { background: #ffffff; border: 1px solid var(--border-clean); border-radius: 20px; padding: 30px 20px; text-align: center; box-shadow: var(--shadow-mobile); margin-top: 10px; display: none; }
         .auth-icon { font-size: 48px; margin-bottom: 12px; }
         .auth-title { font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
         .auth-subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; line-height: 1.5; font-weight: 500; }
-
         .form-group { margin-bottom: 18px; text-align: left; }
         label { display: block; margin-bottom: 6px; color: var(--text-labels); font-size: 11px; font-weight: 700; text-transform: uppercase; }
         input { width: 100%; padding: 14px; background: #ffffff; border: 1px solid var(--border-clean); border-radius: 12px; font-size: 14px; outline: none; }
         input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px var(--primary-glow); }
-
         /* 👁️ Password toggle wrapper styling */
         .password-field-wrapper { position: relative; width: 100%; }
         .password-field-wrapper input { padding-right: 45px; }
         .password-toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-muted); padding: 4px; }
-
         .btn { width: 100%; padding: 14px; background: var(--primary-blue); border: none; border-radius: 12px; color: #ffffff; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         .btn:hover { background: var(--primary-hover); }
-
         .footer-links { margin-top: 20px; font-size: 13px; color: var(--text-muted); }
         .footer-links a { color: var(--primary-blue); text-decoration: none; font-weight: 700; }
         .alert { padding: 12px 14px; border-radius: 12px; margin-bottom: 18px; font-size: 13px; display: none; text-align: center; background-color: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; font-weight: 600; line-height: 1.4; }
-
         /* Forgot password helper alignment */
         .forgot-pass-row { display: flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 16px; }
         .forgot-pass-row a { font-size: 12px; color: var(--primary-blue); text-decoration: none; font-weight: 700; }
     </style>
 </head>
 <body>
-
     <div class="login-container">
         <div>
             <a href="index.html" class="back-link">⬅️ Back to Role Selection</a>
         </div>
-
         <h2 id="portalTitle">Portal Login</h2>
         <p class="subtitle">Dr. AIT Academic Portal Matrix</p>
-
         <div id="alertBox" class="alert"></div>
-
         <!-- Credentials Input Form -->
         <form id="credentialsForm" autocomplete="off" onsubmit="handleFormSubmit(event)">
             <div class="form-group">
                 <label id="usernameLabel" for="username">USN / Username ID</label>
                 <input type="text" id="username" placeholder="Enter ID or USN" required autocomplete="off">
             </div>
-
             <div class="form-group">
                 <label for="password">Account Password</label>
                 <div class="password-field-wrapper">
@@ -77,39 +65,31 @@
                     <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password', this)" title="Show/Hide Password">👁️</button>
                 </div>
             </div>
-
             <div class="forgot-pass-row">
                 <a href="#" onclick="openForgotPasswordModal(event)">Forgot Password?</a>
             </div>
-
             <div class="form-group" id="parentLinkGroup" style="display: none;">
                 <label for="childUsn">Student USN (Link to Child)</label>
                 <input type="text" id="childUsn" placeholder="Enter child's USN" autocomplete="off">
             </div>
-
             <button type="submit" class="btn" id="continueBtn">Continue</button>
         </form>
-
         <!-- Biometric Verification Card (Students Only) -->
         <div id="biometricCardSection" class="auth-card">
             <div class="auth-icon">🖐️</div>
             <div class="auth-title">Fingerprint Verification Required</div>
             <div class="auth-subtitle">Please verify your physical device fingerprint sensor to securely unlock your portal session.</div>
-
             <button class="btn" type="button" onclick="triggerBiometricAndLogin()">Verify Fingerprint Pass</button>
         </div>
-
         <div class="footer-links">
             Don't have an account? <a href="signup.html">Sign Up</a>
         </div>
     </div>
-
     <!-- 🔑 FORGOT PASSWORD RECOVERY MODAL -->
     <div id="forgotPasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 100000; align-items: center; justify-content: center; padding: 20px;">
         <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: 22px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); text-align: left;">
             <h3 style="font-size: 18px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">🔑 Reset Portal Password</h3>
             <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Enter your USN/ID to update your login credentials.</p>
-
             <div style="display: flex; flex-direction: column; gap: 14px;">
                 <div>
                     <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-labels); display: block; margin-bottom: 6px;">USN / Username</label>
@@ -127,7 +107,6 @@
             </div>
         </div>
     </div>
-
     <script>
         let API_BASE = window.location.origin;
         if (API_BASE.includes("-5501.")) {
@@ -137,230 +116,504 @@
         } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
             API_BASE = "https://dr-ait-portal-backend.onrender.com";
         }
-
         let activePortalRole = 'student';
+
         let cachedUsn = '';
+
         let cachedPassword = '';
+
         let cachedChildUsn = '';
 
+
+
         document.addEventListener("DOMContentLoaded", () => {
+
             try {
+
                 const urlParams = new URLSearchParams(window.location.search);
+
                 activePortalRole = (urlParams.get('role') || 'student').toLowerCase().trim();
 
+
+
                 const titleHeader = document.getElementById('portalTitle');
+
                 const usernameLabel = document.getElementById('usernameLabel');
+
                 const usernameInput = document.getElementById('username');
+
                 const parentLinkGroup = document.getElementById('parentLinkGroup');
+
                 const continueBtn = document.getElementById('continueBtn');
 
+
+
                 if (activePortalRole === 'teacher') {
+
                     titleHeader.innerText = "Teacher Login";
+
                     usernameLabel.innerText = "Teacher ID / Employee ID";
+
                     usernameInput.placeholder = "Enter Teacher Employee ID";
+
                     parentLinkGroup.style.display = 'none';
+
                     continueBtn.innerText = "Authenticate & Unlock";
+
                 } else if (activePortalRole === 'hod') {
+
                     titleHeader.innerText = "HOD Executive Login";
+
                     usernameLabel.innerText = "HOD Employee ID / Username";
+
                     usernameInput.placeholder = "Enter HOD Employee ID";
+
                     parentLinkGroup.style.display = 'none';
+
                     continueBtn.innerText = "Authenticate & Unlock";
+
                 } else if (activePortalRole === 'parent') {
+
                     titleHeader.innerText = "Parent Login";
+
                     usernameLabel.innerText = "Parent Username / ID";
+
                     usernameInput.placeholder = "Enter Parent Account ID";
+
                     parentLinkGroup.style.display = 'block';
+
                     continueBtn.innerText = "Authenticate & Unlock";
+
                 } else {
+
                     titleHeader.innerText = "Student Fingerprint Login";
+
                     usernameLabel.innerText = "Student USN";
+
                     usernameInput.placeholder = "Enter College USN";
+
                     parentLinkGroup.style.display = 'none';
+
                     continueBtn.innerText = "Continue to Verification";
+
                     activePortalRole = 'student';
+
                 }
+
+
 
                 getOrCreateDeviceFingerprint();
+
             } catch (e) {
+
                 console.error("Init error:", e);
+
             }
+
         });
 
+
+
         // 👁️ Show / Hide password toggle handler
+
         function togglePasswordVisibility(fieldId, toggleBtn) {
+
             const field = document.getElementById(fieldId);
+
             if (!field) return;
+
             if (field.type === "password") {
+
                 field.type = "text";
+
                 toggleBtn.innerText = "🙈";
+
             } else {
+
                 field.type = "password";
+
                 toggleBtn.innerText = "👁️";
+
             }
+
         }
+
+
 
         // 🔒 PERSISTENT DEVICE FINGERPRINT
+
         function getOrCreateDeviceFingerprint() {
+
             let deviceId = localStorage.getItem("dr_ait_persistent_device_id");
-            
-            if (!deviceId) {
-                const cookieMatch = document.cookie.match(/(^|;) ?deviceFingerprint=([^;]*)(;|$)/);
-                if (cookieMatch) {
-                    deviceId = decodeURIComponent(cookieMatch[2]);
-                    localStorage.setItem("dr_ait_persistent_device_id", deviceId);
-                }
-            }
+
+           
 
             if (!deviceId) {
-                deviceId = "STRICT_TOKEN_" + (crypto.randomUUID ? crypto.randomUUID() : ('id_' + Math.random().toString(36).substring(2) + Date.now() + Math.random().toString(36).substring(2)));
-                localStorage.setItem("dr_ait_persistent_device_id", deviceId);
+
+                const cookieMatch = document.cookie.match(/(^|;) ?deviceFingerprint=([^;]*)(;|$)/);
+
+                if (cookieMatch) {
+
+                    deviceId = decodeURIComponent(cookieMatch[2]);
+
+                    localStorage.setItem("dr_ait_persistent_device_id", deviceId);
+
+                }
+
             }
+
+
+
+            if (!deviceId) {
+
+                deviceId = "STRICT_TOKEN_" + (crypto.randomUUID ? crypto.randomUUID() : ('id_' + Math.random().toString(36).substring(2) + Date.now() + Math.random().toString(36).substring(2)));
+
+                localStorage.setItem("dr_ait_persistent_device_id", deviceId);
+
+            }
+
+
 
             document.cookie = `deviceFingerprint=${deviceId}; path=/; max-age=31536000; SameSite=Strict`;
+
             return deviceId;
+
         }
+
+
 
         function openForgotPasswordModal(e) {
+
             e.preventDefault();
+
             document.getElementById('forgotPasswordModal').style.display = 'flex';
+
         }
+
+
 
         function closeForgotPasswordModal() {
+
             document.getElementById('forgotPasswordModal').style.display = 'none';
+
         }
+
+
 
         async function executePasswordReset() {
+
             const usn = document.getElementById('resetUsnInput').value.trim();
+
             const newPassword = document.getElementById('resetNewPasswordInput').value.trim();
 
+
+
             if (!usn || !newPassword) {
+
                 alert("Please fill in both fields.");
+
                 return;
+
             }
+
+
 
             try {
+
                 const res = await fetch(`${API_BASE}/api/auth/reset-password-confirm`, {
+
                     method: 'POST',
+
                     headers: { 'Content-Type': 'application/json' },
+
                     body: JSON.stringify({ usn, newPassword, institutionId: 'DR_AIT' })
+
                 });
+
                 const data = await res.json();
+
                 if (res.ok && data.success) {
+
                     alert("✅ " + data.message);
+
                     closeForgotPasswordModal();
+
                     document.getElementById('resetUsnInput').value = '';
+
                     document.getElementById('resetNewPasswordInput').value = '';
+
                 } else {
+
                     alert("❌ " + (data.message || "Failed to reset password."));
+
                 }
+
             } catch (e) {
+
                 alert("❌ Network error connecting to server.");
+
             }
+
         }
 
+
+
         async function handleFormSubmit(event) {
+
             event.preventDefault();
+
             const alertBox = document.getElementById('alertBox');
+
             alertBox.style.display = 'none';
 
+
+
             cachedUsn = document.getElementById('username').value.trim();
+
             cachedPassword = document.getElementById('password').value;
+
             cachedChildUsn = document.getElementById('childUsn') ? document.getElementById('childUsn').value.trim() : '';
+
+
 
             if (!cachedUsn || !cachedPassword) return;
 
+
+
             if (activePortalRole === 'parent' && !cachedChildUsn) {
+
                 alertBox.innerText = "Please enter the linked Student USN.";
+
                 alertBox.style.display = 'block';
+
                 return;
+
             }
+
+
 
             if (activePortalRole !== 'student') {
+
                 sendLoginRequest();
+
                 return;
+
             }
+
+
 
             document.getElementById('credentialsForm').style.display = 'none';
+
             document.getElementById('biometricCardSection').style.display = 'block';
+
         }
 
+
+
         async function triggerBiometricAndLogin() {
+
             const alertBox = document.getElementById('alertBox');
+
             alertBox.style.display = 'none';
 
+
+
+            let fingerprintVerified = false;
+
+
+
             try {
-                const confirmFingerprint = window.confirm("👆 Dr. AIT Fingerprint Security Matrix:\n\nPlace your finger on the device sensor and tap OK to verify your session.");
-                if (!confirmFingerprint) {
-                    throw new Error("Fingerprint verification declined by user.");
+
+                if (window.PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
+
+                    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+
+                    if (available) {
+
+                        try {
+
+                            const challenge = new Uint8Array(32);
+
+                            window.crypto.getRandomValues(challenge);
+
+
+
+                            await navigator.credentials.get({
+
+                                publicKey: {
+
+                                    challenge: challenge,
+
+                                    timeout: 30000,
+
+                                    userVerification: "required"
+
+                                }
+
+                            });
+
+                            fingerprintVerified = true;
+
+                        } catch (webAuthnErr) {
+
+                            console.warn("Hardware biometric prompt unavailable or skipped.");
+
+                        }
+
+                    }
+
                 }
+
+
+
+                if (!fingerprintVerified) {
+
+                    const confirmFingerprint = window.confirm("👆 Dr. AIT Fingerprint Security Matrix:\n\nPlace your finger on the device sensor and tap OK to verify your session.");
+
+                    if (!confirmFingerprint) {
+
+                        throw new Error("Fingerprint verification declined by user.");
+
+                    }
+
+                }
+
+
 
                 sendLoginRequest();
 
+
+
             } catch (err) {
+
                 console.warn("Fingerprint scan canceled or failed:", err);
 
+
+
                 document.getElementById('biometricCardSection').style.display = 'none';
+
                 document.getElementById('credentialsForm').style.display = 'block';
 
+
+
                 alertBox.innerText = "❌ Fingerprint verification canceled or failed. Access blocked.";
+
                 alertBox.style.display = 'block';
+
             }
+
         }
 
+
+
         async function sendLoginRequest() {
+
             const alertBox = document.getElementById('alertBox');
+
             const deviceFingerprint = getOrCreateDeviceFingerprint();
 
+
+
             try {
+
                 const response = await fetch(`${API_BASE}/api/auth/combined-login`, {
+
                     method: 'POST',
+
                     headers: { 'Content-Type': 'application/json' },
+
                     body: JSON.stringify({
+
                         usn: cachedUsn,
+
                         password: cachedPassword,
+
                         role: activePortalRole,
+
                         deviceFingerprint: deviceFingerprint,
+
                         institutionId: 'DR_AIT'
+
                     })
+
                 });
+
+
 
                 const data = await response.json();
 
+
+
                 if (response.ok && data.success) {
+
                     localStorage.setItem('userUsn', data.usn || cachedUsn);
+
                     localStorage.setItem('userName', data.name || '');
+
                     localStorage.setItem('userRole', data.role || activePortalRole);
+
                     localStorage.setItem('userSubject', data.subjectName || '');
+
                     localStorage.setItem('userBranch', data.branch || 'AIML');
 
+
+
                     if (activePortalRole === 'parent') {
+
                         localStorage.setItem('childUsn', cachedChildUsn);
+
                     }
+
+
 
                     if (data.role === 'hod' || activePortalRole === 'hod') {
+
                         window.location.href = "hod_dashboard.html";
+
                     } else if (data.role === 'parent') {
+
                         window.location.href = "parent.html";
+
                     } else {
+
                         window.location.href = "dashboard.html";
+
                     }
+
                 } else {
+
                     document.getElementById('biometricCardSection').style.display = 'none';
+
                     document.getElementById('credentialsForm').style.display = 'block';
 
+
+
                     alertBox.innerText = data.message || "Invalid credentials.";
+
                     alertBox.style.display = 'block';
+
                 }
+
             } catch (err) {
+
                 console.error("Network error:", err);
+
                 document.getElementById('biometricCardSection').style.display = 'none';
+
                 document.getElementById('credentialsForm').style.display = 'block';
 
+
+
                 alertBox.innerText = "Connection lost to API server.";
+
                 alertBox.style.display = 'block';
+
             }
+
         }
+
     </script>
+
 </body>
-</html>
+
+</html> 
