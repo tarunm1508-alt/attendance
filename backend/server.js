@@ -1311,7 +1311,7 @@ app.get('/api/parent/profile', async (req, res, next) => {
 // 8. BASE ROUTE & GLOBAL ERROR HANDLER
 // ==========================================================================
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "frontend", "index.html"));
+    res.sendFile(path.resolve(__dirname, "frontend", "index.html"));
 });
 
 app.use((err, req, res, next) => {
