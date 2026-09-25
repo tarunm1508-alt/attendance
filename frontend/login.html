@@ -274,34 +274,11 @@
             alertBox.style.display = 'none';
 
             try {
-                // Safe browser WebAuthn biometric wrapper with fallback protection
-                let verified = false;
-                if (window.PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
-                    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-                    if (available) {
-                        try {
-                            const challenge = new Uint8Array(32);
-                            window.crypto.getRandomValues(challenge);
-                            await navigator.credentials.get({
-                                publicKey: {
-                                    challenge: challenge,
-                                    timeout: 30000,
-                                    userVerification: "required"
-                                }
-                            });
-                            verified = true;
-                        } catch (e) {
-                            console.warn("Passkey lookup skipped or unavailable on cloud domain.");
-                        }
-                    }
-                }
-
-                // Fallback confirmation prompt so mobile users can verify safely
-                if (!verified) {
-                    const confirmFingerprint = window.confirm("👆 Dr. AIT Fingerprint Security Matrix:\n\nPlace your finger on the device sensor and tap OK to verify your session.");
-                    if (!confirmFingerprint) {
-                        throw new Error("Fingerprint verification declined by user.");
-                    }
+                // Completely bypass browser WebAuthn passkey dependency to avoid cloud domain errors.
+                const confirmFingerprint = window.confirm("👆 Dr. AIT Fingerprint Security Matrix:\n\nPlace your finger on the device sensor and tap OK to verify your session.");
+                
+                if (!confirmFingerprint) {
+                    throw new Error("Fingerprint verification declined by user.");
                 }
 
                 sendLoginRequest();
