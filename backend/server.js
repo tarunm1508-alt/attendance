@@ -138,20 +138,24 @@ app.get('/api/auth/student-attendance-ledger', async (req, res) => {
             conductedSessions = timetableRes.rows;
         }
 
-        // 2. Fetch all attendance records scanned by this specific student
+        // 2. Fetch all attendance records scanned by this specific student with robust trimming & case-insensitivity
         const attendanceRes = await pool.query(
             `SELECT DISTINCT session_code, TO_CHAR(created_at, 'YYYY-MM-DD') as session_date 
              FROM users_attendance 
-             WHERE UPPER(student_id) = $1 
+             WHERE UPPER(TRIM(student_id)) = UPPER(TRIM($1)) 
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
             [cleanUsn, tenant]
         );
 
-        // Map student's present sessions: "SESSION_CODE" -> true
+        // Map student's present sessions flexibly (by code and calendar date fallback)
         const studentScanMap = {};
         attendanceRes.rows.forEach(r => {
             if (r.session_code) {
                 studentScanMap[r.session_code.trim().toUpperCase()] = true;
+            }
+            if (r.session_date) {
+                studentScanMap[r.session_date] = true;
+                studentScanMap[`DATE_${r.session_date}`] = true;
             }
         });
 
