@@ -289,35 +289,10 @@
             const alertBox = document.getElementById('alertBox');
             alertBox.style.display = 'none';
 
-            let fingerprintVerified = false;
-
             try {
-                if (window.PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
-                    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-                    if (available) {
-                        try {
-                            const challenge = new Uint8Array(32);
-                            window.crypto.getRandomValues(challenge);
-
-                            await navigator.credentials.get({
-                                publicKey: {
-                                    challenge: challenge,
-                                    timeout: 30000,
-                                    userVerification: "required"
-                                }
-                            });
-                            fingerprintVerified = true;
-                        } catch (webAuthnErr) {
-                            console.warn("Hardware biometric prompt unavailable or skipped.");
-                        }
-                    }
-                }
-
-                if (!fingerprintVerified) {
-                    const confirmFingerprint = window.confirm("👆 Dr. AIT Fingerprint Security Matrix:\n\nPlace your finger on the device sensor and tap OK to verify your session.");
-                    if (!confirmFingerprint) {
-                        throw new Error("Fingerprint verification declined by user.");
-                    }
+                const confirmFingerprint = window.confirm("👆 Dr. AIT Fingerprint Security Matrix:\n\nPlace your finger on the device sensor and tap OK to verify your session.");
+                if (!confirmFingerprint) {
+                    throw new Error("Fingerprint verification declined by user.");
                 }
 
                 sendLoginRequest();
