@@ -16,8 +16,8 @@ app.use(cors({
 
 app.use(express.json()); 
 
-app.use(express.static(path.join(__dirname, "frontend")));
-app.use("/frontend", express.static(path.join(__dirname, "frontend")));
+app.use(express.static(path.join(__dirname, "../frontend")));
+app.use("/frontend", express.static(path.join(__dirname, "../frontend")));
 
 // ==========================================================================
 // 🎯 100% PURE DATABASE-DRIVEN STUDENT MARKS & METRICS ENDPOINT (Multi-User & GPA Isolated)
@@ -1311,7 +1311,7 @@ app.get('/api/parent/profile', async (req, res, next) => {
 // 8. BASE ROUTE & GLOBAL ERROR HANDLER
 // ==========================================================================
 app.get("/", (req, res) => {
-    res.sendFile(path.resolve(__dirname, "frontend", "index.html"));
+    res.sendFile(path.resolve(__dirname, "../frontend", "index.html"));
 });
 
 app.use((err, req, res, next) => {
