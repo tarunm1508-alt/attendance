@@ -20,7 +20,93 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 app.use("/frontend", express.static(path.join(__dirname, "../frontend")));
 
 // ==========================================================================
-// 🎯 100% PURE DATABASE-DRIVEN STUDENT MARKS & METRICS ENDPOINT (Multi-User & GPA Isolated)
+// 🚨 TEACHER BUTTON TRIGGER: CALCULATE ATTENDANCE SHORTAGES & DISPATCH WARNINGS
+// ==========================================================================
+app.post('/api/teacher/trigger-attendance-evaluation', async (req, res) => {
+    const { institutionId } = req.body;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+
+    try {
+        const studentsRes = await pool.query(
+            "SELECT usn FROM users WHERE role ILIKE 'student' AND COALESCE(institution_id, 'DR_AIT') ILIKE $1",
+            [tenant]
+        );
+
+        let totalWarningsDispatched = 0;
+
+        for (let student of studentsRes.rows) {
+            const cleanUsn = student.usn.trim().toUpperCase();
+
+            const totalConductedRes = await pool.query(
+                "SELECT subject_name, COUNT(*) as conducted FROM class_sessions WHERE COALESCE(institution_id, 'DR_AIT') ILIKE $1 GROUP BY subject_name", 
+                [tenant]
+            );
+            
+            const attendedRes = await pool.query(
+                "SELECT subject_name, COUNT(*) as attended FROM users_attendance WHERE UPPER(student_id) = UPPER($1) AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 GROUP BY subject_name", 
+                [cleanUsn, tenant]
+            );
+
+            for (let cond of totalConductedRes.rows) {
+                const subject = cond.subject_name;
+                const conductedCount = parseInt(cond.conducted) || 0;
+                const attObj = attendedRes.rows.find(a => a.subject_name.toUpperCase() === subject.toUpperCase());
+                const attendedCount = attObj ? parseInt(attObj.attended) || 0 : 0;
+
+                // Only evaluate if at least 3 classes have been conducted to avoid premature warnings
+                if (conductedCount >= 3) {
+                    const percentage = (attendedCount / conductedCount) * 100;
+
+                    if (percentage < 75.0) {
+                        const warningTitle = "⚠️ LOW ATTENDANCE WARNING (< 75%)";
+                        const warningMessage = `CRITICAL SHORTAGE ALERT: Your attendance in '${subject}' has dropped to ${percentage.toFixed(1)}% (${attendedCount}/${conductedCount} classes). You are at risk of detention. Please improve attendance immediately.`;
+
+                        const existingAlert = await pool.query(
+                            `SELECT id FROM user_notifications 
+                             WHERE UPPER(user_id) = $1 AND title = $2 AND message ILIKE '%' || $3 || '%' AND COALESCE(institution_id, 'DR_AIT') ILIKE $4`,
+                            [cleanUsn, warningTitle, subject, tenant]
+                        );
+
+                        if (existingAlert.rows.length === 0) {
+                            await pool.query(
+                                `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
+                                 VALUES ($1, 'student', $2, $3, $4)`,
+                                [cleanUsn, warningTitle, warningMessage, tenant]
+                            );
+
+                            const parentLookup = await pool.query(
+                                `SELECT usn FROM users WHERE UPPER(child_usn) = UPPER($1) AND role = 'parent' AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+                                [cleanUsn, tenant]
+                            );
+
+                            if (parentLookup.rows.length > 0) {
+                                const parentId = parentLookup.rows[0].usn;
+                                await pool.query(
+                                    `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
+                                     VALUES ($1, 'parent', $2, $3, $4)`,
+                                    [parentId, `Ward Shortage: ${warningTitle}`, `Your ward (${cleanUsn}) has low attendance in ${subject} (${percentage.toFixed(1)}%).`, tenant]
+                                );
+                            }
+
+                            totalWarningsDispatched++;
+                        }
+                    }
+                }
+            }
+        }
+
+        res.status(200).json({ 
+            success: true, 
+            message: `Evaluation complete! Dispatched ${totalWarningsDispatched} shortage alerts for classes below 75%.` 
+        });
+    } catch (err) {
+        console.error("❌ Attendance evaluation trigger error:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================================================
+// 🎯 100% PURE DATABASE-DRIVEN STUDENT MARKS & METRICS ENDPOINT (Dynamic Real Counts)
 // ==========================================================================
 app.get('/api/auth/student-subject-metrics', async (req, res) => {
     const studentId = req.query.studentId || req.query.usn || req.query.id || req.query.student_id;
@@ -35,6 +121,7 @@ app.get('/api/auth/student-subject-metrics', async (req, res) => {
         const cleanStudentId = studentId.trim().toUpperCase();
         const tenant = institutionId.trim();
 
+        // 1. Fetch real student marks
         let queryStr = `
             SELECT 
                 COALESCE(subject_code, subject) AS subject_code,
@@ -43,12 +130,9 @@ app.get('/api/auth/student-subject-metrics', async (req, res) => {
                 COALESCE(cie1, 0) AS cie1,
                 COALESCE(cie2, 0) AS cie2,
                 COALESCE(cie3, 0) AS cie3,
-                COALESCE(see, 0) AS see,
-                10 AS conducted,
-                9 AS attended,
-                1 AS absent
+                COALESCE(see, 0) AS see
             FROM student_marks
-            WHERE (student_id::text ILIKE $1 OR usn::text ILIKE $1)
+            WHERE (usn::text ILIKE $1)
               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2
         `;
         let queryParams = [cleanStudentId, tenant];
@@ -59,9 +143,40 @@ app.get('/api/auth/student-subject-metrics', async (req, res) => {
         }
         queryStr += ` ORDER BY semester_number ASC, subject_code ASC;`;
 
-        const result = await pool.query(queryStr, queryParams);
+        const marksResult = await pool.query(queryStr, queryParams);
 
-        // 🛠️ Fetch exact SGPA & CGPA for this specific student and semester from student_semesters table
+        // 2. Fetch total conducted classes per subject from class_sessions
+        const totalConductedRes = await pool.query(
+            "SELECT subject_name, COUNT(*) as conducted FROM class_sessions WHERE COALESCE(institution_id, 'DR_AIT') ILIKE $1 GROUP BY subject_name",
+            [tenant]
+        );
+
+        // 3. Fetch total attended classes per subject for this student from users_attendance
+        const attendedRes = await pool.query(
+            "SELECT subject_name, COUNT(*) as attended FROM users_attendance WHERE UPPER(student_id) = UPPER($1) AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 GROUP BY subject_name",
+            [cleanStudentId, tenant]
+        );
+
+        // 4. Map real attendance numbers into the response rows
+        const dynamicPredictions = marksResult.rows.map(row => {
+            const subjectKey = (row.subject_name || row.subject_code || '').trim().toUpperCase();
+            
+            const condObj = totalConductedRes.rows.find(c => (c.subject_name || '').trim().toUpperCase() === subjectKey) || { conducted: 0 };
+            const attObj = attendedRes.rows.find(a => (a.subject_name || '').trim().toUpperCase() === subjectKey) || { attended: 0 };
+
+            const conductedCount = parseInt(condObj.conducted) || 0;
+            const attendedCount = parseInt(attObj.attended) || 0;
+            const absentCount = Math.max(0, conductedCount - attendedCount);
+
+            return {
+                ...row,
+                conducted: conductedCount,
+                attended: attendedCount,
+                absent: absentCount
+            };
+        });
+
+        // 5. Fetch SGPA & CGPA
         let summaryRow = { sgpa: null, cgpa: null };
         if (semesterNumber) {
             const semSummaryResult = await pool.query(
@@ -75,9 +190,9 @@ app.get('/api/auth/student-subject-metrics', async (req, res) => {
 
         return res.status(200).json({ 
             success: true, 
-            ai_predictions: result.rows || [],
-            marks: result.rows || [],
-            data: result.rows || [],
+            ai_predictions: dynamicPredictions,
+            marks: marksResult.rows || [],
+            data: dynamicPredictions,
             sgpa: summaryRow.sgpa,
             cgpa: summaryRow.cgpa
         });
@@ -102,7 +217,6 @@ app.get('/api/auth/student-attendance-ledger', async (req, res) => {
             return res.status(400).json({ success: false, message: "Missing student USN parameter." });
         }
 
-        // 1. Fetch conducted sessions matching this institution and semester from weekly_timetables / class_sessions
         const sessionsRes = await pool.query(
             `SELECT DISTINCT cs.session_code, 
                     COALESCE(cs.subject_code, cs.subject_name, 'General') as subject_name, 
@@ -116,7 +230,6 @@ app.get('/api/auth/student-attendance-ledger', async (req, res) => {
         );
         let conductedSessions = sessionsRes.rows;
 
-        // Fallback: If filtered sessions are empty, pull all institution sessions or timetable slots for this sem
         if (conductedSessions.length === 0) {
             const fallbackRes = await pool.query(
                 `SELECT DISTINCT session_code, COALESCE(subject_code, subject_name, 'General') as subject_name, TO_CHAR(created_at, 'YYYY-MM-DD') as session_date 
@@ -138,7 +251,6 @@ app.get('/api/auth/student-attendance-ledger', async (req, res) => {
             conductedSessions = timetableRes.rows;
         }
 
-        // 2. Fetch all attendance records scanned by this specific student with robust trimming & case-insensitivity
         const attendanceRes = await pool.query(
             `SELECT DISTINCT session_code, TO_CHAR(created_at, 'YYYY-MM-DD') as session_date 
              FROM users_attendance 
@@ -147,7 +259,6 @@ app.get('/api/auth/student-attendance-ledger', async (req, res) => {
             [cleanUsn, tenant]
         );
 
-        // Map student's present sessions flexibly (by code and calendar date fallback)
         const studentScanMap = {};
         attendanceRes.rows.forEach(r => {
             if (r.session_code) {
@@ -171,6 +282,76 @@ app.get('/api/auth/student-attendance-ledger', async (req, res) => {
 });
 
 // ==========================================================================
+// 📍 STRICT PROXIMITY ATTENDANCE CHECK-IN SUBMISSION (GEOFENCING + SESSION CHECK)
+// ==========================================================================
+app.post('/api/auth/submit-attendance', async (req, res) => {
+    const { studentId, subjectName, sessionCode, latitude, longitude, institutionId } = req.body;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanUsn = studentId ? studentId.trim().toUpperCase() : '';
+
+    if (!cleanUsn || !sessionCode) {
+        return res.status(400).json({ success: false, message: "Missing student USN or session code token." });
+    }
+
+    try {
+        const sessionCheck = await pool.query(
+            `SELECT * FROM class_sessions WHERE session_code = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [sessionCode.trim(), tenant]
+        );
+
+        if (sessionCheck.rows.length === 0) {
+            return res.status(400).json({ success: false, message: "⚠️ Attendance session has expired or is invalid (Screenshot rejected)." });
+        }
+
+        const studentLat = parseFloat(latitude);
+        const studentLng = parseFloat(longitude);
+
+        if (isNaN(studentLat) || isNaN(studentLng)) {
+            return res.status(403).json({ 
+                success: false, 
+                message: "🚫 Location Required: GPS coordinates must be enabled to mark attendance from inside the classroom." 
+            });
+        }
+
+        // Exact Dr. AIT College Coordinates
+        const CLASSROOM_LAT = 12.9641; 
+        const CLASSROOM_LNG = 77.5065;
+
+        const earthRadiusMeters = 6371000;
+        const dLat = (studentLat - CLASSROOM_LAT) * Math.PI / 180;
+        const dLng = (studentLng - CLASSROOM_LNG) * Math.PI / 180;
+        const a = 
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(CLASSROOM_LAT * Math.PI / 180) * Math.cos(studentLat * Math.PI / 180) * 
+            Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distanceMeters = earthRadiusMeters * c;
+
+        // Campus Geofence Threshold (500m block radius to accommodate campus range)
+        const MAX_ALLOWED_DISTANCE_METERS = 500.0;
+
+        if (distanceMeters > MAX_ALLOWED_DISTANCE_METERS) {
+            return res.status(403).json({ 
+                success: false, 
+                message: `🚫 Proxy Detected / Check-in Blocked: You are ~${Math.round(distanceMeters)}m away from the campus! (Hostel/Canteen/Screenshot scanning detected). You must be within ${MAX_ALLOWED_DISTANCE_METERS}m.` 
+            });
+        }
+
+        await pool.query(
+            `INSERT INTO users_attendance (student_id, session_code, subject_name, distance, institution_id)
+             VALUES ($1, $2, $3, $4, $5)
+             ON CONFLICT DO NOTHING`,
+            [cleanUsn, sessionCode.trim(), subjectName || 'AI', distanceMeters.toFixed(2), tenant]
+        );
+
+        res.status(200).json({ success: true, message: "Attendance verified and recorded successfully inside campus!" });
+    } catch (err) {
+        console.error("❌ Attendance submission error:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================================================
 // 📊 SESSION ROSTER ENDPOINT (STRICT BRANCH & SEMESTER ISOLATION)
 // ==========================================================================
 app.get('/api/auth/teacher-session-roster', async (req, res) => {
@@ -178,7 +359,6 @@ app.get('/api/auth/teacher-session-roster', async (req, res) => {
         const { sessionCode, institutionId } = req.query;
         const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
-        // 1. Get the session details to know which subject code it belongs to
         const sessionRes = await pool.query(
             `SELECT subject_code, subject_name, institution_id FROM class_sessions WHERE session_code = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
             [sessionCode, tenant]
@@ -190,7 +370,6 @@ app.get('/api/auth/teacher-session-roster', async (req, res) => {
 
         const session = sessionRes.rows[0];
 
-        // 2. Find which branch and semester are mapped to this subject in teacher slots or timetable
         const slotRes = await pool.query(
             `SELECT branch, semester_number FROM weekly_timetables WHERE (UPPER(subject_code) = UPPER($1) OR UPPER(subject_name) ILIKE '%' || UPPER($1) || '%') AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 LIMIT 1`,
             [session.subject_code || session.subject_name, tenant]
@@ -199,7 +378,6 @@ app.get('/api/auth/teacher-session-roster', async (req, res) => {
         const branch = slotRes.rows.length > 0 ? slotRes.rows[0].branch : 'AIML';
         const semesterNumber = slotRes.rows.length > 0 ? slotRes.rows[0].semester_number : 3;
 
-        // 3. Fetch students strictly belonging to THIS specific branch and semester
         const studentsRes = await pool.query(
             `SELECT usn, name, phone_number FROM users 
              WHERE role ILIKE 'student' 
@@ -211,7 +389,6 @@ app.get('/api/auth/teacher-session-roster', async (req, res) => {
 
         const allBranchStudents = studentsRes.rows;
 
-        // 4. Fetch students who successfully scanned the QR code for this session
         const scannedRes = await pool.query(
             `SELECT student_id, distance, created_at FROM users_attendance 
              WHERE session_code = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
@@ -272,7 +449,6 @@ app.get('/api/teacher/batch-marks-roster', async (req, res) => {
         const foundationalBranches = ['MATHS', 'PHYSICS', 'CHEM', 'BIOLOGY', 'MATHEMATICS', 'CHEMISTRY'];
 
         if (foundationalBranches.includes(cleanBranch.toUpperCase())) {
-            // Foundation subjects span across multiple branches, so pull all students in that semester
             studentsRes = await pool.query(
                 `SELECT usn, name FROM users 
                  WHERE role ILIKE 'student' 
@@ -282,7 +458,6 @@ app.get('/api/teacher/batch-marks-roster', async (req, res) => {
                 [semNum, tenant]
             );
         } else {
-            // Core technical branch students
             studentsRes = await pool.query(
                 `SELECT usn, name FROM users 
                  WHERE role ILIKE 'student' 
@@ -296,7 +471,6 @@ app.get('/api/teacher/batch-marks-roster', async (req, res) => {
 
         const students = studentsRes.rows;
 
-        // Fetch existing marks for this subject and semester
         const marksRes = await pool.query(
             `SELECT UPPER(usn) as usn, cie1, cie2, cie3, see FROM student_marks 
              WHERE (UPPER(subject_code) = UPPER($1) OR UPPER(subject) = UPPER($1))
@@ -312,7 +486,6 @@ app.get('/api/teacher/batch-marks-roster', async (req, res) => {
             }
         });
 
-        // Merge students with recorded marks
         const consolidated = students.map(st => {
             const cleanUsnKey = (st.usn || '').trim().toUpperCase();
             const m = marksMap[cleanUsnKey] || {};
@@ -352,10 +525,87 @@ app.use("/api/attendance", attendanceRoutes);
 app.use("/api/marks", marksRoutes);
 
 // ==========================================================================
+// 🎓 FACULTY FDP ATTENDED & PUBLICATIONS ACADEMIC YEAR ENDPOINTS
+// ==========================================================================
+app.get('/api/teacher/fdp-records', async (req, res) => {
+    const { teacherId, institutionId, academicYear } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanTeacherId = teacherId ? teacherId.trim().toUpperCase() : '';
+    const year = academicYear ? academicYear.trim() : '2026-2027';
+
+    try {
+        const query = `
+            SELECT * FROM faculty_fdp_attended 
+            WHERE UPPER(teacher_id) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 AND academic_year = $3
+            ORDER BY id DESC
+        `;
+        const result = await pool.query(query, [cleanTeacherId, tenant, year]);
+        res.status(200).json({ success: true, fdpRecords: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/teacher/fdp-records', async (req, res) => {
+    const { 
+        institutionId, teacherId, teacherName, branch, academicYear,
+        fdpTitle, fdpMode, sponsorshipStatus, organizingAddress, fromDate, toDate, participantsCount 
+    } = req.body;
+
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanTeacherId = teacherId ? teacherId.trim().toUpperCase() : '';
+
+    try {
+        await pool.query(
+            `INSERT INTO faculty_fdp_attended 
+                (institution_id, teacher_id, teacher_name, branch, academic_year, fdp_title, fdp_mode, sponsorship_status, organizing_address, from_date, to_date, participants_count)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            [
+                tenant, cleanTeacherId, teacherName || 'Faculty', branch || 'AIML', academicYear || '2026-2027',
+                fdpTitle, fdpMode || 'Online', sponsorshipStatus || 'Not Sponsored', organizingAddress || '',
+                fromDate || '', toDate || '', parseInt(participantsCount) || 0
+            ]
+        );
+        res.status(201).json({ success: true, message: "FDP record added successfully!" });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/teacher/fdp-records', async (req, res) => {
+    const { id, institutionId } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    try {
+        await pool.query(`DELETE FROM faculty_fdp_attended WHERE id = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`, [id, tenant]);
+        res.status(200).json({ success: true, message: "FDP record deleted." });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.get('/api/hod/fdp-records', async (req, res) => {
+    const { branch, institutionId, academicYear } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanBranch = branch ? branch.trim().toUpperCase() : 'AIML';
+    const year = academicYear ? academicYear.trim() : '2026-2027';
+
+    try {
+        const query = `
+            SELECT * FROM faculty_fdp_attended 
+            WHERE UPPER(branch) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 AND academic_year = $3
+            ORDER BY id DESC
+        `;
+        const result = await pool.query(query, [cleanBranch, tenant, year]);
+        res.status(200).json({ success: true, fdpRecords: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================================================
 // 👔 4. HOD EXECUTIVE PORTAL ENDPOINTS (/api/hod) WITH DEPARTMENT SCOPING
 // ==========================================================================
 
-// 🎓 Fetch HOD Department Staff & Mapped Slots with Core vs Foundation Scoping
 app.get('/api/hod/department-data', async (req, res) => {
     try {
         const { hodBranch, institutionId } = req.query;
@@ -367,7 +617,6 @@ app.get('/api/hod/department-data', async (req, res) => {
         const cleanBranch = hodBranch.toUpperCase().trim();
         const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
 
-        // Define foundational/science departments that span across multiple engineering branches
         const foundationalDepartments = ['MATHS', 'CHEM', 'PHYSICS', 'BIOLOGY', 'MATHEMATICS', 'CHEMISTRY'];
 
         let staffQuery, staffParams;
@@ -404,10 +653,9 @@ app.get('/api/hod/department-data', async (req, res) => {
     }
 });
 
-// 📍 GET: Fetch Faculty/Teachers list strictly isolated by HOD's specific branch
 app.get("/api/hod/teachers", async (req, res) => {
-    const { branch, institutionId } = req.query;
-    const targetBranch = branch ? branch.trim() : 'AIML';
+    const { branch, hodBranch, institutionId } = req.query;
+    const targetBranch = (branch || hodBranch || 'AIML').trim();
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     try {
         const query = `
@@ -426,7 +674,6 @@ app.get("/api/hod/teachers", async (req, res) => {
     }
 });
 
-// 📍 GET: Fetch Single Timetable Entries
 app.get("/api/hod/timetable", async (req, res) => {
     const { branch, academicYear, semesterNumber } = req.query;
     try {
@@ -449,7 +696,6 @@ app.get("/api/hod/timetable", async (req, res) => {
     }
 });
 
-// 📍 POST: Assign/Update Teacher for an individual subject
 app.post("/api/hod/assign-teacher", async (req, res) => {
     const { timetableId, teacherUsn, teacherName } = req.body;
     if (!timetableId || !teacherUsn) {
@@ -470,7 +716,6 @@ app.post("/api/hod/assign-teacher", async (req, res) => {
     }
 });
 
-// 📍 GET: Fetch Full Weekly Timetable Grid (MON - SAT)
 app.get('/api/hod/weekly-timetable', async (req, res) => {
     const { branch, academicYear, semesterNumber, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -488,7 +733,6 @@ app.get('/api/hod/weekly-timetable', async (req, res) => {
     }
 });
 
-// 📍 POST: Save Weekly Timetable Matrix & Dispatch App Messages (Includes Room Numbers)
 app.post('/api/hod/save-weekly-timetable', async (req, res) => {
     const { branch, academicYear, semesterNumber, timetableData, institutionId } = req.body;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -537,9 +781,6 @@ app.post('/api/hod/save-weekly-timetable', async (req, res) => {
     }
 });
 
-// ==========================================================================
-// 📲 5. TEACHER & NOTIFICATIONS INBOX ENDPOINTS (Strict Role Isolation)
-// ==========================================================================
 app.get('/api/teacher/notifications', async (req, res) => {
     const { teacherId, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -556,7 +797,6 @@ app.get('/api/teacher/notifications', async (req, res) => {
     }
 });
 
-// 📍 GET: Unified Notifications Inbox (Strict User Targeting, preventing student broadcast leaks)
 app.get('/api/notifications', async (req, res) => {
     const { userId, role, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -583,7 +823,6 @@ app.get('/api/notifications', async (req, res) => {
     }
 });
 
-// 📍 GET: Archived Past Messages Ledger
 app.get('/api/notifications/archive', async (req, res) => {
     const { userId, role, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -634,16 +873,12 @@ app.get('/api/teacher/assigned-classes', async (req, res) => {
     }
 });
 
-// ==========================================================================
-// 📊 ATTENDANCE REGISTER MATRIX ENDPOINT (UNIQUE DATE GROUPING FIX)
-// ==========================================================================
 app.get('/api/teacher/attendance-register', async (req, res, next) => {
     const { teacherId, subjectCode, semesterNumber, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const sub = subjectCode ? subjectCode.trim().toUpperCase() : '';
 
     try {
-        // 1. Fetch all students for the institution
         const studentsRes = await pool.query(
             `SELECT usn, name FROM users 
              WHERE role ILIKE 'student' 
@@ -653,32 +888,30 @@ app.get('/api/teacher/attendance-register', async (req, res, next) => {
         );
         const students = studentsRes.rows;
 
-        // 2. Fetch distinct calendar dates conducted for this subject (grouping by date so dates never repeat)
         const sessionsRes = await pool.query(
-            `SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as session_date, MIN(session_code) as session_code
+            `SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as session_date, session_code
              FROM class_sessions 
              WHERE (UPPER(CAST(subject_name AS TEXT)) ILIKE '%' || $1 || '%' OR UPPER(CAST(session_code AS TEXT)) ILIKE '%' || $1 || '%') 
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 
-             GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
-             ORDER BY session_date ASC`,
+             ORDER BY created_at ASC`,
             [sub, tenant]
         );
-        const dates = sessionsRes.rows.map(s => s.session_date);
+        
+        const dates = [...new Set(sessionsRes.rows.map(s => s.session_date))];
+        const sessionCodes = sessionsRes.rows.map(s => s.session_code);
 
-        // 3. Fetch all attendance records tied to these dates
         let attendanceRows = [];
-        if (dates.length > 0) {
+        if (sessionCodes.length > 0 || dates.length > 0) {
             const attendanceRes = await pool.query(
                 `SELECT DISTINCT UPPER(student_id) as student_id, TO_CHAR(created_at, 'YYYY-MM-DD') as session_date 
                  FROM users_attendance 
-                 WHERE TO_CHAR(created_at, 'YYYY-MM-DD') = ANY($1::text[])
-                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
-                [dates, tenant]
+                 WHERE (session_code = ANY($1::text[]) OR TO_CHAR(created_at, 'YYYY-MM-DD') = ANY($2::text[]))
+                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
+                [sessionCodes, dates, tenant]
             );
             attendanceRows = attendanceRes.rows;
         }
 
-        // Map attendance lookup: "USN_DATE" -> true
         const attendanceMap = {};
         if (Array.isArray(attendanceRows)) {
             attendanceRows.forEach(r => {
@@ -700,9 +933,6 @@ app.get('/api/teacher/attendance-register', async (req, res, next) => {
     }
 });
 
-// ==========================================================================
-// 🔄 6. SCHEDULE SWAP & MENTORSHIP ENDPOINTS
-// ==========================================================================
 app.post('/api/teacher/request-swap', async (req, res) => {
     const { 
         requestingTeacherId, requestingTeacherName, targetTeacherId, targetTeacherName,
@@ -788,9 +1018,6 @@ app.post('/api/hod/respond-swap', async (req, res) => {
     }
 });
 
-// ==========================================================================
-// 📝 7. MARKS, MENTORSHIP & DYNAMIC HOD-DRIVEN EVALUATION ENDPOINTS
-// ==========================================================================
 app.get('/api/teacher/student-marks-overview', async (req, res) => {
     const { studentUsn, semester, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -858,7 +1085,7 @@ app.get('/api/teacher/student-marks-overview', async (req, res) => {
                     NULL AS assigned_teacher_id,
                     NULL AS assigned_teacher_name
                  FROM student_marks 
-                 WHERE (UPPER(student_id) = $1 OR UPPER(usn) = $1)
+                 WHERE (UPPER(usn) = $1)
                    AND semester_number = $2
                    AND COALESCE(institution_id, 'DR_AIT') ILIKE $3
                  ORDER BY subject_code ASC`,
@@ -878,7 +1105,7 @@ app.get('/api/teacher/student-marks-overview', async (req, res) => {
         const marksRes = await pool.query(
             `SELECT COALESCE(subject_code, subject) AS subject_code, cie1, cie2, cie3, see, semester_number 
              FROM student_marks 
-             WHERE (UPPER(student_id) = $1 OR UPPER(usn) = $1) 
+             WHERE UPPER(usn) = $1 
                AND semester_number = $2
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
             [cleanUsn, targetSemester, tenant]
@@ -967,7 +1194,7 @@ app.post('/api/teacher/update-marks', async (req, res) => {
 
         const existing = await pool.query(
             `SELECT id FROM student_marks 
-             WHERE (UPPER(COALESCE(student_id, '')) = $1 OR UPPER(COALESCE(usn, '')) = $1) 
+             WHERE UPPER(usn) = $1 
                AND (UPPER(COALESCE(subject_code, '')) = $2 OR UPPER(COALESCE(subject, '')) = $2)
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
             [cleanUsn, cleanCode, tenant]
@@ -984,8 +1211,8 @@ app.post('/api/teacher/update-marks', async (req, res) => {
         } else {
             await pool.query(
                 `INSERT INTO student_marks 
-                    (student_id, usn, student_name, subject, subject_code, subject_name, semester_number, cie1, cie2, cie3, see, institution_id)
-                 VALUES ($1, $1, $2, $3, $3, $3, $4, $5, $6, $7, $8, $9)`,
+                    (usn, student_name, subject, subject_code, subject_name, semester_number, cie1, cie2, cie3, see, institution_id)
+                 VALUES ($1, $2, $3, $3, $3, $4, $5, $6, $7, $8, $9)`,
                 [cleanUsn, studentFullName, cleanCode, sem, c1, c2, c3, s, tenant]
             );
         }
@@ -1030,7 +1257,7 @@ app.get('/api/teacher/filtered-marks-roster', async (req, res) => {
                     COALESCE(m.see, 0) AS see
                 FROM student_list sl
                 JOIN student_marks m 
-                  ON (UPPER(sl.usn) = UPPER(m.student_id) OR UPPER(sl.usn) = UPPER(m.usn))
+                  ON UPPER(sl.usn) = UPPER(m.usn)
                   AND COALESCE(m.institution_id, 'DR_AIT') ILIKE $1
 
                 UNION ALL
@@ -1048,7 +1275,7 @@ app.get('/api/teacher/filtered-marks-roster', async (req, res) => {
                 FROM student_list sl
                 WHERE NOT EXISTS (
                     SELECT 1 FROM student_marks sm 
-                    WHERE (UPPER(sl.usn) = UPPER(sm.student_id) OR UPPER(sl.usn) = UPPER(sm.usn))
+                    WHERE UPPER(sl.usn) = UPPER(sm.usn)
                 )
             )
             SELECT * FROM all_marks
@@ -1153,9 +1380,9 @@ app.post('/api/admin/bulk-upload-marks', async (req, res) => {
 
             await pool.query(
                 `INSERT INTO student_marks 
-                    (student_id, usn, student_name, subject, subject_code, subject_name, semester_number, cie1, cie2, cie3, see, institution_id)
-                 VALUES ($1, $1, $2, $3, $3, $3, $4, $5, $6, $7, $8, $9)
-                 ON CONFLICT (student_id, subject_code, semester_number, institution_id)
+                    (usn, student_name, subject, subject_code, subject_name, semester_number, cie1, cie2, cie3, see, institution_id)
+                 VALUES ($1, $2, $3, $3, $3, $4, $5, $6, $7, $8, $9)
+                 ON CONFLICT (usn, subject_code, semester_number, institution_id)
                  DO UPDATE SET cie1=EXCLUDED.cie1, cie2=EXCLUDED.cie2, cie3=EXCLUDED.cie3, see=EXCLUDED.see, student_name=EXCLUDED.student_name`,
                 [
                     cleanUsn, 
@@ -1178,9 +1405,6 @@ app.post('/api/admin/bulk-upload-marks', async (req, res) => {
     }
 });
 
-// ==========================================================================
-// 💬 10. DIRECT & BROADCAST MESSAGING ENDPOINTS (Strict Branch/Section Targeting)
-// ==========================================================================
 app.post('/api/messages/send', async (req, res, next) => {
     const { senderId, senderName, senderRole, recipientId, targetBranch, targetSemester, targetSection, messageText, institutionId } = req.body;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -1311,9 +1535,6 @@ app.get('/api/parent/profile', async (req, res, next) => {
     }
 });
 
-// ==========================================================================
-// 8. BASE ROUTE & GLOBAL ERROR HANDLER
-// ==========================================================================
 app.get("/", (req, res) => {
     res.sendFile(path.resolve(__dirname, "../frontend", "index.html"));
 });
@@ -1323,9 +1544,6 @@ app.use((err, req, res, next) => {
     res.status(500).json({ success: false, message: "Something went wrong on the server!" });
 });
 
-// ==========================================================================
-// 9. START SERVER
-// ==========================================================================
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
     console.log("==================================================");
@@ -1335,6 +1553,6 @@ const server = app.listen(PORT, () => {
     console.log("==================================================");
 });
 
-server.setTimeout(30000); // 30 second timeout safeguard
+server.setTimeout(30000);
 
 module.exports = app;

@@ -220,6 +220,7 @@
                 <label for="branch" style="color: var(--primary-blue); font-weight: 800;">Department Branch</label>
                 <select id="branch">
                     <option value="AIML">Artificial Intelligence & Machine Learning (AIML)</option>
+                    <option value="CSBS">Computer Science & Business Systems (CSBS)</option>
                     <option value="CSE">Computer Science & Engineering (CSE)</option>
                     <option value="ISE">Information Science & Engineering (ISE)</option>
                     <option value="ECE">Electronics & Communication Engineering (ECE)</option>
@@ -229,6 +230,7 @@
                     <option value="MATHS">Mathematics Department</option>
                     <option value="CHEM">Chemistry Department</option>
                     <option value="PHYSICS">Physics Department</option>
+                    <option value="BIOLOGY">Biology Department</option>
                 </select>
             </div>
 
@@ -252,10 +254,11 @@
                 <input type="email" id="email" placeholder="example@domain.com" autocomplete="off" required>
             </div>
 
-            <!-- 📱 PHONE NUMBER FIELD (Visible for Parents & General Profiles) -->
+            <!-- 📱 PHONE NUMBER FIELD (Strictly 10-digit limit enforced) -->
             <div class="form-group" id="phoneGroup">
                 <label for="phoneNumber">Phone Number</label>
-                <input type="tel" id="phoneNumber" placeholder="+919876543210" autocomplete="off">
+                <input type="tel" id="phoneNumber" placeholder="9876543210" maxlength="10" pattern="[0-9]{10}" 
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" autocomplete="off">
             </div>
 
             <div class="form-group">
@@ -475,6 +478,13 @@
             const branch = document.getElementById('branch').value;
             
             const deviceFingerprint = getOrCreateDeviceFingerprint();
+
+            if (phoneNumber.length !== 10) {
+                alertBox.innerText = "⚠️ Please enter a valid 10-digit phone number.";
+                alertBox.style.display = 'block';
+                document.getElementById('phoneNumber').focus();
+                return;
+            }
 
             if (role === 'student' && !enrolledCredentialId) {
                 alertBox.innerText = "⚠️ You must register your phone fingerprint sensor before completing signup.";

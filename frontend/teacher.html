@@ -38,8 +38,8 @@
         .control-card h4 { margin: 0 0 12px 0; color: var(--dark); font-size: 16px; font-weight: 700; }
         
         label { font-weight: 700; font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.04em; }
-        select, input { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; outline: none; margin-bottom: 14px; font-size: 14px; transition: all 0.2s; }
-        select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1); }
+        select, input, textarea { width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; outline: none; margin-bottom: 14px; font-size: 14px; transition: all 0.2s; }
+        select:focus, input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1); }
         
         .btn { width: 100%; padding: 13px; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
         .btn-generate { background-color: var(--primary); color: white; }
@@ -118,6 +118,38 @@
     </div>
 
     <!-- ===================================================================== -->
+    <!-- 📚 SECTION: RESEARCH PAPERS & PUBLICATIONS HUB                      -->
+    <!-- ===================================================================== -->
+    <div class="marks-section" style="border-left: 5px solid var(--accent);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <div class="section-title" style="margin-bottom: 0;">📚 Research Papers & Publications Hub</div>
+            <button class="btn btn-generate" style="width: auto; padding: 8px 16px; font-size: 12px;" onclick="openAddPublicationModal()">+ Add Publication</button>
+        </div>
+        <p style="font-size: 13px; color: var(--muted); margin-top: 0; margin-bottom: 18px;">
+            Submit your published research papers, journals, conferences, and impact metrics (Quartiles & H-Index) to synchronize with your HOD department records.
+        </p>
+        <div style="width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 12px;">
+            <table class="marks-table">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">Type</th>
+                        <th style="text-align: left; width: 32%;">Title & Authors</th>
+                        <th style="width: 25%;">Journal / Conference Venue</th>
+                        <th style="width: 10%;">Quartile</th>
+                        <th style="width: 15%;">H-Index / Indexing</th>
+                        <th style="width: 10%;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="teacherPubsTableBody">
+                    <tr>
+                        <td colspan="6" style="padding: 20px; color: var(--muted); font-style: italic;">Loading your publications...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ===================================================================== -->
     <!-- 📚 SECTION 1: MARKS EVALUATION (SEMESTER + STUDENT ROSTER SELECTOR)   -->
     <!-- ===================================================================== -->
     <div class="marks-section">
@@ -175,7 +207,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- 📡 SECTION 2: ATTENDANCE QR GENERATOR & LIVE SCANS                     -->
+    <!-- 📡 SECTION 2: ATTENDANCE QR GENERATOR & LIVE SCANS                    -->
     <!-- ===================================================================== -->
     <div class="section-title" style="text-align: left;">📡 Live Lecture Attendance System</div>
     <div class="control-panel">
@@ -208,7 +240,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- 📋 SECTION 3: LIVE CLASS ROSTER (PRESENT VS ABSENT BREAKDOWN)           -->
+    <!-- 📋 SECTION 3: LIVE CLASS ROSTER (PRESENT VS ABSENT BREAKDOWN)          -->
     <!-- ===================================================================== -->
     <div class="live-monitor-container" style="margin-bottom: 25px;">
         <div class="live-monitor-header">
@@ -259,7 +291,7 @@
     </div>
 
     <!-- ===================================================================== -->
-    <!-- 📡 SECTION 4: REAL-TIME SCANS LOG STREAM                              -->
+    <!-- 📡 SECTION 4: REAL-TIME SCANS LOG STREAM                               -->
     <!-- ===================================================================== -->
     <div class="live-monitor-container">
         <div class="live-monitor-header">
@@ -291,12 +323,84 @@
     <button class="btn btn-logout" onclick="logoutTeacher()">Sign Out From Portal</button>
 </div>
 
+<!-- ===================================================================== -->
+<!-- 📚 ADD PUBLICATION MODAL FORM                                         -->
+<!-- ===================================================================== -->
+<div id="pubModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:16px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:0 15px 35px rgba(0,0,0,0.2);">
+        <h3 style="margin-top:0; color:var(--dark);">📖 Add Research Publication / Paper</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+                <label>Publication Type</label>
+                <select id="pubType">
+                    <option value="Journal">Journal</option>
+                    <option value="Conference">Conference</option>
+                    <option value="Chapter">Chapter</option>
+                    <option value="Book">Book</option>
+                    <option value="Patent">Patent</option>
+                    <option value="Thesis">Thesis</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label>Publication Date / Year</label>
+                <input type="text" id="pubDate" placeholder="e.g., 2026 or 2025/11">
+            </div>
+        </div>
+        <label>Paper Title</label>
+        <input type="text" id="pubTitle" placeholder="Enter complete research paper title...">
+        
+        <label>Authors (Comma separated)</label>
+        <input type="text" id="pubAuthors" placeholder="e.g., Dr. Ajay Prakash B.V.; Dr. Prabhavati Angadi">
+
+        <label>Journal / Conference / Publisher Venue</label>
+        <input type="text" id="pubVenue" placeholder="e.g., International Journal of Drug Delivery Technology">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Volume</label>
+                <input type="text" id="pubVolume" placeholder="Vol. 12">
+            </div>
+            <div>
+                <label>Issue</label>
+                <input type="text" id="pubIssue" placeholder="Issue 3">
+            </div>
+            <div>
+                <label>Pages</label>
+                <input type="text" id="pubPages" placeholder="110-115">
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+                <label>Quartile Ranking</label>
+                <select id="pubQuartile">
+                    <option value="Q1">Q1</option>
+                    <option value="Q2">Q2</option>
+                    <option value="Q3" selected>Q3</option>
+                    <option value="Q4">Q4</option>
+                    <option value="N/A">N/A / Unindexed</option>
+                </select>
+            </div>
+            <div>
+                <label>H-Index & Indexing Database</label>
+                <input type="text" id="pubHIndex" placeholder="e.g., H-Index = 21, Google Scholar & Scopus">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn btn-close" style="background:#cbd5e1; color:#0f172a;" onclick="closeAddPublicationModal()">Cancel</button>
+            <button class="btn btn-generate" onclick="submitTeacherPublication()">Save Publication 💾</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // 🌐 Dynamic API Base Resolution
     let API_BASE = "https://dr-ait-portal-backend.onrender.com";
     if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
         if (window.location.port === "5501" || window.location.origin.includes("-5501.")) {
-                    API_BASE = "https://dr-ait-portal-backend.onrender.com";
+                API_BASE = "https://dr-ait-portal-backend.onrender.com";
         } else if (window.location.port === "5000") {
             API_BASE = window.location.origin;
         } else {
@@ -335,7 +439,132 @@
     window.onload = () => {
         loadStudentRosterForTeacher();
         loadTeacherInboxMessages();
+        loadTeacherPublications();
     };
+
+    // =========================================================================
+    // 📚 RESEARCH PUBLICATIONS HUB CONTROLLERS
+    // =========================================================================
+    function openAddPublicationModal() {
+        document.getElementById('pubModal').style.display = 'flex';
+    }
+
+    function closeAddPublicationModal() {
+        document.getElementById('pubModal').style.display = 'none';
+    }
+
+    async function loadTeacherPublications() {
+        const tbody = document.getElementById('teacherPubsTableBody');
+        if (!tbody) return;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/teacher/publications?teacherId=${encodeURIComponent(teacherUsn)}&institutionId=${encodeURIComponent(institutionId)}`);
+            const data = await res.json();
+
+            if (!data.success || !data.publications || data.publications.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--muted); font-style: italic;">No research publications added yet. Click "+ Add Publication" to begin.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            data.publications.forEach((pub, index) => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><span class="badge-edit">${pub.pub_type}</span></td>
+                        <td style="text-align: left;">
+                            <strong>${pub.title}</strong><br>
+                            <small style="color: var(--muted);">Authors: ${pub.authors || teacherName} (${pub.publication_date || 'N/A'})</small>
+                        </td>
+                        <td style="text-align: left;">${pub.journal_or_conference || 'N/A'}</td>
+                        <td><span style="font-weight: 800; color: var(--primary);">${pub.quartile || 'N/A'}</span></td>
+                        <td>${pub.h_index_metrics || 'N/A'}</td>
+                        <td>
+                            <button class="btn-close" style="padding: 6px 10px; font-size: 11px; width: auto;" onclick="deleteTeacherPublication(${pub.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--danger);">Failed to load publications ledger.</td></tr>`;
+        }
+    }
+
+    async function submitTeacherPublication() {
+        const pubType = document.getElementById('pubType').value;
+        const publicationDate = document.getElementById('pubDate').value.trim();
+        const title = document.getElementById('pubTitle').value.trim();
+        const authors = document.getElementById('pubAuthors').value.trim();
+        const journalOrConference = document.getElementById('pubVenue').value.trim();
+        const volume = document.getElementById('pubVolume').value.trim();
+        const issue = document.getElementById('pubIssue').value.trim();
+        const pages = document.getElementById('pubPages').value.trim();
+        const quartile = document.getElementById('pubQuartile').value;
+        const hIndexMetrics = document.getElementById('pubHIndex').value.trim();
+
+        if (!title || !journalOrConference) {
+            alert("⚠️ Please provide at least the Paper Title and Journal/Conference Venue.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${API_BASE}/api/teacher/publications`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    institutionId: institutionId,
+                    teacherId: teacherUsn,
+                    teacherName: teacherName,
+                    branch: teacherBranch,
+                    pubType: pubType,
+                    title: title,
+                    authors: authors || teacherName,
+                    publicationDate: publicationDate,
+                    journalOrConference: journalOrConference,
+                    volume: volume,
+                    issue: issue,
+                    pages: pages,
+                    quartile: quartile,
+                    hIndexMetrics: hIndexMetrics
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert("✅ Research publication added successfully!");
+                closeAddPublicationModal();
+                document.getElementById('pubTitle').value = "";
+                document.getElementById('pubAuthors').value = "";
+                document.getElementById('pubVenue').value = "";
+                document.getElementById('pubVolume').value = "";
+                document.getElementById('pubIssue').value = "";
+                document.getElementById('pubPages').value = "";
+                document.getElementById('pubHIndex').value = "";
+                loadTeacherPublications();
+            } else {
+                alert(`❌ Error: ${data.error || 'Failed to save publication.'}`);
+            }
+        } catch (err) {
+            alert("❌ Network error saving publication.");
+        }
+    }
+
+    async function deleteTeacherPublication(pubId) {
+        if (!confirm("Are you sure you want to delete this publication record?")) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/teacher/publications?id=${pubId}&institutionId=${encodeURIComponent(institutionId)}`, {
+                method: 'DELETE'
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                alert("🗑️ Publication deleted.");
+                loadTeacherPublications();
+            } else {
+                alert("❌ Failed to delete publication.");
+            }
+        } catch (err) {
+            alert("❌ Network error.");
+        }
+    }
 
     // =========================================================================
     // 🔔 TEACHER NOTIFICATIONS INBOX LOADER (Fixed with institutionId)
@@ -556,7 +785,7 @@
     // =========================================================================
     async function generateAttendanceQR() {
         const subject = document.getElementById("qrSubject").value;
-        
+         
         try {
             const res = await fetch(`${API_BASE}/api/qr/generate`, {
                 method: "POST",
@@ -568,7 +797,7 @@
             if (res.ok) {
                 document.getElementById("activeQrSubject").innerText = subject;
                 const canvasTarget = document.getElementById("qrCanvas");
-                
+                 
                 const backendQrImage = data.qrCodeDataUrl || data.qrUrl || data.qrCode || data.image;
                 if (backendQrImage) {
                     canvasTarget.innerHTML = `<img src="${backendQrImage}" alt="Active Session QR" width="200" height="200"/>`;
@@ -618,7 +847,7 @@
                 const total = student.total_classes || 10;
                 const attended = student.attended_classes || 9;
                 const percentage = total > 0 ? ((attended / total) * 100).toFixed(1) : 0;
-                
+                 
                 tbody.innerHTML += `
                     <tr>
                         <td style="padding: 12px; font-weight: bold; color: var(--dark);">${student.usn}</td>
@@ -647,7 +876,6 @@
                 document.getElementById('presentCountBadge').innerText = `${data.presentCount} Present`;
                 document.getElementById('absentCountBadge').innerText = `${data.absentCount} Absent`;
 
-                // Present Table
                 let presentHtml = "";
                 if (data.presentStudents.length === 0) {
                     presentHtml = `<tr><td colspan="2" style="padding: 15px; text-align: center; color: var(--muted); font-style: italic;">No students present yet.</td></tr>`;
@@ -663,7 +891,6 @@
                 }
                 document.getElementById('presentTableBody').innerHTML = presentHtml;
 
-                // Absent Table
                 let absentHtml = "";
                 if (data.absentStudents.length === 0) {
                     absentHtml = `<tr><td colspan="2" style="padding: 15px; text-align: center; color: var(--muted); font-style: italic;">All students are present! 🎉</td></tr>`;

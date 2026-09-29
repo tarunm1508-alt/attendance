@@ -60,7 +60,7 @@
         .period-header { font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
 
         /* Hourly Slot Cell Editors */
-        .slot-cell { display: flex; flex-direction: column; gap: 4px; width: 130px; padding: 2px; }
+        .slot-cell { display: flex; flex-direction: column; gap: 4px; width: 140px; padding: 2px; }
         
         .split-sub-room-box {
             display: flex;
@@ -117,10 +117,103 @@
                     <div class="avatar-circle">👔</div>
                     <div>
                         <div class="hod-name" id="displayHodName">Prof. HOD Leader</div>
-                        <div class="hod-dept" id="displayHodDept">Head of Department | AIML Branch (Dr. AIT)</div>
+                        <div class="hod-dept" id="displayHodDept">Head of Department | Branch (Dr. AIT)</div>
                     </div>
                 </div>
                 <button onclick="handleLogout()" style="padding: 10px 18px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">Logout ⬅️</button>
+            </div>
+        </div>
+
+        <!-- 📊 1.5 DEPARTMENT RESEARCH & PUBLICATIONS HUB -->
+        <div class="bento-card" style="border-left: 5px solid var(--accent-purple);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 22px;">📊</span>
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Department Research & Faculty Publications Hub</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Review faculty research papers, journals, quartile rankings, and citation metrics submitted across your branch.</p>
+                    </div>
+                </div>
+                
+                <!-- 🎯 SELECT YEAR DROPDOWN INSIDE RESEARCH HUB -->
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border-clean);">
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Year:</label>
+                        <select id="pubsYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
+                            <option value="2025-2026">2025 - 2026</option>
+                            <option value="2026-2027" selected>2026 - 2027</option>
+                            <option value="2027-2028">2027 - 2028</option>
+                        </select>
+                    </div>
+                    <button onclick="exportDepartmentPublicationsReport()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer;">
+                        📥 Export Report
+                    </button>
+                </div>
+            </div>
+
+            <div style="width: 100%; overflow-x: auto; border: 1px solid var(--border-clean); border-radius: 12px; margin-top: 12px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; background: white; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f1f5f9;">
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 5%;">Sl. No.</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Authors</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 25%;">Title</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Conference / Journal / Book Chapter</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 14%;">Scopus / WoS / SCI Indexed</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 10%;">Year of Publication</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 10%;">Q1 / Q2 / Q3 / Q4</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hodPubsTableBody">
+                        <tr>
+                            <td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">Loading department faculty publications...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 🏛️ FDP ATTENDED BY FACULTY SECTION -->
+        <div class="bento-card" style="border-left: 5px solid var(--primary-blue);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 22px;">🏛️</span>
+                    <div>
+                        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Department FDP Attended by Faculty</h3>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Review Faculty Development Programs, ATAL/DST sponsorships, and duration dates.</p>
+                    </div>
+                </div>
+
+                <!-- 🎯 SELECT YEAR DROPDOWN INSIDE FDP HUB -->
+                <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border-clean);">
+                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Year:</label>
+                    <select id="fdpYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
+                        <option value="2025-2026">2025 - 2026</option>
+                        <option value="2026-2027" selected>2026 - 2027</option>
+                        <option value="2027-2028">2027 - 2028</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="width: 100%; overflow-x: auto; border: 1px solid var(--border-clean); border-radius: 12px; margin-top: 12px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; background: white; font-size: 12px;">
+                    <thead>
+                        <tr style="background: #f1f5f9;">
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 6%;">Sl. No.</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Name of Faculty</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 22%;">Title of FDP (Online / Offline)</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 14%;">Sponsorship (ATAL / VGST / DST)</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 20%;">Organized by (Full Address)</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 12%;">From - To Dates</th>
+                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 8%;">No. of Participants</th>
+                        </tr>
+                    </thead>
+                    <tbody id="hodFdpTableBody">
+                        <tr>
+                            <td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">Loading department FDP records...</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -412,6 +505,7 @@
 
         let activeScheme = 'ODD';
         let activeSemNumber = 3;
+        let currentSelectedAcademicYear = '2026-2027';
 
         const daysOfWeek = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
         const periods = [
@@ -425,9 +519,10 @@
         ];
 
         let teachersList = [];
+        let departmentPublications = [];
+        let departmentFdpRecords = [];
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Bypass biometric overlay for HOD role login
             initializeHodWorkspace();
         });
 
@@ -441,23 +536,132 @@
             await fetchTeachers();
             await reloadTimetableGrid();
             await loadHodChatLedger();
+            await loadDepartmentPublications();
+            await loadDepartmentFdpRecords();
+        }
+
+        function switchAcademicYear(yearStr) {
+            currentSelectedAcademicYear = yearStr;
+            const pubsDropdown = document.getElementById('pubsYearDropdown');
+            const fdpDropdown = document.getElementById('fdpYearDropdown');
+            if (pubsDropdown) pubsDropdown.value = yearStr;
+            if (fdpDropdown) fdpDropdown.value = yearStr;
+
+            loadDepartmentPublications();
+            loadDepartmentFdpRecords();
+            showPopupNotification(`📅 Switched to Academic Year ${yearStr}`);
+        }
+
+        // =========================================================================
+        // 📊 DEPARTMENT PUBLICATIONS HUB LOADERS & EXPORTERS
+        // =========================================================================
+        async function loadDepartmentPublications() {
+            const tbody = document.getElementById('hodPubsTableBody');
+            if (!tbody) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/hod/publications?branch=${encodeURIComponent(userBranch)}&institutionId=${encodeURIComponent(institutionId)}&academicYear=${currentSelectedAcademicYear}`);
+                const data = await res.json();
+
+                if (!data.success || !data.publications || data.publications.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">No faculty research publications recorded for ${userBranch} in ${currentSelectedAcademicYear}.</td></tr>`;
+                    departmentPublications = [];
+                    return;
+                }
+
+                departmentPublications = data.publications;
+                tbody.innerHTML = "";
+                departmentPublications.forEach((pub, index) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; font-weight: 700;">${index + 1}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); font-weight: 700;">${pub.authors || pub.teacher_name || 'Faculty'}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);"><strong>${pub.title}</strong></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);">${pub.journal_or_conference || 'N/A'}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);">${pub.h_index_metrics || pub.indexing_type || 'Scopus Indexed'}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; font-weight: 700;">${pub.publication_year || pub.publication_date || '2026'}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center;"><span style="background:#e0e7ff; color:#3730a3; padding: 3px 8px; border-radius: 6px; font-weight: 800;">${pub.quartile || 'Q3'}</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--accent-red);">Failed to load department publications.</td></tr>`;
+            }
+        }
+
+        async function loadDepartmentFdpRecords() {
+            const tbody = document.getElementById('hodFdpTableBody');
+            if (!tbody) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/hod/fdp-records?branch=${encodeURIComponent(userBranch)}&institutionId=${encodeURIComponent(institutionId)}&academicYear=${currentSelectedAcademicYear}`);
+                const data = await res.json();
+
+                if (!data.success || !data.fdpRecords || data.fdpRecords.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">No FDP records found for ${userBranch} in ${currentSelectedAcademicYear}.</td></tr>`;
+                    departmentFdpRecords = [];
+                    return;
+                }
+
+                departmentFdpRecords = data.fdpRecords;
+                tbody.innerHTML = "";
+                departmentFdpRecords.forEach((fdp, index) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; font-weight: 700;">${index + 1}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); font-weight: 700;">${fdp.teacher_name || 'Faculty'}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);">${fdp.fdp_title} <span style="font-size:10px; background:#e0e7ff; color:#3730a3; padding:2px 6px; border-radius:4px;">${fdp.fdp_mode}</span></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);">${fdp.sponsorship_status}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);"><small>${fdp.organizing_address}</small></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center;">${fdp.from_date} to ${fdp.to_date}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; font-weight: 700;">${fdp.participants_count || '50'}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--accent-red);">Failed to load FDP ledger.</td></tr>`;
+            }
+        }
+
+        function exportDepartmentPublicationsReport() {
+            if (!departmentPublications || departmentPublications.length === 0) {
+                alert("⚠️ No publication records available to export.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Sl No,Authors,Title,Journal/Conference,Scopus/WoS/SCI,Year of Publication,Quartile\n";
+            departmentPublications.forEach((pub, index) => {
+                const safeTitle = `"${(pub.title || '').replace(/"/g, '""')}"`;
+                const safeVenue = `"${(pub.journal_or_conference || '').replace(/"/g, '""')}"`;
+                const safeAuthors = `"${(pub.authors || pub.teacher_name || '').replace(/"/g, '""')}"`;
+                const safeIndexing = `"${(pub.h_index_metrics || pub.indexing_type || '').replace(/"/g, '""')}"`;
+                csvContent += `${index + 1},${safeAuthors},${safeTitle},${safeVenue},${safeIndexing},${pub.publication_year || pub.publication_date || ''},${pub.quartile || 'N/A'}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `DrAIT_${userBranch}_Department_Faculty_Publications.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showPopupNotification("✅ Official department publication report downloaded!");
         }
 
         async function fetchTeachers() {
             try {
-                const res = await fetch(`${API_BASE}/api/hod/teachers?institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/hod/teachers?branch=${encodeURIComponent(userBranch)}&institutionId=${institutionId}`);
                 teachersList = await res.json();
 
                 const mentorSelect = document.getElementById('mentorSelectDropdown');
                 if (mentorSelect) {
-                    fillTeacherDropdownOptions(mentorSelect, "");
+                    fillMentorDropdownOptions(mentorSelect, "");
                 }
             } catch (err) { console.error("Teacher load error:", err); }
         }
 
-        // Helper function to build category-grouped options robustly matching math/science departments
-        function fillTeacherDropdownOptions(selectElement, selectedTeacherId) {
-            let coreOpts = "", mathOpts = "", phyOpts = "", chemOpts = "";
+        function fillMentorDropdownOptions(selectElement, selectedTeacherId) {
+            let coreOpts = "", mathOpts = "", phyOpts = "", chemOpts = "", bioOpts = "", cdnOpts = "";
             
             teachersList.forEach(t => {
                 const b = (t.branch || '').toUpperCase();
@@ -466,14 +670,49 @@
                 if (b.includes('MATH') || b.includes('MATHEMATICS')) mathOpts += opt;
                 else if (b.includes('PHYS')) phyOpts += opt;
                 else if (b.includes('CHEM')) chemOpts += opt;
+                else if (b.includes('BIOL')) bioOpts += opt;
+                else if (b.includes('CDN') || b.includes('HAT')) cdnOpts += opt;
                 else coreOpts += opt;
             });
 
             selectElement.innerHTML = `<option value="">-- Select Teacher --</option>` +
-                `<optgroup label="${userBranch} Department">${coreOpts}</optgroup>` +
-                `<optgroup label="Mathematics Department">${mathOpts}</optgroup>` +
-                `<optgroup label="Physics Department">${phyOpts}</optgroup>` +
-                `<optgroup label="Chemistry Department">${chemOpts}</optgroup>`;
+                (coreOpts ? `<optgroup label="${userBranch} Department">${coreOpts}</optgroup>` : '') +
+                (mathOpts ? `<optgroup label="Mathematics Department">${mathOpts}</optgroup>` : '') +
+                (phyOpts ? `<optgroup label="Physics Department">${phyOpts}</optgroup>` : '') +
+                (chemOpts ? `<optgroup label="Chemistry Department">${chemOpts}</optgroup>` : '') +
+                (bioOpts ? `<optgroup label="Biology Department">${bioOpts}</optgroup>` : '') +
+                (cdnOpts ? `<optgroup label="Aptitude / CDN Department">${cdnOpts}</optgroup>` : '');
+        }
+
+        function filterTeachersForSlot(day, periodId, preselectedTeacherId = '') {
+            const deptSelect = document.getElementById(`dept_${day}_${periodId}`);
+            const teacherSelect = document.getElementById(`teacher_${day}_${periodId}`);
+            const chosenDept = (deptSelect.value || '').toUpperCase();
+
+            if (!chosenDept) {
+                teacherSelect.innerHTML = `<option value="">-- Select Teacher --</option>`;
+                return;
+            }
+
+            let filteredOpts = "";
+            teachersList.forEach(t => {
+                const b = (t.branch || '').toUpperCase();
+                let matches = false;
+
+                if (chosenDept === 'MATHS' && (b.includes('MATH') || b.includes('MATHEMATICS'))) matches = true;
+                else if (chosenDept === 'PHYSICS' && b.includes('PHYS')) matches = true;
+                else if (chosenDept === 'CHEM' && b.includes('CHEM')) matches = true;
+                else if (chosenDept === 'BIOLOGY' && b.includes('BIOL')) matches = true;
+                else if (chosenDept === 'CDN' && (b.includes('CDN') || b.includes('HAT'))) matches = true;
+                else if (chosenDept === userBranch.toUpperCase() && !b.includes('MATH') && !b.includes('PHYS') && !b.includes('CHEM') && !b.includes('BIOL') && !b.includes('CDN') && !b.includes('HAT')) matches = true;
+
+                if (matches) {
+                    const isSel = (t.usn.toUpperCase() === (preselectedTeacherId || '').toUpperCase()) ? 'selected' : '';
+                    filteredOpts += `<option value="${t.usn}" data-name="${t.name}" ${isSel}>${t.name} (${t.usn})</option>`;
+                }
+            });
+
+            teacherSelect.innerHTML = `<option value="">-- Select Teacher --</option>` + filteredOpts;
         }
 
         async function submitBatchMentorshipAssignment() {
@@ -787,12 +1026,26 @@
                     const roomNum = slotData.room_number || '';
                     const assignedTeacherId = slotData.assigned_teacher_id || '';
 
-                    let selectId = `teacher_${day}_${p.id}`;
                     html += `
                         <td>
                             <div class="slot-cell">
-                                <select class="slot-select" id="${selectId}"></select>
-                                <div class="split-sub-room-box">
+                                <!-- 1. Department Filter Dropdown -->
+                                <select class="slot-select" id="dept_${day}_${p.id}" onchange="filterTeachersForSlot('${day}', ${p.id})">
+                                    <option value="">-- Select Dept --</option>
+                                    <option value="${userBranch}">${userBranch} Dept</option>
+                                    <option value="MATHS">Mathematics</option>
+                                    <option value="PHYSICS">Physics</option>
+                                    <option value="CHEM">Chemistry</option>
+                                    <option value="BIOLOGY">Biology</option>
+                                    <option value="CDN">Aptitude / CDN</option>
+                                </select>
+
+                                <!-- 2. Filtered Teacher Dropdown -->
+                                <select class="slot-select" id="teacher_${day}_${p.id}" style="margin-top: 2px;">
+                                    <option value="">-- Select Teacher --</option>
+                                </select>
+
+                                <div class="split-sub-room-box" style="margin-top: 4px;">
                                     <input type="text" class="slot-input" id="sub_${day}_${p.id}" value="${subCode}" placeholder="Subject Code">
                                     <div class="split-divider"></div>
                                     <input type="text" class="slot-input-room" id="room_${day}_${p.id}" value="${roomNum}" placeholder="Room No">
@@ -806,12 +1059,28 @@
                 tr.innerHTML = html;
                 tbody.appendChild(tr);
 
-                // Populate each slot select dropdown dynamically with grouped categories
+                // Populate slot dropdowns with pre-selected state if data exists
                 periods.forEach(p => {
                     const slotData = existingMap[`${day}_${p.id}`] || {};
-                    const selectEl = document.getElementById(`teacher_${day}_${p.id}`);
-                    if (selectEl) {
-                        fillTeacherDropdownOptions(selectEl, slotData.assigned_teacher_id || '');
+                    const assignedTeacherId = slotData.assigned_teacher_id || '';
+                    
+                    if (assignedTeacherId) {
+                        const foundTeacher = teachersList.find(t => t.usn.toUpperCase() === assignedTeacherId.toUpperCase());
+                        if (foundTeacher) {
+                            const tb = (foundTeacher.branch || '').toUpperCase();
+                            let deptVal = userBranch.toUpperCase();
+                            if (tb.includes('MATH')) deptVal = 'MATHS';
+                            else if (tb.includes('PHYS')) deptVal = 'PHYSICS';
+                            else if (tb.includes('CHEM')) deptVal = 'CHEM';
+                            else if (tb.includes('BIOL')) deptVal = 'BIOLOGY';
+                            else if (tb.includes('CDN') || tb.includes('HAT')) deptVal = 'CDN';
+
+                            const deptEl = document.getElementById(`dept_${day}_${p.id}`);
+                            if (deptEl) {
+                                deptEl.value = deptVal;
+                                filterTeachersForSlot(day, p.id, assignedTeacherId);
+                            }
+                        }
                     }
                 });
             });

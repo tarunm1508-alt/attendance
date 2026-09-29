@@ -280,6 +280,18 @@
 
     <script>
         function routeToAuthentication(selectedProfileRole) {
+            // 🔒 SECURE FACULTY & HOD PRIVACY PASSWORD GATEWAY
+            if (selectedProfileRole === 'hod' || selectedProfileRole === 'teacher') {
+                const enteredPassword = prompt(`🔒 Security Passcode Required: Enter the authorized ${selectedProfileRole.toUpperCase()} passcode to open portal:`);
+                
+                const departmentSecretPasscode = "AIT@2026";
+
+                if (enteredPassword !== departmentSecretPasscode) {
+                    alert("❌ Incorrect password. Please enter the correct code.");
+                    return; // Stops execution and prevents opening the login page
+                }
+            }
+
             localStorage.setItem('intendedPortalRole', selectedProfileRole);
             window.location.href = `login.html?role=${selectedProfileRole}`;
         }
