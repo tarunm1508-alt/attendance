@@ -1,5 +1,5 @@
 // 1. API Base URL 
-const API_URL = "https://dr-ait-portal-backend.onrender.com/api";
+const API_URL = "http://localhost:5000/api";
 
 // 2. Logout Function (Used by both Teacher and Student)
 function logout() {
