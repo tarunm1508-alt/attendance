@@ -118,7 +118,7 @@
         .mentee-card { background: white; border: 1px solid var(--bento-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-premium); }
 
         /* ==========================================================================
-            🖨️ PERFECTED PRINT STYLING FIX (Eliminates Blank Leading Pages)
+            🖨 PERFECTED PRINT STYLING FIX (Eliminates Blank Leading Pages)
             ========================================================================== */
         @media print {
             @page {
@@ -199,6 +199,44 @@
             <h3 id="responseModalTitle" style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 8px;">Attendance Recorded!</h3>
             <p id="responseModalText" style="font-size: 14px; color: #64748b; margin-bottom: 24px; line-height: 1.4;">Your attendance has been successfully logged within campus boundaries.</p>
             <button onclick="closeAttendanceResponseModal()" class="btn btn-blue" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px;">Got It 👍</button>
+        </div>
+    </div>
+
+    <!-- 🚨 TEACHER SHORTAGE EVALUATION MODAL -->
+    <div id="shortageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 100000; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #ffffff; width: 100%; max-width: 750px; border-radius: 22px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid var(--bento-border); overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="padding: 20px 26px; border-bottom: 1px solid var(--bento-border); display: flex; justify-content: space-between; align-items: center; background: #fff5f5;">
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #991b1b;">⚠️ Students Below 75% Attendance Shortage</h3>
+                    <p style="margin: 3px 0 0 0; font-size: 12px; color: #7f1d1d;" id="shortageModalSubtitle">Calculated live for your active subject module.</p>
+                </div>
+                <button onclick="closeShortageModal()" style="background: none; border: none; font-size: 22px; cursor: pointer; color: var(--text-muted); font-weight: bold;">✕</button>
+            </div>
+            <div style="padding: 24px; overflow-y: auto; flex: 1;">
+                <div class="table-container" style="margin: 0;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>USN / ID</th>
+                                <th>Student Name</th>
+                                <th>Conducted</th>
+                                <th>Attended</th>
+                                <th style="text-align: center;">Percentage</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shortageTableBody">
+                            <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Calculating shortage records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div style="padding: 16px 26px; border-top: 1px solid var(--bento-border); background: #f8fafc; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; color: var(--text-muted);" id="shortageCountSummary">0 students flagged.</span>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="closeShortageModal()" class="btn btn-dark" style="padding: 10px 18px;">Close</button>
+                    <button onclick="broadcastShortageAlerts()" class="btn btn-blue" id="broadcastShortageBtn" style="padding: 10px 20px; background: #991b1b;">📢 Broadcast Warning Alerts</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -423,7 +461,7 @@
                 ========================================================================== -->
             <div id="teacherSectionLayout" style="display: none;">
 
-                <!-- 📚 TEACHER RESEARCH & PUBLICATIONS HUB -->
+                <!-- 📚 TEACHER RESEARCH & PUBLICATIONS HUB (EXACT HOD INDEX COLUMNS MATCH) -->
                 <div class="bento-card" style="border-left: 5px solid var(--accent-green); margin-bottom: 24px; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
@@ -452,16 +490,18 @@
                         <table>
                             <thead>
                                 <tr>
-                                    <th style="width: 10%;">Type</th>
-                                    <th style="width: 35%;">Title & Authors</th>
-                                    <th style="width: 25%;">Journal / Venue</th>
-                                    <th style="width: 10%; text-align: center;">Quartile</th>
-                                    <th style="width: 15%;">H-Index / Indexing</th>
-                                    <th style="width: 10%; text-align: center;">Action</th>
+                                    <th style="width: 8%; text-align: center;">Sl. No.</th>
+                                    <th style="width: 20%;">Authors</th>
+                                    <th style="width: 27%;">Title</th>
+                                    <th style="width: 18%;">Conference / Journal / Book Chapter</th>
+                                    <th style="width: 12%;">Scopus / WoS / SCI Indexed</th>
+                                    <th style="width: 10%; text-align: center;">Year of Publication</th>
+                                    <th style="width: 10%; text-align: center;">Q1 / Q2 / Q3 / Q4</th>
+                                    <th style="width: 5%; text-align: center;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="teacherPubsTableBody">
-                                <tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">Loading your publications...</td></tr>
+                                <tr><td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">Loading your publications...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -587,9 +627,12 @@
 
                 <!-- TAB 1: LIVE CLASS STREAM -->
                 <div id="wrapper_liveStream">
-                    <div style="text-align: left; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="text-align: left; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h3 style="font-size: 14px; font-weight: 800; color: var(--text-muted);">Live Stream Log Ledger</h3>
-                        <button class="btn btn-blue" style="padding: 8px 14px; font-size: 12px;" onclick="loadAttendance()">🔄 Sync Stream</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-blue" style="padding: 8px 14px; font-size: 12px; background: #991b1b;" onclick="triggerShortageCalculationAndBroadcast()">⚠️ Check Shortage (< 75%)</button>
+                            <button class="btn btn-blue" style="padding: 8px 14px; font-size: 12px;" onclick="loadUserNotifications()">🔄 Sync Stream</button>
+                        </div>
                     </div>
                     <div class="table-container">
                         <table>
@@ -1049,13 +1092,13 @@
             </div>
 
             <div style="text-align: right; margin-top: 20px;">
-                <button class="btn btn-dark" onclick="handleLogout()">Secure Logout ⬅️</button>
+                <button class="btn btn-dark" onclick="handleLogout()">Secure Logout ⬅️️</button>
             </div>
         </div>
     </div>
 
     <!-- JavaScript Client Engine -->
-    <script>
+<script>
         history.pushState(null, null, location.href);
         window.addEventListener('popstate', function () {
             history.pushState(null, null, location.href);
@@ -1099,6 +1142,7 @@
         let html5QrcodeScannerInstance = null;
         let cachedStudentMetrics = [];
         let currentSelectedAcademicYear = '2026-2027';
+        let latestShortageStudentsCache = [];
 
         function getOrCreateDeviceFingerprint() {
             let fingerprint = localStorage.getItem('device_fingerprint');
@@ -1139,7 +1183,120 @@
         }
 
         // =========================================================================
-        // 📚 RESEARCH PUBLICATIONS & FDP HUB CONTROLLERS (TEACHER)
+        // ⚠️ TEACHER SHORTAGE EVALUATION & BROADCAST CONTROLLERS
+        // =========================================================================
+        async function triggerShortageCalculationAndBroadcast() {
+            const cleanSub = (userSubject || '').trim();
+            if (!cleanSub) {
+                firePremiumToastAlert("⚠️ Please select an assigned subject slot first.", "var(--accent-red)");
+                return;
+            }
+
+            const modal = document.getElementById('shortageModal');
+            const tbody = document.getElementById('shortageTableBody');
+            const summary = document.getElementById('shortageCountSummary');
+            const subTitle = document.getElementById('shortageModalSubtitle');
+
+            if (modal) modal.style.display = 'flex';
+            if (subTitle) subTitle.innerText = `Subject Module: ${cleanSub} (Semester ${userSemester})`;
+            if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Evaluating students for ${cleanSub}...</td></tr>`;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/calculate-shortage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        teacherId: userUsn,
+                        subjectCode: cleanSub,
+                        semesterNumber: userSemester,
+                        institutionId: institutionId
+                    })
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--accent-red);">Error calculating shortage records.</td></tr>`;
+                    return;
+                }
+
+                latestShortageStudentsCache = data.shortageStudents || [];
+                if (summary) summary.innerText = `${latestShortageStudentsCache.length} students flagged below 75%.`;
+
+                if (latestShortageStudentsCache.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--accent-green); font-weight: 700; padding: 24px;">🎉 Excellent! No students are below 75% attendance for ${cleanSub}.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = "";
+                latestShortageStudentsCache.forEach(st => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><code>${st.usn}</code></td>
+                            <td><strong>${st.name}</strong></td>
+                            <td>${st.conducted}</td>
+                            <td>${st.attended}</td>
+                            <td style="text-align: center;"><span style="background: #fee2e2; color: #991b1b; padding: 4px 10px; border-radius: 6px; font-weight: 800;">${st.percentage}%</span></td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error("Shortage calc error:", err);
+                if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--accent-red);">Network error connecting to server.</td></tr>`;
+            }
+        }
+
+        function closeShortageModal() {
+            const modal = document.getElementById('shortageModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function broadcastShortageAlerts() {
+            const cleanSub = (userSubject || '').trim();
+            if (!latestShortageStudentsCache || latestShortageStudentsCache.length === 0) {
+                firePremiumToastAlert("⚠️ No students to broadcast.", "var(--accent-red)");
+                return;
+            }
+
+            const btn = document.getElementById('broadcastShortageBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "Broadcasting...";
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/broadcast-shortage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        teacherId: userUsn,
+                        teacherName: userName,
+                        subjectCode: cleanSub,
+                        semesterNumber: userSemester,
+                        shortageStudents: latestShortageStudentsCache,
+                        institutionId: institutionId
+                    })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.success) {
+                    firePremiumToastAlert(`📢 Successfully broadcasted shortage alerts to ${latestShortageStudentsCache.length} students & parents!`);
+                    closeShortageModal();
+                } else {
+                    firePremiumToastAlert(`❌ ${data.message || 'Failed to broadcast alerts.'}`, "var(--accent-red)");
+                }
+            } catch (err) {
+                console.error("Broadcast error:", err);
+                firePremiumToastAlert("❌ Network error broadcasting alerts.", "var(--accent-red)");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "📢 Broadcast Warning Alerts";
+                }
+            }
+        }
+
+        // =========================================================================
+        // 📚 RESEARCH PUBLICATIONS & FDP HUB CONTROLLERS (TEACHER - EXACT HOD INDEX MATCH)
         // =========================================================================
         function openAddPublicationModal() {
             const modal = document.getElementById('pubModal');
@@ -1182,25 +1339,27 @@
                 const data = await res.json();
 
                 if (!data.success || !data.publications || data.publications.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">No research publications added for ${currentSelectedAcademicYear}. Click "+ Add Publication" to begin.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">No research publications recorded for ${currentSelectedAcademicYear}. Click "+ Add Publication" to begin.</td></tr>`;
                     return;
                 }
 
                 tbody.innerHTML = "";
-                data.publications.forEach((pub) => {
+                data.publications.forEach((pub, index) => {
                     tbody.innerHTML += `
                         <tr>
-                            <td><span class="status-badge" style="background:#e0e7ff; color:#3730a3;">${pub.pub_type}</span></td>
-                            <td><strong>${pub.title}</strong><br><small style="color:var(--text-muted);">Authors: ${pub.authors || userName} (${pub.publication_date || 'N/A'})</small></td>
+                            <td style="text-align: center; font-weight: bold;">${index + 1}</td>
+                            <td>${pub.authors || userName}</td>
+                            <td><strong>${pub.title}</strong></td>
                             <td>${pub.journal_or_conference || 'N/A'}</td>
-                            <td style="text-align: center;"><span style="font-weight: 800; color: var(--primary-blue);">${pub.quartile || 'N/A'}</span></td>
-                            <td>${pub.h_index_metrics || 'N/A'}</td>
-                            <td style="text-align: center;"><button onclick="deleteTeacherPublication(${pub.id})" class="btn" style="background:#fee2e2; color:#991b1b; padding:4px 10px; font-size:11px;">Delete</button></td>
+                            <td>${pub.h_index_metrics || 'Indexed'}</td>
+                            <td style="text-align: center;">${pub.publication_date || currentSelectedAcademicYear}</td>
+                            <td style="text-align: center;"><span style="font-weight: 800; color: var(--primary-blue); background: #e0e7ff; padding: 3px 8px; border-radius: 6px;">${pub.quartile || 'Q3'}</span></td>
+                            <td style="text-align: center;"><button onclick="deleteTeacherPublication(${pub.id})" class="btn" style="background:#fee2e2; color:#991b1b; padding:4px 8px; font-size:11px;">Delete</button></td>
                         </tr>
                     `;
                 });
             } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--accent-red); padding: 20px;">Failed to load publications ledger.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-red); padding: 20px;">Failed to load publications ledger.</td></tr>`;
             }
         }
 
@@ -1480,7 +1639,7 @@
             loadUserNotifications();
             loadUserDirectInbox();
 
-            if (role === 'teacher' || role === 'hod') {
+            if (role === 'teacher' || role === 'hod' || role.includes('teacher') || role.includes('hod')) {
                 if (document.getElementById('teacherSectionLayout')) document.getElementById('teacherSectionLayout').style.display = 'block';
                 if (document.getElementById('directMessagingDesk')) document.getElementById('directMessagingDesk').style.display = 'block';
                 if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 ${role.toUpperCase()}: ${userName} | TENANT: ${institutionId}`;
@@ -1496,9 +1655,7 @@
                 if (document.getElementById('studentSectionLayout')) document.getElementById('studentSectionLayout').style.display = 'block';
                 if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | USN: ${userUsn}`;
                 
-                // Trigger automated low-attendance shortage check on student login
                 checkAttendanceShortagesAutomatically();
-                
                 initializeStudentPerformanceLayout();
             }
         }
@@ -2410,7 +2567,7 @@
                 updateSemesterSummaryDisplay(result);
 
                 if (document.getElementById('ai_risk_value')) {
-                    document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
+                    document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️️ SHORTAGE RISK" : "✅ SAFE ZONE";
                     document.getElementById('ai_risk_value').style.color = finalPercentage < 75 ? 'var(--accent-red)' : 'var(--accent-green)';
                 }
 
@@ -2556,6 +2713,21 @@
             const complianceBox = document.getElementById('complianceShortageNoticeBox');
             const complianceTableBody = document.getElementById('complianceAlertTableBody');
 
+            // 🔄 Universal Workspace Refresh Handler across portals
+            firePremiumToastAlert("🔄 Synchronizing workspace nodes...", "var(--primary-blue)");
+
+            // Refresh active module data based on current role
+            const role = userRole.toLowerCase().trim();
+            if (role === 'teacher' || role === 'hod' || role.includes('teacher') || role.includes('hod')) {
+                if (typeof loadAttendance === 'function') loadAttendance();
+                if (typeof loadTeacherPublications === 'function') loadTeacherPublications();
+                if (typeof loadTeacherFdpRecords === 'function') loadTeacherFdpRecords();
+            } else if (role === 'parent') {
+                if (typeof initializeIsolatedParentWorkspaceHUD === 'function') initializeIsolatedParentWorkspaceHUD();
+            } else {
+                if (typeof initializeStudentPerformanceLayout === 'function') initializeStudentPerformanceLayout();
+            }
+
             if (!feed || !badge) return;
             try {
                 const res = await fetch(`${API_BASE}/api/notifications?userId=${encodeURIComponent(userUsn)}&role=${userRole}&institutionId=${institutionId}`);
@@ -2605,7 +2777,12 @@
                 messages.forEach(msg => {
                     feed.innerHTML += `<div style="background:#f8fafc; border-left:4px solid #1e40af; padding:8px 12px; border-radius:6px; font-size:12px;"><strong>${(msg.title || 'ALERT').trim()}:</strong> ${(msg.message || '').trim()}</div>`;
                 });
-            } catch (e) { console.error(e); }
+
+                firePremiumToastAlert("✅ Workspace synchronized successfully!");
+            } catch (e) { 
+                console.error(e);
+                firePremiumToastAlert("❌ Synchronization error.", "var(--accent-red)");
+            }
         }
 
         async function loadArchivedPastMessages() {

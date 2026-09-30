@@ -6,8 +6,8 @@
     <title>Faculty Portal | Live Attendance</title>
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <style>
         :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f2f5; --success: #27ae60; --danger: #e74c3c; --dark: #333; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--dark); text-align: center; }
@@ -23,11 +23,13 @@
         label { font-weight: bold; font-size: 13px; color: #555; display: block; margin-bottom: 5px; }
         select, input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; outline: none; margin-bottom: 12px; }
         
-        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; text-transform: uppercase; }
+        .btn { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; font-size: 14px; cursor: pointer; transition: 0.2s; text-transform: uppercase; margin-bottom: 8px; }
         .btn-generate { background-color: var(--success); color: white; }
         .btn-generate:hover { background-color: #219150; }
         .btn-close { background-color: #f39c12; color: white; }
         .btn-close:hover { background-color: #d35400; }
+        .btn-shortage { background-color: #c0392b; color: white; }
+        .btn-shortage:hover { background-color: #962d22; }
         .btn-logout { background-color: var(--danger); color: white; margin-top: 25px; }
         .btn-logout:hover { background-color: #c0392b; }
 
@@ -68,10 +70,13 @@
 
         <div class="control-card" style="display: flex; flex-direction: column; justify-content: space-between;">
             <div>
-                <h4>2. Active Session Management</h4>
-                <p style="font-size: 13px; color:#7f8c8d; margin-top:0;">Closing a session updates the total classes column for all students enrolled in this module.</p>
+                <h4>2. Session & Shortage Tools</h4>
+                <p style="font-size: 13px; color:#7f8c8d; margin-top:0;">Evaluate attendance compliance and review students falling below 75%.</p>
             </div>
-            <button class="btn btn-close" onclick="closeAttendanceSession()">End Class Session</button>
+            <div>
+                <button class="btn btn-shortage" onclick="calculateShortageSummary()">⚠️ Check Shortage (&lt; 75%)</button>
+                <button class="btn btn-close" onclick="closeAttendanceSession()">End Class Session</button>
+            </div>
         </div>
     </div>
 
@@ -109,9 +114,48 @@
     <button class="btn btn-logout" onclick="logoutTeacher()">Secure Portal Logout</button>
 </div>
 
+<!-- 🚨 SHORTAGE MODAL POPUP -->
+<div id="shortageModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 100000; align-items: center; justify-content: center; padding: 20px;">
+    <div style="background: #ffffff; width: 100%; max-width: 700px; border-radius: 18px; box-shadow: 0 25px 50px rgba(0,0,0,0.25); overflow: hidden; max-height: 90vh; display: flex; flex-direction: column; text-align: left;">
+        <div style="padding: 20px 24px; background: #fff5f5; border-bottom: 1px solid #fca5a5; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3 style="margin: 0; font-size: 18px; color: #991b1b;">⚠️ Students Below 75% Attendance Shortage</h3>
+                <p style="margin: 3px 0 0 0; font-size: 12px; color: #7f1d1d;" id="shortageModalSub">Subject Module Analysis</p>
+            </div>
+            <button onclick="closeShortageModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; font-weight: bold;">✕</button>
+        </div>
+        <div style="padding: 20px; overflow-y: auto; flex: 1;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>USN</th>
+                        <th>Student Name</th>
+                        <th style="text-align: center;">Conducted</th>
+                        <th style="text-align: center;">Attended</th>
+                        <th style="text-align: center;">Percentage</th>
+                    </tr>
+                </thead>
+                <tbody id="shortageTableBody">
+                    <tr><td colspan="5" style="text-align:center; color:#7f8c8d;">Calculating shortage...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div style="padding: 15px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 13px; color: #64748b;" id="shortageCountSummary">0 students flagged.</span>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="closeShortageModal()" class="btn" style="background: #cbd5e1; color: #0f172a; width: auto; padding: 10px 18px;">Close</button>
+                <button onclick="broadcastShortageWarnings()" class="btn" id="broadcastBtn" style="background: #991b1b; color: white; width: auto; padding: 10px 18px;">📢 Broadcast Warning Alerts</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     const teacherName = localStorage.getItem("user_name");
+    const teacherId = localStorage.getItem("userUsn") || localStorage.getItem("usn") || "TEACHER_DEFAULT";
+    const institutionId = localStorage.getItem("institutionId") || "DR_AIT";
     let trackerInterval = null;
+    let cachedShortageStudents = [];
 
     if (!localStorage.getItem("role") || localStorage.getItem("role") !== 'teacher') {
         window.location.href = 'login.html?role=teacher';
@@ -133,13 +177,11 @@
                 document.getElementById("activeQrSubject").innerText = subject;
                 const canvasTarget = document.getElementById("qrCanvas");
                 
-                // FIXED: Robust asset validation string parser checking backend properties
                 const backendQrImage = data.qrCodeDataUrl || data.qrUrl || data.qrCode || data.image;
                 
                 if (backendQrImage) {
                     canvasTarget.innerHTML = `<img src="${backendQrImage}" alt="Active Session QR" width="200" height="200"/>`;
                 } else {
-                    // FIXED Fallback: Generate clean dynamic data payload block via stable external engine on-the-fly
                     const dynamicPayloadString = JSON.stringify({ subject: subject, token: data.token || data.sessionCode || "DEMO" });
                     const standaloneEngineUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(dynamicPayloadString)}`;
                     canvasTarget.innerHTML = `<img src="${standaloneEngineUrl}" alt="Active Session QR" width="200" height="200"/>`;
@@ -197,6 +239,110 @@
         }
     }
 
+    async function calculateShortageSummary() {
+        const subject = document.getElementById("qrSubject").value;
+        const modal = document.getElementById("shortageModal");
+        const tbody = document.getElementById("shortageTableBody");
+        const subLabel = document.getElementById("shortageModalSub");
+        const summary = document.getElementById("shortageCountSummary");
+
+        if (modal) modal.style.display = 'flex';
+        if (subLabel) subLabel.innerText = `Subject Module: ${subject}`;
+        if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Calculating attendance shortage for ${subject}...</td></tr>`;
+
+        try {
+            const res = await fetch("http://localhost:5000/api/teacher/calculate-shortage", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    teacherId: teacherId,
+                    subjectCode: subject,
+                    semesterNumber: 5,
+                    institutionId: institutionId
+                })
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Failed to calculate shortage data.</td></tr>`;
+                return;
+            }
+
+            cachedShortageStudents = data.shortageStudents || [];
+            if (summary) summary.innerText = `${cachedShortageStudents.length} students flagged below 75%.`;
+
+            if (cachedShortageStudents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:green; font-weight:bold; padding:20px;">🎉 Great! No students are below 75% for ${subject}.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = "";
+            cachedShortageStudents.forEach(st => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><code>${st.usn}</code></td>
+                        <td><strong>${st.name}</strong></td>
+                        <td style="text-align:center;">${st.conducted}</td>
+                        <td style="text-align:center;">${st.attended}</td>
+                        <td style="text-align:center;"><span style="background:#fee2e2; color:#991b1b; padding:4px 8px; border-radius:6px; font-weight:bold;">${st.percentage}%</span></td>
+                    </tr>
+                `;
+            });
+        } catch (err) {
+            console.error("Shortage fetch error:", err);
+            if (tbody) tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Network error connecting to backend API.</td></tr>`;
+        }
+    }
+
+    function closeShortageModal() {
+        const modal = document.getElementById("shortageModal");
+        if (modal) modal.style.display = 'none';
+    }
+
+    async function broadcastShortageWarnings() {
+        const subject = document.getElementById("qrSubject").value;
+        if (!cachedShortageStudents || cachedShortageStudents.length === 0) {
+            alert("No students flagged for shortage to broadcast.");
+            return;
+        }
+
+        const btn = document.getElementById("broadcastBtn");
+        if (btn) {
+            btn.disabled = true;
+            btn.innerText = "Broadcasting...";
+        }
+
+        try {
+            const res = await fetch("http://localhost:5000/api/teacher/broadcast-shortage", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    teacherId: teacherId,
+                    teacherName: teacherName || "Faculty",
+                    subjectCode: subject,
+                    semesterNumber: 5,
+                    shortageStudents: cachedShortageStudents,
+                    institutionId: institutionId
+                })
+            });
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                alert(`📢 Successfully broadcasted shortage warning alerts to ${cachedShortageStudents.length} students and their parent dashboards!`);
+                closeShortageModal();
+            } else {
+                alert("Failed to broadcast messages: " + (data.message || "Unknown error"));
+            }
+        } catch (err) {
+            alert("Network error dispatching broadcast alerts.");
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerText = "📢 Broadcast Warning Alerts";
+            }
+        }
+    }
+
     async function closeAttendanceSession() {
         try {
             const res = await fetch("http://localhost:5000/api/attendance/close-session", {
@@ -208,8 +354,7 @@
             if (res.ok) {
                 clearInterval(trackerInterval); 
                 document.getElementById("qrDisplayBox").style.display = 'none'; 
-               var qrid= document.getElementById("scanCount").innerText = "0";
-             console.log("qrcode", qrid);
+                document.getElementById("scanCount").innerText = "0";
                 document.getElementById("liveScanTableBody").innerHTML = `<tr><td colspan="4" style="padding:20px; text-align:center; color:#7f8c8d; font-style:italic;">Session closed cleanly. All student metrics synchronized safely inside database.</td></tr>`;
                 alert(data.message || "Class session terminated completely!");
             } else {

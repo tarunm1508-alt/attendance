@@ -9,19 +9,39 @@ const isCloud = connectionString.includes('neon.tech') || connectionString.inclu
 const pool = new Pool({
     connectionString: connectionString,
     ssl: isCloud ? { rejectUnauthorized: false } : false, // Required for Cloud DBs (Neon / Supabase / Render)
-    max: 10,
-    idleTimeoutMillis: 30000, // Increased to 30 seconds for better idle stability
-    connectionTimeoutMillis: 10000 // 10 seconds to handle cloud cold starts smoothly
+    max: 15,
+    idleTimeoutMillis: 20000,         // Clean up idle clients safely
+    connectionTimeoutMillis: 10000,   // Handle cloud cold starts smoothly
+    keepAlive: true,                  // 🔌 Keeps TCP connection alive to prevent unexpected drops
+    keepAliveInitialDelayMillis: 10000
 });
 
 pool.on('connect', () => {
     console.log(isCloud ? '☁️ Connected to Cloud PostgreSQL Database!' : '💻 Connected to Local PostgreSQL Database!');
 });
 
-// Robust error listener to handle sudden socket closures or idle terminations smoothly
+// Gracefully handle sudden socket closures or idle terminations without crashing terminal
 pool.on('error', (err, client) => {
+    if (err.message.includes('terminating connection') || err.message.includes('Connection terminated') || err.code === '57P01') {
+        // This is a standard cloud idle timeout recycle—safe to handle quietly
+        return;
+    }
     console.error('⚠️ Warning: Database idle client error encountered:', err.message);
-    // The pool will automatically handle reconnecting dead clients on the next query
 });
 
-module.exports = pool;
+// 🛡️ ULTRA-ROBUST QUERY WRAPPER WITH AUTO-RETRY FOR ATTENDANCE
+module.exports = {
+    query: async (text, params) => {
+        try {
+            return await pool.query(text, params);
+        } catch (error) {
+            // If connection drops during a query, auto-retry once instantly so attendance never fails
+            if (error.code === 'ECONNRESET' || error.message.includes('terminated') || error.message.includes('closed')) {
+                console.warn('🔄 Network blink detected. Automatically retrying database operation...');
+                return await pool.query(text, params);
+            }
+            throw error;
+        }
+    },
+    pool
+};

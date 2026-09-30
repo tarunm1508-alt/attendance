@@ -22,6 +22,202 @@ app.use("/frontend", express.static(path.join(__dirname, "../frontend")));
 // ==========================================================================
 // 🚨 TEACHER BUTTON TRIGGER: CALCULATE ATTENDANCE SHORTAGES & DISPATCH WARNINGS
 // ==========================================================================
+app.post('/api/teacher/calculate-shortage', async (req, res) => {
+    const { teacherId, subjectCode, semesterNumber, branch, institutionId } = req.body;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanSub = subjectCode ? subjectCode.trim().toUpperCase() : '';
+    const semNum = parseInt(semesterNumber) || 5;
+    const cleanBranch = branch ? branch.trim().toUpperCase() : 'AIML';
+
+    try {
+        // 1. Query total classes conducted for this specific subject
+        const conductedRes = await pool.query(
+            `SELECT COUNT(DISTINCT session_code) as total_conducted 
+             FROM class_sessions 
+             WHERE (UPPER(subject_code) = $1 OR UPPER(subject_name) ILIKE '%' || $1 || '%') 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+            [cleanSub, tenant]
+        );
+        const totalConducted = parseInt(conductedRes.rows[0]?.total_conducted) || 0;
+
+        if (totalConducted === 0) {
+            return res.json({ success: true, shortageStudents: [] });
+        }
+
+        // 2. Query students matching the target Branch and Semester
+        const studentsRes = await pool.query(
+            `SELECT usn, name FROM users 
+             WHERE role ILIKE 'student' 
+               AND UPPER(branch) = UPPER($1) 
+               AND semester_number = $2 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3 
+             ORDER BY usn ASC`,
+            [cleanBranch, semNum, tenant]
+        );
+
+        let shortageStudents = [];
+
+        for (let st of studentsRes.rows) {
+            const cleanUsn = st.usn.trim().toUpperCase();
+
+            // 3. Count attended classes for this student in this subject
+            const attendedRes = await pool.query(
+                `SELECT COUNT(DISTINCT a.session_code) as attended 
+                 FROM users_attendance a 
+                 JOIN class_sessions s ON a.session_code = s.session_code 
+                 WHERE UPPER(a.student_id) = $1 
+                   AND (UPPER(s.subject_code) = $2 OR UPPER(s.subject_name) ILIKE '%' || $2 || '%')
+                   AND COALESCE(a.institution_id, 'DR_AIT') ILIKE $3`,
+                [cleanUsn, cleanSub, tenant]
+            );
+
+            const attendedCount = parseInt(attendedRes.rows[0]?.attended) || 0;
+            const percentage = Math.round((attendedCount / totalConducted) * 100);
+
+            if (percentage < 75) {
+                shortageStudents.push({
+                    usn: st.usn,
+                    name: st.name,
+                    conducted: totalConducted,
+                    attended: attendedCount,
+                    percentage: percentage
+                });
+            }
+        }
+
+        res.json({ success: true, shortageStudents });
+    } catch (err) {
+        console.error("❌ Calculate shortage error:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/teacher/broadcast-shortage', async (req, res) => {
+    const { teacherId, teacherName, subjectCode, semesterNumber, shortageStudents, institutionId } = req.body;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanSub = subjectCode ? subjectCode.trim().toUpperCase() : '';
+
+    try {
+        if (!shortageStudents || !Array.isArray(shortageStudents) || shortageStudents.length === 0) {
+            return res.status(400).json({ success: false, message: "No flagged students provided for broadcast." });
+        }
+
+        for (let st of shortageStudents) {
+            const cleanUsn = st.usn.trim().toUpperCase();
+            const warningTitle = "⚠️ LOW ATTENDANCE WARNING (< 75%)";
+            const warningMessage = `CRITICAL SHORTAGE ALERT: Your attendance in '${cleanSub}' has dropped to ${st.percentage}% (${st.attended}/${st.conducted} classes). You are at risk of detention. Please improve attendance immediately.`;
+
+            // Insert alert into student notifications inbox
+            await pool.query(
+                `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
+                 VALUES ($1, 'student', $2, $3, $4)`,
+                [cleanUsn, warningTitle, warningMessage, tenant]
+            );
+
+            // Lookup and notify parent/guardian
+            const parentLookup = await pool.query(
+                `SELECT usn FROM users WHERE UPPER(child_usn) = UPPER($1) AND role = 'parent' AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`,
+                [cleanUsn, tenant]
+            );
+
+            if (parentLookup.rows.length > 0) {
+                const parentId = parentLookup.rows[0].usn;
+                await pool.query(
+                    `INSERT INTO user_notifications (user_id, role, title, message, institution_id)
+                     VALUES ($1, 'parent', $2, $3, $4)`,
+                    [parentId, `Ward Shortage: ${warningTitle}`, `Your ward (${cleanUsn}) has low attendance in ${cleanSub} (${st.percentage}%).`, tenant]
+                );
+            }
+        }
+
+        res.status(200).json({ success: true, message: `Successfully broadcasted shortage warnings to ${shortageStudents.length} students & guardians!` });
+    } catch (err) {
+        console.error("❌ Broadcast shortage error:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// ==========================================================================
+// 📚 TEACHER & HOD PUBLICATIONS HUB ENDPOINTS
+// ==========================================================================
+app.get('/api/teacher/publications', async (req, res) => {
+    const { teacherId, institutionId, academicYear } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanTeacherId = teacherId ? teacherId.trim().toUpperCase() : '';
+    const year = academicYear ? academicYear.trim() : '2026-2027';
+
+    try {
+        const query = `
+            SELECT * FROM faculty_publications 
+            WHERE UPPER(teacher_id) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 AND academic_year = $3
+            ORDER BY id DESC
+        `;
+        const result = await pool.query(query, [cleanTeacherId, tenant, year]);
+        res.status(200).json({ success: true, publications: result.rows });
+    } catch (err) {
+        console.error("❌ Error fetching publications:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 🌐 HOD Alias for Publications Endpoint
+app.get('/api/hod/publications', async (req, res) => {
+    const { institutionId, academicYear } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const year = academicYear ? academicYear.trim() : '2026-2027';
+
+    try {
+        const query = `
+            SELECT * FROM faculty_publications 
+            WHERE COALESCE(institution_id, 'DR_AIT') ILIKE $1 AND academic_year = $2
+            ORDER BY id DESC
+        `;
+        const result = await pool.query(query, [tenant, year]);
+        res.status(200).json({ success: true, publications: result.rows });
+    } catch (err) {
+        console.error("❌ Error fetching HOD publications:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post('/api/teacher/publications', async (req, res) => {
+    const { 
+        institutionId, teacherId, teacherName, branch, academicYear,
+        pubType, title, authors, publicationDate, journalOrConference, quartile, hIndexMetrics 
+    } = req.body;
+
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanTeacherId = teacherId ? teacherId.trim().toUpperCase() : '';
+
+    try {
+        await pool.query(
+            `INSERT INTO faculty_publications 
+                (institution_id, teacher_id, teacher_name, branch, academic_year, pub_type, title, authors, publication_date, journal_or_conference, quartile, h_index_metrics)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+            [
+                tenant, cleanTeacherId, teacherName || 'Faculty', branch || 'AIML', academicYear || '2026-2027',
+                pubType || 'Journal', title, authors || teacherName, publicationDate || '', journalOrConference || '', quartile || 'Q3', hIndexMetrics || ''
+            ]
+        );
+        res.status(201).json({ success: true, message: "Publication added successfully!" });
+    } catch (err) {
+        console.error("❌ Error adding publication:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.delete('/api/teacher/publications', async (req, res) => {
+    const { id, institutionId } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    try {
+        await pool.query(`DELETE FROM faculty_publications WHERE id = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`, [id, tenant]);
+        res.status(200).json({ success: true, message: "Publication deleted." });
+    } catch (err) {
+        console.error("❌ Error deleting publication:", err.message);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.post('/api/teacher/trigger-attendance-evaluation', async (req, res) => {
     const { institutionId } = req.body;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -546,6 +742,26 @@ app.get('/api/teacher/fdp-records', async (req, res) => {
     }
 });
 
+// 🌐 HOD Alias for FDP Records Endpoint
+app.get('/api/hod/fdp-records', async (req, res) => {
+    const { branch, institutionId, academicYear } = req.query;
+    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
+    const cleanBranch = branch ? branch.trim().toUpperCase() : 'AIML';
+    const year = academicYear ? academicYear.trim() : '2026-2027';
+
+    try {
+        const query = `
+            SELECT * FROM faculty_fdp_attended 
+            WHERE UPPER(branch) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 AND academic_year = $3
+            ORDER BY id DESC
+        `;
+        const result = await pool.query(query, [cleanBranch, tenant, year]);
+        res.status(200).json({ success: true, fdpRecords: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 app.post('/api/teacher/fdp-records', async (req, res) => {
     const { 
         institutionId, teacherId, teacherName, branch, academicYear,
@@ -578,25 +794,6 @@ app.delete('/api/teacher/fdp-records', async (req, res) => {
     try {
         await pool.query(`DELETE FROM faculty_fdp_attended WHERE id = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2`, [id, tenant]);
         res.status(200).json({ success: true, message: "FDP record deleted." });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
-});
-
-app.get('/api/hod/fdp-records', async (req, res) => {
-    const { branch, institutionId, academicYear } = req.query;
-    const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
-    const cleanBranch = branch ? branch.trim().toUpperCase() : 'AIML';
-    const year = academicYear ? academicYear.trim() : '2026-2027';
-
-    try {
-        const query = `
-            SELECT * FROM faculty_fdp_attended 
-            WHERE UPPER(branch) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 AND academic_year = $3
-            ORDER BY id DESC
-        `;
-        const result = await pool.query(query, [cleanBranch, tenant, year]);
-        res.status(200).json({ success: true, fdpRecords: result.rows });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -873,19 +1070,49 @@ app.get('/api/teacher/assigned-classes', async (req, res) => {
     }
 });
 
+// ==========================================================================
+// 📊 ATTENDANCE REGISTER ENDPOINT (STRICT TIMETABLE BRANCH & SEMESTER ISOLATION)
+// ==========================================================================
 app.get('/api/teacher/attendance-register', async (req, res, next) => {
     const { teacherId, subjectCode, semesterNumber, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const sub = subjectCode ? subjectCode.trim().toUpperCase() : '';
+    const semNum = parseInt(semesterNumber) || 5;
 
     try {
-        const studentsRes = await pool.query(
-            `SELECT usn, name FROM users 
-             WHERE role ILIKE 'student' 
-               AND COALESCE(institution_id, 'DR_AIT') ILIKE $1 
-             ORDER BY usn ASC`,
-            [tenant]
+        // 1. Determine the exact branch assigned to this subject and semester in weekly_timetables
+        const slotRes = await pool.query(
+            `SELECT branch FROM weekly_timetables 
+             WHERE (UPPER(subject_code) = UPPER($1) OR UPPER(subject_name) ILIKE '%' || UPPER($1) || '%') 
+               AND semester_number = $2 
+               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3 LIMIT 1`,
+            [sub, semNum, tenant]
         );
+
+        let targetBranch = slotRes.rows.length > 0 ? slotRes.rows[0].branch : 'AIML';
+        const foundationalBranches = ['MATHS', 'PHYSICS', 'CHEM', 'BIOLOGY', 'MATHEMATICS', 'CHEMISTRY'];
+
+        let studentsRes;
+        if (foundationalBranches.includes(targetBranch.toUpperCase())) {
+            studentsRes = await pool.query(
+                `SELECT usn, name FROM users 
+                 WHERE role ILIKE 'student' 
+                   AND semester_number = $1 
+                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 
+                 ORDER BY usn ASC`,
+                [semNum, tenant]
+            );
+        } else {
+            studentsRes = await pool.query(
+                `SELECT usn, name FROM users 
+                 WHERE role ILIKE 'student' 
+                   AND UPPER(branch) = UPPER($1) 
+                   AND semester_number = $2 
+                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $3 
+                 ORDER BY usn ASC`,
+                [targetBranch, semNum, tenant]
+            );
+        }
         const students = studentsRes.rows;
 
         const sessionsRes = await pool.query(
@@ -923,6 +1150,7 @@ app.get('/api/teacher/attendance-register', async (req, res, next) => {
 
         res.status(200).json({
             success: true,
+            branch: targetBranch,
             students,
             dates,
             attendanceMap
