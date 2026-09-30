@@ -118,7 +118,7 @@
         .mentee-card { background: white; border: 1px solid var(--bento-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-premium); }
 
         /* ==========================================================================
-            🖨 PERFECTED PRINT STYLING FIX (Eliminates Blank Leading Pages)
+            🖨️ PERFECTED PRINT STYLING FIX (Eliminates Blank Leading Pages)
             ========================================================================== */
         @media print {
             @page {
@@ -457,7 +457,7 @@
             </div>
 
             <!-- ==========================================================================
-                👨‍🏫 TEACHER WORKSPACE CORE
+                👨‍‍🏫 TEACHER WORKSPACE CORE
                 ========================================================================== -->
             <div id="teacherSectionLayout" style="display: none;">
 
@@ -511,7 +511,7 @@
                 <div class="bento-card" style="border-left: 5px solid var(--primary-blue); margin-bottom: 24px; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 22px;">🏛️</span>
+                            <span style="font-size: 22px;">🏛️️</span>
                             <div>
                                 <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">FDP Attended by Faculty</h3>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Track Faculty Development Programs, ATAL/DST sponsorships, and duration dates.</p>
@@ -1092,13 +1092,13 @@
             </div>
 
             <div style="text-align: right; margin-top: 20px;">
-                <button class="btn btn-dark" onclick="handleLogout()">Secure Logout ⬅️️</button>
+                <button class="btn btn-dark" onclick="handleLogout()">Secure Logout ⬅️</button>
             </div>
         </div>
     </div>
 
     <!-- JavaScript Client Engine -->
-<script>
+    <script>
         history.pushState(null, null, location.href);
         window.addEventListener('popstate', function () {
             history.pushState(null, null, location.href);
@@ -1128,7 +1128,7 @@
         let userSubject = localStorage.getItem('userSubject') || '';
         let userSemester = localStorage.getItem('userSemester') || 5;
         const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
-        const teacherBranch = localStorage.getItem('userBranch') || 'AIML';
+        let teacherBranch = localStorage.getItem('userBranch') || 'AIML';
 
         let currentGeneratedSessionToken = ""; 
         let secondsRemainingInSession = 300; // ⏱️ 5 minutes
@@ -1209,6 +1209,7 @@
                         teacherId: userUsn,
                         subjectCode: cleanSub,
                         semesterNumber: userSemester,
+                        branch: window.activeTeacherBranch || teacherBranch,
                         institutionId: institutionId
                     })
                 });
@@ -1418,7 +1419,7 @@
                         institutionId: institutionId,
                         teacherId: userUsn,
                         teacherName: userName,
-                        branch: teacherBranch,
+                        branch: window.activeTeacherBranch || teacherBranch,
                         academicYear: currentSelectedAcademicYear,
                         pubType: pubType,
                         title: title,
@@ -1469,7 +1470,7 @@
                         institutionId: institutionId,
                         teacherId: userUsn,
                         teacherName: userName,
-                        branch: teacherBranch,
+                        branch: window.activeTeacherBranch || teacherBranch,
                         academicYear: currentSelectedAcademicYear,
                         fdpTitle: fdpTitle,
                         fdpMode: fdpMode,
@@ -1736,28 +1737,35 @@
                 const uniqueSubjects = new Set();
 
                 slots.forEach(slot => {
-                    const subCode = (slot.subject_code || slot.subject_name || 'AI').trim();
+                    const rawSubCode = (slot.subject_code || slot.subject_name || 'AI').trim();
                     const semNum = slot.semester_number || slot.semester || 5;
                     const branch = (slot.branch || 'AIML').trim();
                     const dayTime = slot.day_of_week ? `${slot.day_of_week} ${slot.time_slot || ''}` : (slot.time_slot || 'Regular Slot');
-                    const optionText = `Sem ${semNum} [${branch}] - ${subCode} (${dayTime})`;
+                    const optionText = `Sem ${semNum} [${branch}] - ${rawSubCode} (${dayTime})`;
                     
-                    dropdown.innerHTML += `<option value="${slot.id || subCode}" data-subject="${subCode}" data-semester="${semNum}" data-text="${optionText}">${optionText}</option>`;
+                    dropdown.innerHTML += `<option value="${slot.id || rawSubCode}" data-subject="${rawSubCode}" data-semester="${semNum}" data-branch="${branch}" data-text="${optionText}">${optionText}</option>`;
                     
-                    if (!uniqueSubjects.has(subCode)) {
-                        uniqueSubjects.add(subCode);
-                        if (regDropdown) {
-                            regDropdown.innerHTML += `<option value="${subCode}" data-semester="${semNum}">${subCode} (Sem ${semNum})</option>`;
+                    // FIXED: Split comma-separated subjects individually so each appears cleanly in the register dropdown
+                    const splitSubs = rawSubCode.split(',');
+                    splitSubs.forEach(sub => {
+                        const cleanSub = sub.trim();
+                        if (cleanSub && !uniqueSubjects.has(cleanSub)) {
+                            uniqueSubjects.add(cleanSub);
+                            if (regDropdown) {
+                                regDropdown.innerHTML += `<option value="${cleanSub}" data-semester="${semNum}" data-branch="${branch}">${cleanSub} (Sem ${semNum}) [${branch}]</option>`;
+                            }
                         }
-                    }
+                    });
                 });
 
                 if (slots.length > 0 && regDropdown && regDropdown.options.length > 1) {
                     regDropdown.selectedIndex = 1;
                     userSubject = (regDropdown.value || '').trim();
                     userSemester = regDropdown.options[regDropdown.selectedIndex].getAttribute('data-semester') || 5;
+                    window.activeTeacherBranch = regDropdown.options[regDropdown.selectedIndex].getAttribute('data-branch') || teacherBranch;
                     localStorage.setItem('userSubject', userSubject);
                     localStorage.setItem('userSemester', userSemester);
+                    localStorage.setItem('userBranch', window.activeTeacherBranch);
                 }
             } catch (err) { 
                 console.error("❌ Error fetching teacher slots:", err);
@@ -1769,11 +1777,14 @@
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const selectedOpt = dropdown.options[dropdown.selectedIndex];
             
-            userSubject = (selectedOpt.getAttribute('data-subject') || '').trim();
+            const rawSubCode = (selectedOpt.getAttribute('data-subject') || '').trim();
+            userSubject = rawSubCode.split(',')[0].trim();
             userSemester = selectedOpt.getAttribute('data-semester') || 5;
+            window.activeTeacherBranch = selectedOpt.getAttribute('data-branch') || teacherBranch;
             
             localStorage.setItem('userSubject', userSubject);
             localStorage.setItem('userSemester', userSemester);
+            localStorage.setItem('userBranch', window.activeTeacherBranch);
 
             if (document.getElementById('btnLaunchQrSession')) {
                 document.getElementById('btnLaunchQrSession').disabled = !dropdown.value;
@@ -1787,6 +1798,20 @@
                 } else {
                     notice.style.display = 'none';
                 }
+            }
+        }
+
+        function onRegisterSubjectSelected() {
+            const regDropdown = document.getElementById('registerSubjectDropdown');
+            if (!regDropdown) return;
+            const selectedOpt = regDropdown.options[regDropdown.selectedIndex];
+            if (selectedOpt && selectedOpt.value) {
+                userSubject = selectedOpt.value.trim();
+                userSemester = selectedOpt.getAttribute('data-semester') || userSemester;
+                window.activeTeacherBranch = selectedOpt.getAttribute('data-branch') || window.activeTeacherBranch || teacherBranch;
+                localStorage.setItem('userSubject', userSubject);
+                localStorage.setItem('userBranch', window.activeTeacherBranch);
+                loadAttendanceRegisterMatrix();
             }
         }
 
@@ -1951,8 +1976,10 @@
             if (!head || !body) return;
 
             const cleanSub = (userSubject || '').trim();
+            const currentBranch = window.activeTeacherBranch || localStorage.getItem('userBranch') || teacherBranch;
+
             if (!cleanSub) {
-                body.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--accent-red);">⚠️ Please choose a subject from the dropdown above or select a class slot.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--accent-red);">⚠️️ Please choose a subject from the dropdown above or select a class slot.</td></tr>`;
                 return;
             }
 
@@ -1960,7 +1987,8 @@
             body.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Querying database records...</td></tr>";
 
             try {
-                const res = await fetch(`${API_BASE}/api/teacher/attendance-register?teacherId=${encodeURIComponent(userUsn)}&subjectCode=${encodeURIComponent(cleanSub)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
+                // 👇 PASSING THE ACTIVE BRANCH EXPLICITLY TO THE BACKEND
+                const res = await fetch(`${API_BASE}/api/teacher/attendance-register?teacherId=${encodeURIComponent(userUsn)}&branch=${encodeURIComponent(currentBranch)}&subjectCode=${encodeURIComponent(cleanSub)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
                 const data = await res.json();
 
                 if (!res.ok || !data.success) {
@@ -1983,7 +2011,7 @@
 
                 body.innerHTML = "";
                 if (!students || students.length === 0) {
-                    body.innerHTML = `<tr><td colspan="${(dates ? dates.length : 0) + 2}" style="text-align:center;">No students registered in database.</td></tr>`;
+                    body.innerHTML = `<tr><td colspan="${(dates ? dates.length : 0) + 2}" style="text-align:center;">No students registered for ${currentBranch} in database.</td></tr>`;
                     return;
                 }
 
@@ -2276,6 +2304,7 @@
             }
 
             try {
+                // FIXED: Teachers submitting manual attendance bypass student GPS requirements
                 const response = await fetch(`${API_BASE}/api/auth/submit-attendance`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2283,7 +2312,8 @@
                         studentId: studentId,
                         subjectName: subjectName,
                         sessionCode: sessionCode,
-                        distance: '0.00_MANUAL',
+                        latitude: 12.9641,  // Teacher override coordinates (Campus center)
+                        longitude: 77.5065,
                         institutionId: institutionId
                     })
                 });
@@ -2567,7 +2597,7 @@
                 updateSemesterSummaryDisplay(result);
 
                 if (document.getElementById('ai_risk_value')) {
-                    document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️️ SHORTAGE RISK" : "✅ SAFE ZONE";
+                    document.getElementById('ai_risk_value').innerText = finalPercentage < 75 ? "⚠️ SHORTAGE RISK" : "✅ SAFE ZONE";
                     document.getElementById('ai_risk_value').style.color = finalPercentage < 75 ? 'var(--accent-red)' : 'var(--accent-green)';
                 }
 

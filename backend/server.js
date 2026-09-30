@@ -1074,25 +1074,43 @@ app.get('/api/teacher/assigned-classes', async (req, res) => {
 // 📊 ATTENDANCE REGISTER ENDPOINT (STRICT TIMETABLE BRANCH & SEMESTER ISOLATION)
 // ==========================================================================
 app.get('/api/teacher/attendance-register', async (req, res, next) => {
-    const { teacherId, subjectCode, semesterNumber, institutionId } = req.query;
+    const { teacherId, subjectCode, semesterNumber, institutionId, branch } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const sub = subjectCode ? subjectCode.trim().toUpperCase() : '';
     const semNum = parseInt(semesterNumber) || 5;
+    const cleanTeacherId = teacherId ? teacherId.trim().toUpperCase() : '';
 
     try {
-        // 1. Determine the exact branch assigned to this subject and semester in weekly_timetables
-        const slotRes = await pool.query(
-            `SELECT branch FROM weekly_timetables 
-             WHERE (UPPER(subject_code) = UPPER($1) OR UPPER(subject_name) ILIKE '%' || UPPER($1) || '%') 
-               AND semester_number = $2 
-               AND COALESCE(institution_id, 'DR_AIT') ILIKE $3 LIMIT 1`,
-            [sub, semNum, tenant]
-        );
+        let targetBranch = (branch || '').trim();
 
-        let targetBranch = slotRes.rows.length > 0 ? slotRes.rows[0].branch : 'AIML';
+        if (!targetBranch || targetBranch === 'AIML') {
+            const slotRes = await pool.query(
+                `SELECT branch FROM weekly_timetables 
+                 WHERE (UPPER(subject_code) = UPPER($1) OR UPPER(subject_name) ILIKE '%' || UPPER($1) || '%') 
+                   AND semester_number = $2 
+                   AND COALESCE(institution_id, 'DR_AIT') ILIKE $3 LIMIT 1`,
+                [sub, semNum, tenant]
+            );
+            if (slotRes.rows.length > 0 && slotRes.rows[0].branch) {
+                targetBranch = slotRes.rows[0].branch.trim();
+            }
+        }
+
+        if (!targetBranch || targetBranch === 'AIML') {
+            const teacherRes = await pool.query(
+                `SELECT branch FROM users WHERE UPPER(usn) = $1 AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 LIMIT 1`,
+                [cleanTeacherId, tenant]
+            );
+            if (teacherRes.rows.length > 0 && teacherRes.rows[0].branch) {
+                targetBranch = teacherRes.rows[0].branch.trim();
+            }
+        }
+
+        if (!targetBranch) targetBranch = 'AIML';
+
         const foundationalBranches = ['MATHS', 'PHYSICS', 'CHEM', 'BIOLOGY', 'MATHEMATICS', 'CHEMISTRY'];
-
         let studentsRes;
+
         if (foundationalBranches.includes(targetBranch.toUpperCase())) {
             studentsRes = await pool.query(
                 `SELECT usn, name FROM users 
@@ -1115,10 +1133,11 @@ app.get('/api/teacher/attendance-register', async (req, res, next) => {
         }
         const students = studentsRes.rows;
 
+        // 🛠️ STRICT ISOLATION: Match ONLY the exact single subject code
         const sessionsRes = await pool.query(
             `SELECT TO_CHAR(created_at, 'YYYY-MM-DD') as session_date, session_code
              FROM class_sessions 
-             WHERE (UPPER(CAST(subject_name AS TEXT)) ILIKE '%' || $1 || '%' OR UPPER(CAST(session_code AS TEXT)) ILIKE '%' || $1 || '%') 
+             WHERE UPPER(subject_code) = UPPER($1)
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $2 
              ORDER BY created_at ASC`,
             [sub, tenant]
