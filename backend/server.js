@@ -712,17 +712,18 @@ app.get("/api/teacher/attendance-register", async (req, res) => {
             WHERE UPPER(TRIM(cs.subject_code)) = $1
               AND UPPER(TRIM(wt.branch)) = UPPER(TRIM($2))
               AND wt.semester_number = $3
-              AND (
-                    $4 = ''
-                    OR UPPER(TRIM(wt.assigned_teacher_id)) = $4
-                    OR UPPER(TRIM(wt.assigned_teacher_name)) ILIKE '%' || $4 || '%'
-                  )
+              AND UPPER(TRIM(wt.assigned_teacher_id)) = $4
               AND UPPER(COALESCE(TRIM(cs.institution_id), 'DR_AIT')) =
                   UPPER(TRIM($5))
             ORDER BY session_date ASC, cs.session_code ASC
         `, [subject, branch, sem, teacher, tenant]);
 
         const sessionCodes = sessionsResult.rows.map(x => x.session_code);
+        const sessionDateMap = {};
+        sessionsResult.rows.forEach(x => {
+            if (x.session_code) sessionDateMap[x.session_code] = x.session_date;
+        });
+
         const dates = [...new Set(
             sessionsResult.rows.map(x => x.session_date)
         )];
@@ -747,9 +748,14 @@ app.get("/api/teacher/attendance-register", async (req, res) => {
 
         for (const row of attendanceRows) {
             if (row.student_id && row.session_code) {
-                attendanceMap[
-                    `${upper(row.student_id)}_${clean(row.session_code)}`
-                ] = true;
+                const studentId = upper(row.student_id);
+                const sCode = clean(row.session_code);
+                const sDate = sessionDateMap[sCode];
+
+                attendanceMap[`${studentId}_${sCode}`] = true;
+                if (sDate) {
+                    attendanceMap[`${studentId}_${sDate}`] = true;
+                }
             }
         }
 

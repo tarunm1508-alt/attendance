@@ -255,10 +255,10 @@
                 <div class="action-indicator">Proceed →</div>
             </div>
 
-            <!-- 👨‍🏫 2. Teacher Card -->
-            <div class="role-choice-card" onclick="routeToAuthentication('teacher')">
+            <!-- 👨‍🏫 2. Faculty Card -->
+            <div class="role-choice-card" onclick="routeToAuthentication('faculty')">
                 <div class="role-icon-wrapper">👨‍🏫</div>
-                <h3>Teacher Login</h3>
+                <h3>Faculty Login</h3>
                 <div class="action-indicator">Proceed →</div>
             </div>
 
@@ -281,7 +281,7 @@
     <script>
         function routeToAuthentication(selectedProfileRole) {
             // 🔒 SECURE FACULTY & HOD PRIVACY PASSWORD GATEWAY
-            if (selectedProfileRole === 'hod' || selectedProfileRole === 'teacher') {
+            if (selectedProfileRole === 'hod' || selectedProfileRole === 'faculty') {
                 const enteredPassword = prompt(`🔒 Security Passcode Required: Enter the authorized ${selectedProfileRole.toUpperCase()} passcode to open portal:`);
                 
                 const departmentSecretPasscode = "AIT@2026";
