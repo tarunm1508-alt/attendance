@@ -353,7 +353,7 @@
     <!-- 🏛️ ADD FDP ATTENDED MODAL FORM -->
     <div id="fdpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100000; align-items:center; justify-content:center;">
         <div style="background:white; padding:30px; border-radius:16px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:0 15px 35px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--text-dark);">🏛️ Add FDP Attendance Record</h3>
+            <h3 style="margin-top:0; color:var(--text-dark);">🏛️️ Add FDP Attendance Record</h3>
             
             <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">TITLE OF FDP</label>
             <input type="text" id="fdpTitleInput" placeholder="e.g., Advanced AI & Machine Learning" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bento-border); margin-bottom: 12px;">
@@ -457,7 +457,7 @@
             </div>
 
             <!-- ==========================================================================
-                👨‍‍🏫 TEACHER WORKSPACE CORE
+                👨‍🏫 TEACHER WORKSPACE CORE
                 ========================================================================== -->
             <div id="teacherSectionLayout" style="display: none;">
 
@@ -511,7 +511,7 @@
                 <div class="bento-card" style="border-left: 5px solid var(--primary-blue); margin-bottom: 24px; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 22px;">🏛️️</span>
+                            <span style="font-size: 22px;">🏛️</span>
                             <div>
                                 <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">FDP Attended by Faculty</h3>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Track Faculty Development Programs, ATAL/DST sponsorships, and duration dates.</p>
@@ -1407,7 +1407,7 @@
             const hIndexMetrics = document.getElementById('pubHIndex').value.trim();
 
             if (!title || !journalOrConference) {
-                alert("⚠️ Please provide at least the Paper Title and Journal/Conference Venue.");
+                alert("⚠️️ Please provide at least the Paper Title and Journal/Conference Venue.");
                 return;
             }
 
@@ -1709,6 +1709,7 @@
             } catch (e) { console.error("Parent HUD error:", e); }
         }
 
+        // 🛡️ STRICT HOD-MAPPED ASSIGNED TIMETABLE SLOTS FETCH (FILTERED BY TEACHER ID & DEPARTMENT)
         async function fetchTeacherAssignedClasses() {
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const regDropdown = document.getElementById('registerSubjectDropdown');
@@ -1716,14 +1717,12 @@
             if (!dropdown) return;
 
             try {
-                const endpointUrl = `${API_BASE}/api/auth/teacher-mapped-slots?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`;
+                const endpointUrl = `${API_BASE}/api/teacher/assigned-classes?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`;
                 const res = await fetch(endpointUrl);
-                const data = await res.json();
-                
-                const slots = Array.isArray(data) ? data : (data.slots || data.data || []);
+                const slots = await res.json();
 
-                if (!slots || slots.length === 0) {
-                    dropdown.innerHTML = `<option value="">⚠️ No classes mapped by HOD yet for ID: ${userUsn}</option>`;
+                if (!Array.isArray(slots) || slots.length === 0) {
+                    dropdown.innerHTML = `<option value="">⚠️ No classes explicitly assigned by HOD for ID: ${userUsn}</option>`;
                     if (regDropdown) regDropdown.innerHTML = `<option value="">⚠️ No subjects assigned</option>`;
                     if (badge) badge.innerText = "0 Slots Mapped";
                     if (document.getElementById('btnLaunchQrSession')) document.getElementById('btnLaunchQrSession').disabled = true;
@@ -1735,24 +1734,31 @@
                 if (regDropdown) regDropdown.innerHTML = `<option value="">-- Select Subject --</option>`;
                 
                 const uniqueSubjects = new Set();
+                const currentTeacherDept = (teacherBranch || 'AIML').trim().toUpperCase();
+                const foundationalBranches = ['MATHS', 'PHYSICS', 'CHEM', 'BIOLOGY', 'MATHEMATICS', 'CHEMISTRY'];
 
                 slots.forEach(slot => {
+                    const slotBranch = (slot.branch || 'AIML').trim().toUpperCase();
+                    
+                    // 🛡️ STRICT ISOLATION: Only include slots assigned to this teacher's department branch
+                    if (slotBranch !== currentTeacherDept && !foundationalBranches.includes(currentTeacherDept)) {
+                        return; // Drops cross-department leaks like CSBS subjects entirely!
+                    }
+
                     const rawSubCode = (slot.subject_code || slot.subject_name || 'AI').trim();
                     const semNum = slot.semester_number || slot.semester || 5;
-                    const branch = (slot.branch || 'AIML').trim();
                     const dayTime = slot.day_of_week ? `${slot.day_of_week} ${slot.time_slot || ''}` : (slot.time_slot || 'Regular Slot');
-                    const optionText = `Sem ${semNum} [${branch}] - ${rawSubCode} (${dayTime})`;
+                    const optionText = `Sem ${semNum} [${slot.branch}] - ${rawSubCode} (${dayTime})`;
                     
-                    dropdown.innerHTML += `<option value="${slot.id || rawSubCode}" data-subject="${rawSubCode}" data-semester="${semNum}" data-branch="${branch}" data-text="${optionText}">${optionText}</option>`;
+                    dropdown.innerHTML += `<option value="${slot.id || rawSubCode}" data-subject="${rawSubCode}" data-semester="${semNum}" data-branch="${slot.branch}" data-text="${optionText}">${optionText}</option>`;
                     
-                    // FIXED: Split comma-separated subjects individually so each appears cleanly in the register dropdown
                     const splitSubs = rawSubCode.split(',');
                     splitSubs.forEach(sub => {
                         const cleanSub = sub.trim();
                         if (cleanSub && !uniqueSubjects.has(cleanSub)) {
                             uniqueSubjects.add(cleanSub);
                             if (regDropdown) {
-                                regDropdown.innerHTML += `<option value="${cleanSub}" data-semester="${semNum}" data-branch="${branch}">${cleanSub} (Sem ${semNum}) [${branch}]</option>`;
+                                regDropdown.innerHTML += `<option value="${cleanSub}" data-semester="${semNum}" data-branch="${slot.branch}">${cleanSub} (Sem ${semNum}) [${slot.branch}]</option>`;
                             }
                         }
                     });
@@ -1867,9 +1873,8 @@
             subDropdown.innerHTML = `<option value="">-- Loading Subjects... --</option>`;
 
             try {
-                const res = await fetch(`${API_BASE}/api/auth/teacher-mapped-slots?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
-                const data = await res.json();
-                const slots = Array.isArray(data) ? data : (data.slots || data.data || []);
+                const res = await fetch(`${API_BASE}/api/teacher/assigned-classes?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
+                const slots = await res.json();
 
                 subDropdown.innerHTML = `<option value="">-- Choose Subject --</option>`;
                 const addedSubs = new Set();
@@ -1979,7 +1984,7 @@
             const currentBranch = window.activeTeacherBranch || localStorage.getItem('userBranch') || teacherBranch;
 
             if (!cleanSub) {
-                body.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--accent-red);">⚠️️ Please choose a subject from the dropdown above or select a class slot.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--accent-red);">⚠️ Please choose a subject from the dropdown above or select a class slot.</td></tr>`;
                 return;
             }
 
@@ -1987,7 +1992,6 @@
             body.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Querying database records...</td></tr>";
 
             try {
-                // 👇 PASSING THE ACTIVE BRANCH EXPLICITLY TO THE BACKEND
                 const res = await fetch(`${API_BASE}/api/teacher/attendance-register?teacherId=${encodeURIComponent(userUsn)}&branch=${encodeURIComponent(currentBranch)}&subjectCode=${encodeURIComponent(cleanSub)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
                 const data = await res.json();
 
@@ -2304,7 +2308,6 @@
             }
 
             try {
-                // FIXED: Teachers submitting manual attendance bypass student GPS requirements
                 const response = await fetch(`${API_BASE}/api/auth/submit-attendance`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2532,7 +2535,7 @@
         async function adjustCameraZoom(zoomVal) {
             const scale = parseFloat(zoomVal);
             const videoElement = document.querySelector('#previewVideo video');
-            
+             
             if (videoElement) {
                 videoElement.style.transform = `scale(${scale})`;
                 videoElement.style.transformOrigin = 'center center';
@@ -2664,7 +2667,7 @@
 
         function renderSemesterCharts(semNum) {
             const filtered = cachedStudentMetrics.filter(sub => parseInt(sub.semester_number) === parseInt(semNum));
-            
+             
             let scatterPointsArray = [];
             let barLabels = [];
             let barValuesCIE1 = [];
@@ -2762,22 +2765,22 @@
             try {
                 const res = await fetch(`${API_BASE}/api/notifications?userId=${encodeURIComponent(userUsn)}&role=${userRole}&institutionId=${institutionId}`);
                 const messages = await res.json();
-                
+                 
                 // Fetch student metrics for compliance banner if student role
                 if (userRole.toLowerCase() === 'student' && complianceBox && complianceTableBody) {
                     const metricsRes = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
                     const metricsData = await metricsRes.json();
                     const subjects = Array.isArray(metricsData.ai_predictions) ? metricsData.ai_predictions : [];
-                    
+                     
                     let hasShortage = false;
                     complianceTableBody.innerHTML = "";
-                    
+                     
                     subjects.forEach(sub => {
                         const conducted = parseInt(sub.conducted) || 0;
                         const attended = parseInt(sub.attended) || 0;
                         const absent = parseInt(sub.absent) || (conducted - attended);
                         const ratio = conducted > 0 ? Math.round((attended / conducted) * 100) : 100;
-                        
+                         
                         if (conducted > 0 && ratio < 75) {
                             hasShortage = true;
                             complianceTableBody.innerHTML += `
@@ -2881,7 +2884,7 @@
 
         function toggleSpeechRecognitionHub() {
             const voiceNode = document.getElementById('voiceControlNode');
-            
+             
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert("❌ Speech recognition is not supported in this browser. Please use Google Chrome.");
                 return;
@@ -2981,7 +2984,7 @@
             document.querySelectorAll('#studentSectionLayout .semester-display-pane').forEach(panel => panel.classList.remove('active'));
             document.querySelector('#nav_' + targetSem)?.classList.add('active');
             document.querySelector('#panel_' + targetSem)?.classList.add('active');
-            
+             
             const semNum = parseInt(targetSem.replace('sem', '')) || 5;
             userSemester = semNum;
             localStorage.setItem('userSemester', userSemester);

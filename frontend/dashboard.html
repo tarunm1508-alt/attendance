@@ -353,7 +353,7 @@
     <!-- 🏛️ ADD FDP ATTENDED MODAL FORM -->
     <div id="fdpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100000; align-items:center; justify-content:center;">
         <div style="background:white; padding:30px; border-radius:16px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:0 15px 35px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--text-dark);">🏛️ Add FDP Attendance Record</h3>
+            <h3 style="margin-top:0; color:var(--text-dark);">🏛️️ Add FDP Attendance Record</h3>
             
             <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">TITLE OF FDP</label>
             <input type="text" id="fdpTitleInput" placeholder="e.g., Advanced AI & Machine Learning" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bento-border); margin-bottom: 12px;">
@@ -457,7 +457,7 @@
             </div>
 
             <!-- ==========================================================================
-                👨‍‍🏫 TEACHER WORKSPACE CORE
+                👨‍🏫 TEACHER WORKSPACE CORE
                 ========================================================================== -->
             <div id="teacherSectionLayout" style="display: none;">
 
@@ -511,7 +511,7 @@
                 <div class="bento-card" style="border-left: 5px solid var(--primary-blue); margin-bottom: 24px; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 22px;">🏛️️</span>
+                            <span style="font-size: 22px;">🏛️</span>
                             <div>
                                 <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">FDP Attended by Faculty</h3>
                                 <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Track Faculty Development Programs, ATAL/DST sponsorships, and duration dates.</p>
@@ -1407,7 +1407,7 @@
             const hIndexMetrics = document.getElementById('pubHIndex').value.trim();
 
             if (!title || !journalOrConference) {
-                alert("⚠️ Please provide at least the Paper Title and Journal/Conference Venue.");
+                alert("⚠️️ Please provide at least the Paper Title and Journal/Conference Venue.");
                 return;
             }
 
@@ -1709,6 +1709,7 @@
             } catch (e) { console.error("Parent HUD error:", e); }
         }
 
+        // 🛡️ STRICT HOD-MAPPED ASSIGNED TIMETABLE SLOTS FETCH (FILTERED BY TEACHER ID & DEPARTMENT)
         async function fetchTeacherAssignedClasses() {
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const regDropdown = document.getElementById('registerSubjectDropdown');
@@ -1716,14 +1717,12 @@
             if (!dropdown) return;
 
             try {
-                const endpointUrl = `${API_BASE}/api/auth/teacher-mapped-slots?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`;
+                const endpointUrl = `${API_BASE}/api/teacher/assigned-classes?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`;
                 const res = await fetch(endpointUrl);
-                const data = await res.json();
-                
-                const slots = Array.isArray(data) ? data : (data.slots || data.data || []);
+                const slots = await res.json();
 
-                if (!slots || slots.length === 0) {
-                    dropdown.innerHTML = `<option value="">⚠️ No classes mapped by HOD yet for ID: ${userUsn}</option>`;
+                if (!Array.isArray(slots) || slots.length === 0) {
+                    dropdown.innerHTML = `<option value="">⚠️ No classes explicitly assigned by HOD for ID: ${userUsn}</option>`;
                     if (regDropdown) regDropdown.innerHTML = `<option value="">⚠️ No subjects assigned</option>`;
                     if (badge) badge.innerText = "0 Slots Mapped";
                     if (document.getElementById('btnLaunchQrSession')) document.getElementById('btnLaunchQrSession').disabled = true;
@@ -1735,24 +1734,31 @@
                 if (regDropdown) regDropdown.innerHTML = `<option value="">-- Select Subject --</option>`;
                 
                 const uniqueSubjects = new Set();
+                const currentTeacherDept = (teacherBranch || 'AIML').trim().toUpperCase();
+                const foundationalBranches = ['MATHS', 'PHYSICS', 'CHEM', 'BIOLOGY', 'MATHEMATICS', 'CHEMISTRY'];
 
                 slots.forEach(slot => {
+                    const slotBranch = (slot.branch || 'AIML').trim().toUpperCase();
+                    
+                    // 🛡️ STRICT ISOLATION: Only include slots assigned to this teacher's department branch
+                    if (slotBranch !== currentTeacherDept && !foundationalBranches.includes(currentTeacherDept)) {
+                        return; // Drops cross-department leaks like CSBS subjects entirely!
+                    }
+
                     const rawSubCode = (slot.subject_code || slot.subject_name || 'AI').trim();
                     const semNum = slot.semester_number || slot.semester || 5;
-                    const branch = (slot.branch || 'AIML').trim();
                     const dayTime = slot.day_of_week ? `${slot.day_of_week} ${slot.time_slot || ''}` : (slot.time_slot || 'Regular Slot');
-                    const optionText = `Sem ${semNum} [${branch}] - ${rawSubCode} (${dayTime})`;
+                    const optionText = `Sem ${semNum} [${slot.branch}] - ${rawSubCode} (${dayTime})`;
                     
-                    dropdown.innerHTML += `<option value="${slot.id || rawSubCode}" data-subject="${rawSubCode}" data-semester="${semNum}" data-branch="${branch}" data-text="${optionText}">${optionText}</option>`;
+                    dropdown.innerHTML += `<option value="${slot.id || rawSubCode}" data-subject="${rawSubCode}" data-semester="${semNum}" data-branch="${slot.branch}" data-text="${optionText}">${optionText}</option>`;
                     
-                    // FIXED: Split comma-separated subjects individually so each appears cleanly in the register dropdown
                     const splitSubs = rawSubCode.split(',');
                     splitSubs.forEach(sub => {
                         const cleanSub = sub.trim();
                         if (cleanSub && !uniqueSubjects.has(cleanSub)) {
                             uniqueSubjects.add(cleanSub);
                             if (regDropdown) {
-                                regDropdown.innerHTML += `<option value="${cleanSub}" data-semester="${semNum}" data-branch="${branch}">${cleanSub} (Sem ${semNum}) [${branch}]</option>`;
+                                regDropdown.innerHTML += `<option value="${cleanSub}" data-semester="${semNum}" data-branch="${slot.branch}">${cleanSub} (Sem ${semNum}) [${slot.branch}]</option>`;
                             }
                         }
                     });
@@ -1867,9 +1873,8 @@
             subDropdown.innerHTML = `<option value="">-- Loading Subjects... --</option>`;
 
             try {
-                const res = await fetch(`${API_BASE}/api/auth/teacher-mapped-slots?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
-                const data = await res.json();
-                const slots = Array.isArray(data) ? data : (data.slots || data.data || []);
+                const res = await fetch(`${API_BASE}/api/teacher/assigned-classes?teacherId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
+                const slots = await res.json();
 
                 subDropdown.innerHTML = `<option value="">-- Choose Subject --</option>`;
                 const addedSubs = new Set();
@@ -1979,7 +1984,7 @@
             const currentBranch = window.activeTeacherBranch || localStorage.getItem('userBranch') || teacherBranch;
 
             if (!cleanSub) {
-                body.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--accent-red);">⚠️️ Please choose a subject from the dropdown above or select a class slot.</td></tr>`;
+                body.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--accent-red);">⚠️ Please choose a subject from the dropdown above or select a class slot.</td></tr>`;
                 return;
             }
 
@@ -1987,7 +1992,6 @@
             body.innerHTML = "<tr><td colspan='3' style='text-align:center;'>Querying database records...</td></tr>";
 
             try {
-                // 👇 PASSING THE ACTIVE BRANCH EXPLICITLY TO THE BACKEND
                 const res = await fetch(`${API_BASE}/api/teacher/attendance-register?teacherId=${encodeURIComponent(userUsn)}&branch=${encodeURIComponent(currentBranch)}&subjectCode=${encodeURIComponent(cleanSub)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
                 const data = await res.json();
 
@@ -2044,73 +2048,486 @@
         async function loadStudentPersonalAttendanceMatrix() {
             const head = document.getElementById('studentMatrixHead');
             const body = document.getElementById('studentMatrixBody');
+
             if (!head || !body) return;
 
-            head.innerHTML = `<tr><th>Class Date</th><th>Loading personal register for Sem ${userSemester}...</th></tr>`;
-            body.innerHTML = `<tr><td colspan="2" style="text-align: center;">Fetching database records...</td></tr>`;
+            const requestedSemester = parseInt(userSemester, 10) || 5;
+            const studentId = (userUsn || '').trim().toUpperCase();
+            const tenantId = (institutionId || 'DR_AIT').trim();
+
+            const setLoadingState = () => {
+                head.innerHTML = `
+                    <tr>
+                        <th style="position:sticky; left:0; background:#f1f5f9; z-index:2; min-width:140px;">
+                            📅 Class Date / Session
+                        </th>
+                        <th>Loading mapped subjects for Semester ${requestedSemester}...</th>
+                    </tr>
+                `;
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="2" style="text-align:center; color:var(--text-muted); padding:24px;">
+                            Fetching your branch-mapped attendance records...
+                        </td>
+                    </tr>
+                `;
+            };
+
+            setLoadingState();
+
+            if (!studentId) {
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="2" style="text-align:center; color:var(--accent-red); padding:24px;">
+                            ❌ Student identity is missing. Please log in again.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
 
             try {
-                const ledgerRes = await fetch(`${API_BASE}/api/auth/student-attendance-ledger?studentId=${encodeURIComponent(userUsn)}&semesterNumber=${userSemester}&institutionId=${institutionId}`);
-                const ledgerData = await ledgerRes.json();
+                /*
+                 * IMPORTANT:
+                 * The student register must NEVER build its subject list from
+                 * conductedSessions alone. That was the reason another branch's
+                 * subjects could appear here.
+                 *
+                 * The backend ledger is expected to return:
+                 *   student.branch
+                 *   mappedSubjects[]
+                 *   conductedSessions[]
+                 *   studentScanMap{}
+                 *
+                 * mappedSubjects is the source of truth for the student's
+                 * branch + semester curriculum.
+                 */
+                const ledgerUrl =
+                    `${API_BASE}/api/auth/student-attendance-ledger` +
+                    `?studentId=${encodeURIComponent(studentId)}` +
+                    `&semesterNumber=${encodeURIComponent(requestedSemester)}` +
+                    `&institutionId=${encodeURIComponent(tenantId)}`;
+
+                const ledgerRes = await fetch(ledgerUrl, {
+                    method: 'GET',
+                    cache: 'no-store',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                let ledgerData = {};
+                try {
+                    ledgerData = await ledgerRes.json();
+                } catch (jsonErr) {
+                    console.error("Student ledger JSON parse error:", jsonErr);
+                }
 
                 if (!ledgerRes.ok || !ledgerData.success) {
-                    body.innerHTML = `<tr><td colspan="2" style="text-align: center; color: red;">Failed to load attendance ledger.</td></tr>`;
+                    console.error("Student attendance ledger failed:", ledgerData);
+                    body.innerHTML = `
+                        <tr>
+                            <td colspan="2" style="text-align:center; color:var(--accent-red); padding:24px;">
+                                ❌ Failed to load your personal attendance register.
+                                ${ledgerData.message ? `<br><small>${ledgerData.message}</small>` : ''}
+                            </td>
+                        </tr>
+                    `;
                     return;
                 }
 
-                const { conductedSessions, studentScanMap } = ledgerData;
+                const studentProfile = ledgerData.student || {};
+                const mappedSubjects = Array.isArray(ledgerData.mappedSubjects)
+                    ? ledgerData.mappedSubjects
+                    : [];
 
-                if (!conductedSessions || conductedSessions.length === 0) {
-                    head.innerHTML = `<tr><th>Class Date</th><th>Status</th></tr>`;
-                    body.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">No classes conducted yet for Semester ${userSemester}.</td></tr>`;
+                const conductedSessions = Array.isArray(ledgerData.conductedSessions)
+                    ? ledgerData.conductedSessions
+                    : [];
+
+                const studentScanMap =
+                    ledgerData.studentScanMap &&
+                    typeof ledgerData.studentScanMap === 'object'
+                        ? ledgerData.studentScanMap
+                        : {};
+
+                /*
+                 * Keep the logged-in student's actual branch visible in the
+                 * client state, but NEVER fall back to AIML for students.
+                 */
+                const actualStudentBranch = String(
+                    studentProfile.branch ||
+                    ledgerData.branch ||
+                    localStorage.getItem('studentBranch') ||
+                    ''
+                ).trim();
+
+                if (actualStudentBranch) {
+                    localStorage.setItem('studentBranch', actualStudentBranch);
+                }
+
+                /*
+                 * Normalize subject identifiers.
+                 * We deliberately use EXACT identifiers rather than
+                 * substring matching. This prevents:
+                 *   RMIPR, RMT507
+                 * from being treated as RMIPR.
+                 */
+                const normalizeSubject = (value) =>
+                    String(value ?? '')
+                        .replace(/\s+/g, ' ')
+                        .trim()
+                        .toUpperCase();
+
+                const subjectDisplayName = (subject) => {
+                    const code = String(
+                        subject?.subject_code ||
+                        subject?.code ||
+                        ''
+                    ).replace(/\s+/g, ' ').trim();
+
+                    const name = String(
+                        subject?.subject_name ||
+                        subject?.name ||
+                        subject?.subject ||
+                        ''
+                    ).replace(/\s+/g, ' ').trim();
+
+                    if (code && name && normalizeSubject(code) !== normalizeSubject(name)) {
+                        return `${code} - ${name}`;
+                    }
+
+                    return code || name || '';
+                };
+
+                /*
+                 * Build the allowed curriculum ONLY from weekly_timetables
+                 * mapping returned by the backend.
+                 *
+                 * Each mapped subject keeps both its code and its name so
+                 * sessions can be matched safely.
+                 */
+                const mappedSubjectMap = new Map();
+
+                mappedSubjects.forEach(subject => {
+                    const code = normalizeSubject(
+                        subject?.subject_code ||
+                        subject?.code ||
+                        ''
+                    );
+
+                    const name = normalizeSubject(
+                        subject?.subject_name ||
+                        subject?.name ||
+                        subject?.subject ||
+                        ''
+                    );
+
+                    if (!code && !name) return;
+
+                    const key = code || name;
+
+                    if (!mappedSubjectMap.has(key)) {
+                        mappedSubjectMap.set(key, {
+                            key,
+                            code,
+                            name,
+                            label: subjectDisplayName(subject)
+                        });
+                    }
+                });
+
+                /*
+                 * Do NOT render a potentially incorrect global session list
+                 * when the backend has not supplied the student's mapped
+                 * subjects. Showing no subjects is safer than showing another
+                 * branch's curriculum.
+                 */
+                if (mappedSubjectMap.size === 0) {
+                    const branchLabel = actualStudentBranch || 'your branch';
+
+                    head.innerHTML = `
+                        <tr>
+                            <th style="position:sticky; left:0; background:#f1f5f9; z-index:2; min-width:140px;">
+                                📅 Class Date / Session
+                            </th>
+                            <th>Mapped Subjects</th>
+                        </tr>
+                    `;
+
+                    body.innerHTML = `
+                        <tr>
+                            <td colspan="2" style="text-align:center; padding:28px; color:var(--text-muted);">
+                                No subject mapping was returned for
+                                <strong>${branchLabel}</strong>,
+                                Semester ${requestedSemester}.
+                                <br>
+                                <small>
+                                    The register will not display unrelated branch subjects.
+                                </small>
+                            </td>
+                        </tr>
+                    `;
                     return;
                 }
 
-                const subjectSet = new Set();
-                conductedSessions.forEach(s => {
-                    if (s.subject_name) subjectSet.add(s.subject_name.trim());
-                });
-                const subjectsArray = Array.from(subjectSet);
+                /*
+                 * Filter class sessions strictly against the mapped curriculum.
+                 *
+                 * A session matches only when:
+                 *   session.subject_code === mapped.subject_code
+                 * OR
+                 *   session.subject_name === mapped.subject_name
+                 *
+                 * Exact matching is intentional. A combined value such as
+                 * "RMIPR, RMT507" will NOT match the mapped subject "RMIPR".
+                 */
+                const allowedSessions = conductedSessions.filter(session => {
+                    const sessionCode = normalizeSubject(
+                        session?.subject_code ||
+                        session?.code ||
+                        ''
+                    );
 
-                let headerHTML = `<tr><th style="position: sticky; left: 0; background: #f1f5f9; z-index: 2; min-width: 140px;">📅 Class Date / Session</th>`;
-                subjectsArray.forEach(sub => {
-                    headerHTML += `<th style="text-align: center; min-width: 150px;">${sub}</th>`;
-                });
-                headerHTML += `</tr>`;
-                head.innerHTML = headerHTML;
+                    const sessionName = normalizeSubject(
+                        session?.subject_name ||
+                        session?.name ||
+                        session?.subject ||
+                        ''
+                    );
 
+                    if (!sessionCode && !sessionName) return false;
+
+                    for (const mapped of mappedSubjectMap.values()) {
+                        if (mapped.code && sessionCode && mapped.code === sessionCode) {
+                            return true;
+                        }
+
+                        if (mapped.name && sessionName && mapped.name === sessionName) {
+                            return true;
+                        }
+
+                        /*
+                         * Some records may have only a subject_code while the
+                         * timetable's subject_name is the same value.
+                         */
+                        if (mapped.code && sessionName && mapped.code === sessionName) {
+                            return true;
+                        }
+
+                        if (mapped.name && sessionCode && mapped.name === sessionCode) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                });
+
+                /*
+                 * Keep the subject columns in mapped curriculum order, not in
+                 * the arbitrary order of class_sessions.
+                 */
+                const subjectsArray = Array.from(mappedSubjectMap.values());
+
+                /*
+                 * Map every valid session to its mapped subject.
+                 * We keep an array per date+subject because a subject can have
+                 * more than one class period on the same day.
+                 */
                 const datesMap = {};
-                conductedSessions.forEach(s => {
-                    if (!datesMap[s.session_date]) datesMap[s.session_date] = {};
-                    datesMap[s.session_date][(s.subject_name || '').trim().toUpperCase()] = s.session_code;
+
+                allowedSessions.forEach(session => {
+                    const rawDate =
+                        session?.session_date ||
+                        session?.class_date ||
+                        session?.date ||
+                        session?.created_at ||
+                        '';
+
+                    const date = String(rawDate).substring(0, 10);
+                    const sessionCode = String(session?.session_code || '').trim();
+
+                    if (!date || !sessionCode) return;
+
+                    const sessionSubjectCode = normalizeSubject(
+                        session?.subject_code ||
+                        session?.code ||
+                        ''
+                    );
+
+                    const sessionSubjectName = normalizeSubject(
+                        session?.subject_name ||
+                        session?.name ||
+                        session?.subject ||
+                        ''
+                    );
+
+                    const matchedSubject = subjectsArray.find(mapped => {
+                        return (
+                            (mapped.code && sessionSubjectCode && mapped.code === sessionSubjectCode) ||
+                            (mapped.name && sessionSubjectName && mapped.name === sessionSubjectName) ||
+                            (mapped.code && sessionSubjectName && mapped.code === sessionSubjectName) ||
+                            (mapped.name && sessionSubjectCode && mapped.name === sessionSubjectCode)
+                        );
+                    });
+
+                    if (!matchedSubject) return;
+
+                    if (!datesMap[date]) datesMap[date] = {};
+
+                    if (!datesMap[date][matchedSubject.key]) {
+                        datesMap[date][matchedSubject.key] = [];
+                    }
+
+                    if (!datesMap[date][matchedSubject.key].includes(sessionCode)) {
+                        datesMap[date][matchedSubject.key].push(sessionCode);
+                    }
                 });
 
                 const sortedDates = Object.keys(datesMap).sort().reverse();
 
-                body.innerHTML = "";
+                /*
+                 * Show the student's branch and semester context in the table
+                 * header. This also makes it immediately obvious that the
+                 * register is not using a global AIML list.
+                 */
+                const branchText = actualStudentBranch
+                    ? ` | Branch: ${actualStudentBranch}`
+                    : '';
+
+                let headerHTML = `
+                    <tr>
+                        <th style="position:sticky; left:0; background:#f1f5f9; z-index:2; min-width:160px;">
+                            📅 Class Date / Session
+                        </th>
+                `;
+
+                subjectsArray.forEach(subject => {
+                    const label = subject.label || subject.code || subject.name || 'Course';
+
+                    headerHTML += `
+                        <th style="text-align:center; min-width:160px;">
+                            ${label}
+                        </th>
+                    `;
+                });
+
+                headerHTML += `</tr>`;
+                head.innerHTML = headerHTML;
+
+                /*
+                 * No valid mapped sessions = no unrelated subjects.
+                 */
+                if (sortedDates.length === 0) {
+                    body.innerHTML = `
+                        <tr>
+                            <td colspan="${subjectsArray.length + 1}"
+                                style="text-align:center; color:var(--text-muted); padding:28px;">
+                                No conducted attendance sessions found for
+                                ${actualStudentBranch ? `<strong>${actualStudentBranch}</strong>, ` : ''}
+                                Semester ${requestedSemester}.
+                                <br>
+                                <small>
+                                    ${subjectsArray.length} mapped subject(s) are registered for this student.
+                                </small>
+                            </td>
+                        </tr>
+                    `;
+
+                    console.info("Student attendance register:", {
+                        studentId,
+                        branch: actualStudentBranch,
+                        semester: requestedSemester,
+                        mappedSubjects: subjectsArray.map(s => s.label),
+                        validSessions: 0
+                    });
+
+                    return;
+                }
+
+                body.innerHTML = '';
+
                 sortedDates.forEach(dateStr => {
-                    let rowHTML = `<tr><td style="font-weight: 700; position: sticky; left: 0; background: #ffffff; z-index: 1;">📅 ${dateStr}</td>`;
-                    
-                    subjectsArray.forEach(sub => {
-                        const subKey = sub.trim().toUpperCase();
-                        const sessionCode = datesMap[dateStr][subKey] || '';
-                        const isPresent = sessionCode ? studentScanMap[sessionCode.trim().toUpperCase()] : false;
-                        
-                        const badge = isPresent 
-                            ? '<span style="background:#d1fae5; color:#065f46; padding:4px 12px; border-radius:6px; font-weight:800;">P</span>' 
-                            : '<span style="background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:6px; font-weight:800;">AB</span>';
-                        
-                        rowHTML += `<td style="text-align: center;">${sessionCode ? badge : '<span style="color:#cbd5e1;">-</span>'}</td>`;
+                    let rowHTML = `
+                        <tr>
+                            <td style="font-weight:700; position:sticky; left:0; background:#ffffff; z-index:1;">
+                                📅 ${dateStr}
+                            </td>
+                    `;
+
+                    subjectsArray.forEach(subject => {
+                        const sessionCodes =
+                            datesMap[dateStr]?.[subject.key] || [];
+
+                        if (!sessionCodes.length) {
+                            rowHTML += `
+                                <td style="text-align:center; color:#cbd5e1;">
+                                    -
+                                </td>
+                            `;
+                            return;
+                        }
+
+                        /*
+                         * Attendance is present when at least one of the
+                         * mapped sessions for that subject/date is present.
+                         * This avoids overwriting one class period with another.
+                         */
+                        const isPresent = sessionCodes.some(sessionCode => {
+                            const key = normalizeSubject(sessionCode);
+                            return Boolean(studentScanMap[key]);
+                        });
+
+                        const badge = isPresent
+                            ? `
+                                <span style="background:#d1fae5; color:#065f46; padding:4px 12px; border-radius:6px; font-weight:800;">
+                                    P
+                                </span>
+                              `
+                            : `
+                                <span style="background:#fee2e2; color:#991b1b; padding:4px 10px; border-radius:6px; font-weight:800;">
+                                    AB
+                                </span>
+                              `;
+
+                        rowHTML += `
+                            <td style="text-align:center;">
+                                ${badge}
+                            </td>
+                        `;
                     });
 
                     rowHTML += `</tr>`;
-                    body.innerHTML += rowHTML;
+                    body.insertAdjacentHTML('beforeend', rowHTML);
                 });
 
-                firePremiumToastAlert(`📋 Personal attendance register loaded for Sem ${userSemester}!`);
+                console.info("Student attendance register loaded:", {
+                    studentId,
+                    branch: actualStudentBranch,
+                    semester: requestedSemester,
+                    mappedSubjects: subjectsArray.map(s => s.label),
+                    conductedSessionsReturned: conductedSessions.length,
+                    validMappedSessions: allowedSessions.length,
+                    datesShown: sortedDates.length
+                });
+
+                firePremiumToastAlert(
+                    `📋 Personal attendance register loaded${actualStudentBranch ? ` for ${actualStudentBranch}` : ''}!`
+                );
+
             } catch (err) {
-                console.error("Personal matrix error:", err);
-                body.innerHTML = `<tr><td colspan="2" style="text-align: center; color: red;">Network error loading personal register.</td></tr>`;
+                console.error("Personal attendance matrix error:", err);
+
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="2"
+                            style="text-align:center; color:var(--accent-red); padding:24px;">
+                            ❌ Network error loading personal attendance register.
+                            <br>
+                            <small>Please refresh the page and try again.</small>
+                        </td>
+                    </tr>
+                `;
             }
         }
 
@@ -2304,7 +2721,6 @@
             }
 
             try {
-                // FIXED: Teachers submitting manual attendance bypass student GPS requirements
                 const response = await fetch(`${API_BASE}/api/auth/submit-attendance`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2532,7 +2948,7 @@
         async function adjustCameraZoom(zoomVal) {
             const scale = parseFloat(zoomVal);
             const videoElement = document.querySelector('#previewVideo video');
-            
+             
             if (videoElement) {
                 videoElement.style.transform = `scale(${scale})`;
                 videoElement.style.transformOrigin = 'center center';
@@ -2664,7 +3080,7 @@
 
         function renderSemesterCharts(semNum) {
             const filtered = cachedStudentMetrics.filter(sub => parseInt(sub.semester_number) === parseInt(semNum));
-            
+             
             let scatterPointsArray = [];
             let barLabels = [];
             let barValuesCIE1 = [];
@@ -2762,22 +3178,22 @@
             try {
                 const res = await fetch(`${API_BASE}/api/notifications?userId=${encodeURIComponent(userUsn)}&role=${userRole}&institutionId=${institutionId}`);
                 const messages = await res.json();
-                
+                 
                 // Fetch student metrics for compliance banner if student role
                 if (userRole.toLowerCase() === 'student' && complianceBox && complianceTableBody) {
                     const metricsRes = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
                     const metricsData = await metricsRes.json();
                     const subjects = Array.isArray(metricsData.ai_predictions) ? metricsData.ai_predictions : [];
-                    
+                     
                     let hasShortage = false;
                     complianceTableBody.innerHTML = "";
-                    
+                     
                     subjects.forEach(sub => {
                         const conducted = parseInt(sub.conducted) || 0;
                         const attended = parseInt(sub.attended) || 0;
                         const absent = parseInt(sub.absent) || (conducted - attended);
                         const ratio = conducted > 0 ? Math.round((attended / conducted) * 100) : 100;
-                        
+                         
                         if (conducted > 0 && ratio < 75) {
                             hasShortage = true;
                             complianceTableBody.innerHTML += `
@@ -2881,7 +3297,7 @@
 
         function toggleSpeechRecognitionHub() {
             const voiceNode = document.getElementById('voiceControlNode');
-            
+             
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert("❌ Speech recognition is not supported in this browser. Please use Google Chrome.");
                 return;
@@ -2981,7 +3397,7 @@
             document.querySelectorAll('#studentSectionLayout .semester-display-pane').forEach(panel => panel.classList.remove('active'));
             document.querySelector('#nav_' + targetSem)?.classList.add('active');
             document.querySelector('#panel_' + targetSem)?.classList.add('active');
-            
+             
             const semNum = parseInt(targetSem.replace('sem', '')) || 5;
             userSemester = semNum;
             localStorage.setItem('userSemester', userSemester);
