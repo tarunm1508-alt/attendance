@@ -51,6 +51,19 @@ app.get("/api/auth/student-subject-metrics", async (req, res) => {
 
         const usn = upper(studentId);
 
+        // 🛡️ GUARD: If a faculty or staff ID (e.g. starting with AIML, EEU, EMP, or FAC) hits this route, return empty smoothly instead of logging Rows=0
+        if (usn.startsWith("AIML") || usn.startsWith("EEU") || usn.startsWith("EMP") || usn.startsWith("FAC")) {
+            return res.json({
+                success: true,
+                ai_predictions: [],
+                marks: [],
+                data: [],
+                sgpa: null,
+                cgpa: null,
+                message: "Staff profile bypassed student metrics ledger."
+            });
+        }
+
         const studentResult = await pool.query(`
             SELECT TRIM(usn) AS usn,
                    TRIM(name) AS name,
@@ -1411,7 +1424,7 @@ app.post("/api/hod/save-weekly-timetable", async (req, res) => {
                      institution_id)
                 VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
                 ON CONFLICT (branch, academic_year, semester_number,
-                             day_of_week, period_id)
+                            day_of_week, period_id)
                 DO UPDATE SET
                     time_slot=EXCLUDED.time_slot,
                     subject_code=EXCLUDED.subject_code,

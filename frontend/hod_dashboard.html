@@ -124,8 +124,21 @@
             </div>
         </div>
 
+        <!-- 🚀 EXECUTIVE QUICK-JUMP NAVIGATION BAR -->
+        <div style="position: sticky; top: 16px; z-index: 1000; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border-clean); padding: 12px 18px; border-radius: 16px; display: flex; gap: 10px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
+            <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); align-self: center; text-transform: uppercase; margin-right: 4px;">⚡ Jump To:</span>
+            <button onclick="scrollToSection('hodPubsCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">📚 Research Hub</button>
+            <button onclick="scrollToSection('hodFdpCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">🏛️ FDP Records</button>
+            <button onclick="scrollToSection('hodMedicalCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">🩺 Medical Desk</button>
+            <button onclick="scrollToSection('hodMentorCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">🎓 Proctor Tool</button>
+            <button onclick="scrollToSection('hodMarksCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">📊 Marks Uploader</button>
+            <button onclick="scrollToSection('hodCommsCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">💬 Broadcast Desk</button>
+            <button onclick="scrollToSection('hodSwapsCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">🔄 Swap Approvals</button>
+            <button onclick="scrollToSection('timetableMatrixCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">📅 Master Timetable</button>
+        </div>
+
         <!-- 📊 1.5 DEPARTMENT RESEARCH & PUBLICATIONS HUB -->
-        <div class="bento-card" style="border-left: 5px solid var(--accent-purple);">
+        <div id="hodPubsCard" class="bento-card" style="border-left: 5px solid var(--accent-purple);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 22px;">📊</span>
@@ -174,7 +187,7 @@
         </div>
 
         <!-- 🏛️ FDP ATTENDED BY FACULTY SECTION -->
-        <div class="bento-card" style="border-left: 5px solid var(--primary-blue);">
+        <div id="hodFdpCard" class="bento-card" style="border-left: 5px solid var(--primary-blue);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 22px;">🏛️</span>
@@ -218,7 +231,7 @@
         </div>
 
         <!-- 🩺 2. MEDICAL / LEAVE ATTENDANCE EXCUSE DESK -->
-        <div class="bento-card" style="border-left: 5px solid var(--accent-red);">
+        <div id="hodMedicalCard" class="bento-card" style="border-left: 5px solid var(--accent-red);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
                 <span style="font-size: 20px;">🩺</span>
                 <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Medical / Leave Attendance Excuse Desk</h3>
@@ -249,7 +262,7 @@
         </div>
 
         <!-- 🎓 3. PROCTOR & MENTORSHIP ALLOCATION TOOL -->
-        <div class="bento-card" style="border-left: 5px solid var(--accent-purple);">
+        <div id="hodMentorCard" class="bento-card" style="border-left: 5px solid var(--accent-purple);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 22px;">🎓</span>
@@ -296,7 +309,7 @@
         </div>
 
         <!-- 📝 4. HOD HISTORICAL & PAST SEMESTER MARKS BATCH WORKSTATION -->
-        <div class="bento-card" style="border-left: 5px solid var(--accent-green);">
+        <div id="hodMarksCard" class="bento-card" style="border-left: 5px solid var(--accent-green);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 22px;">📊</span>
@@ -361,7 +374,7 @@
         </div>
 
         <!-- 💬 5. HOD COMMAND MESSAGING & BROADCAST DESK -->
-        <div class="bento-card" style="border-left: 5px solid var(--accent-green);">
+        <div id="hodCommsCard" class="bento-card" style="border-left: 5px solid var(--accent-green);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
                 <span style="font-size: 20px;">💬</span>
                 <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">HOD Command Messaging & Broadcast Desk</h3>
@@ -391,7 +404,7 @@
         </div>
 
         <!-- 🔄 6. FACULTY SWAP & LEAVE APPROVALS INBOX -->
-        <div class="bento-card" style="border-left: 5px solid var(--primary-blue);">
+        <div id="hodSwapsCard" class="bento-card" style="border-left: 5px solid var(--primary-blue);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <span style="font-size: 20px;">🔄</span>
@@ -521,6 +534,20 @@
         let teachersList = [];
         let departmentPublications = [];
         let departmentFdpRecords = [];
+
+        // ⚡ SMOOTH SCROLL HELPER FOR JUMP BUTTONS
+        function scrollToSection(elementId) {
+            const targetElement = document.getElementById(elementId);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                targetElement.style.transition = 'border-color 0.3s ease';
+                const originalBorder = targetElement.style.borderColor;
+                targetElement.style.borderColor = 'var(--primary-blue)';
+                setTimeout(() => {
+                    targetElement.style.borderColor = originalBorder;
+                }, 1000);
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             initializeHodWorkspace();

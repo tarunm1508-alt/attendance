@@ -353,7 +353,7 @@
     <!-- 🏛️ ADD FDP ATTENDED MODAL FORM -->
     <div id="fdpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100000; align-items:center; justify-content:center;">
         <div style="background:white; padding:30px; border-radius:16px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:0 15px 35px rgba(0,0,0,0.2);">
-            <h3 style="margin-top:0; color:var(--text-dark);">🏛️️ Add FDP Attendance Record</h3>
+            <h3 style="margin-top:0; color:var(--text-dark);">🏛 Add FDP Attendance Record</h3>
             
             <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">TITLE OF FDP</label>
             <input type="text" id="fdpTitleInput" placeholder="e.g., Advanced AI & Machine Learning" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bento-border); margin-bottom: 12px;">
@@ -461,8 +461,18 @@
                 ========================================================================== -->
             <div id="teacherSectionLayout" style="display: none;">
 
-                <!-- 📚 TEACHER RESEARCH & PUBLICATIONS HUB (EXACT HOD INDEX COLUMNS MATCH) -->
-                <div class="bento-card" style="border-left: 5px solid var(--accent-green); margin-bottom: 24px; text-align: left;">
+                <!-- 🚀 EXECUTIVE QUICK-JUMP NAVIGATION BAR -->
+                <div style="position: sticky; top: 16px; z-index: 1000; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--bento-border); padding: 12px 18px; border-radius: 16px; display: flex; gap: 10px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 24px;">
+                    <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); align-self: center; text-transform: uppercase; margin-right: 4px;">⚡ Jump To:</span>
+                    <button onclick="scrollToSection('teacherPubsHub')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">📚 Research Hub</button>
+                    <button onclick="scrollToSection('teacherFdpHub')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">🏛️ FDP Records</button>
+                    <button onclick="scrollToSection('teacherSlotSelector')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">🎯 Class Slots</button>
+                    <button onclick="scrollToSection('teacherQrDispatcher')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">⚡ QR Dispatcher</button>
+                    <button onclick="scrollToSection('teacherViewsBar')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">📊 Stream & Registers</button>
+                </div>
+
+                <!-- 📚 TEACHER RESEARCH & PUBLICATIONS HUB -->
+                <div id="teacherPubsHub" class="bento-card" style="border-left: 5px solid var(--accent-green); margin-bottom: 24px; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 22px;">📚</span>
@@ -508,7 +518,7 @@
                 </div>
 
                 <!-- 🏛️ FDP ATTENDED BY FACULTY SECTION -->
-                <div class="bento-card" style="border-left: 5px solid var(--primary-blue); margin-bottom: 24px; text-align: left;">
+                <div id="teacherFdpHub" class="bento-card" style="border-left: 5px solid var(--primary-blue); margin-bottom: 24px; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <span style="font-size: 22px;">🏛️</span>
@@ -565,7 +575,7 @@
                 </div>
 
                 <!-- 📅 HOD-MAPPED CLASS SLOT SELECTOR CARD -->
-                <div style="background: #eff6ff; border: 2px solid var(--primary-blue); border-radius: 18px; padding: 20px; margin-bottom: 24px;">
+                <div id="teacherSlotSelector" style="background: #eff6ff; border: 2px solid var(--primary-blue); border-radius: 18px; padding: 20px; margin-bottom: 24px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <h3 style="font-size: 15px; font-weight: 800; color: var(--primary-blue);">🎯 Select HOD-Assigned Class Slot</h3>
@@ -583,7 +593,7 @@
                     </div>
                 </div>
 
-                <div class="stats-grid">
+                <div id="teacherQrDispatcher" class="stats-grid">
                     <div class="stat-box" style="border-left: 4px solid var(--primary-blue);">
                         <h4>Active Scan Check-ins</h4>
                         <div id="totalPresentCount" class="count-number">0</div>
@@ -617,7 +627,7 @@
                 </div>
 
                 <!-- 🎛️ TEACHER TAB SWITCHER -->
-                <div class="view-toggle-bar">
+                <div id="teacherViewsBar" class="view-toggle-bar">
                     <button class="toggle-tab-btn active" id="btn_viewLive" onclick="switchTeacherView('live')">📋 Active Class Stream</button>
                     <button class="toggle-tab-btn" id="btn_viewHistory" onclick="switchTeacherView('history')">🕒 Past Sessions Log</button>
                     <button class="toggle-tab-btn" id="btn_viewMarks" onclick="switchTeacherView('marks')">📝 Subject Marks Roster</button>
@@ -673,7 +683,7 @@
                                 <div style="max-height: 250px; overflow-y: auto;">
                                     <table>
                                         <thead><tr><th>Name</th><th>USN</th><th>Distance</th></tr></thead>
-                                        <tbody id="rosterPresentTableBody"><tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No records loaded.</td></tr></tbody>
+                                        <tbody id="rosterPresentTableBody"><tr><td colspan="3" style="text-align:center; color:var(--text-muted);">None checked in yet.</td></tr></tbody>
                                     </table>
                                 </div>
                             </div>
@@ -1144,6 +1154,20 @@
         let currentSelectedAcademicYear = '2026-2027';
         let latestShortageStudentsCache = [];
 
+        // ⚡ SMOOTH SCROLL HELPER FOR JUMP BUTTONS
+        function scrollToSection(elementId) {
+            const targetElement = document.getElementById(elementId);
+            if (targetElement) {
+                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                targetElement.style.transition = 'border-color 0.3s ease';
+                const originalBorder = targetElement.style.borderColor;
+                targetElement.style.borderColor = 'var(--primary-blue)';
+                setTimeout(() => {
+                    targetElement.style.borderColor = originalBorder;
+                }, 1000);
+            }
+        }
+
         function getOrCreateDeviceFingerprint() {
             let fingerprint = localStorage.getItem('device_fingerprint');
             if (!fingerprint) {
@@ -1407,7 +1431,7 @@
             const hIndexMetrics = document.getElementById('pubHIndex').value.trim();
 
             if (!title || !journalOrConference) {
-                alert("⚠️️ Please provide at least the Paper Title and Journal/Conference Venue.");
+                alert("⚠️ Please provide at least the Paper Title and Journal/Conference Venue.");
                 return;
             }
 
@@ -1631,7 +1655,10 @@
         }
 
         async function initializeFunctionalWorkspaceRouter() {
-            const role = userRole.toLowerCase().trim();
+            // 🛡️ Normalize role so both 'faculty' and 'teacher' open the teacher workspace
+            let role = userRole.toLowerCase().trim();
+            if (role === 'faculty') role = 'teacher';
+
             if (document.getElementById('teacherSectionLayout')) document.getElementById('teacherSectionLayout').style.display = 'none';
             if (document.getElementById('studentSectionLayout')) document.getElementById('studentSectionLayout').style.display = 'none';
             if (document.getElementById('parentSectionLayout')) document.getElementById('parentSectionLayout').style.display = 'none';
@@ -1652,6 +1679,7 @@
                 if (document.getElementById('parentSectionLayout')) document.getElementById('parentSectionLayout').style.display = 'block';
                 await resolveParentAndChildProfile();
                 initializeIsolatedParentWorkspaceHUD();
+                loadParentSemesterData();
             } else {
                 if (document.getElementById('studentSectionLayout')) document.getElementById('studentSectionLayout').style.display = 'block';
                 if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | USN: ${userUsn}`;
@@ -1707,6 +1735,42 @@
                     document.getElementById('parent_eligibility_status').style.color = finalPercentage >= 75 ? "var(--accent-green)" : "var(--accent-red)";
                 }
             } catch (e) { console.error("Parent HUD error:", e); }
+        }
+
+        async function loadParentSemesterData() {
+            if (!childUsn) return;
+            for (let sem = 1; sem <= 8; sem++) {
+                const tbody = document.getElementById(`parent_sem${sem}_body`);
+                if (!tbody) continue;
+                try {
+                    const res = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${childUsn}&semester=${sem}&institutionId=${institutionId}`);
+                    const result = await res.json();
+                    const subjects = Array.isArray(result.ai_predictions) ? result.ai_predictions : [];
+                    
+                    tbody.innerHTML = "";
+                    if (subjects.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No records available for Semester ${sem}.</td></tr>`;
+                        continue;
+                    }
+
+                    subjects.forEach(sub => {
+                        const ratio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 100;
+                        tbody.innerHTML += `
+                            <tr>
+                                <td><strong>${sub.subject_name || sub.subject || 'Course'}</strong></td>
+                                <td><code>${sub.subject_code || 'SUB'}</code></td>
+                                <td><span style="font-weight: 800; color: ${ratio >= 75 ? 'var(--accent-green)' : 'var(--accent-red)'};">${ratio}%</span></td>
+                                <td>${sub.cie1 ?? 0}/25</td>
+                                <td>${sub.cie2 ?? 0}/25</td>
+                                <td>${sub.cie3 ?? 0}/25</td>
+                                <td><strong>${sub.see ?? 0} GP</strong></td>
+                            </tr>
+                        `;
+                    });
+                } catch (err) {
+                    console.error(`Error loading parent sem ${sem} data:`, err);
+                }
+            }
         }
 
         // 🛡️ STRICT HOD-MAPPED ASSIGNED TIMETABLE SLOTS FETCH (FILTERED BY TEACHER ID & DEPARTMENT)
@@ -2087,21 +2151,6 @@
             }
 
             try {
-                /*
-                 * IMPORTANT:
-                 * The student register must NEVER build its subject list from
-                 * conductedSessions alone. That was the reason another branch's
-                 * subjects could appear here.
-                 *
-                 * The backend ledger is expected to return:
-                 *   student.branch
-                 *   mappedSubjects[]
-                 *   conductedSessions[]
-                 *   studentScanMap{}
-                 *
-                 * mappedSubjects is the source of truth for the student's
-                 * branch + semester curriculum.
-                 */
                 const ledgerUrl =
                     `${API_BASE}/api/auth/student-attendance-ledger` +
                     `?studentId=${encodeURIComponent(studentId)}` +
@@ -2151,10 +2200,6 @@
                         ? ledgerData.studentScanMap
                         : {};
 
-                /*
-                 * Keep the logged-in student's actual branch visible in the
-                 * client state, but NEVER fall back to AIML for students.
-                 */
                 const actualStudentBranch = String(
                     studentProfile.branch ||
                     ledgerData.branch ||
@@ -2166,13 +2211,6 @@
                     localStorage.setItem('studentBranch', actualStudentBranch);
                 }
 
-                /*
-                 * Normalize subject identifiers.
-                 * We deliberately use EXACT identifiers rather than
-                 * substring matching. This prevents:
-                 *   RMIPR, RMT507
-                 * from being treated as RMIPR.
-                 */
                 const normalizeSubject = (value) =>
                     String(value ?? '')
                         .replace(/\s+/g, ' ')
@@ -2200,13 +2238,6 @@
                     return code || name || '';
                 };
 
-                /*
-                 * Build the allowed curriculum ONLY from weekly_timetables
-                 * mapping returned by the backend.
-                 *
-                 * Each mapped subject keeps both its code and its name so
-                 * sessions can be matched safely.
-                 */
                 const mappedSubjectMap = new Map();
 
                 mappedSubjects.forEach(subject => {
@@ -2237,12 +2268,6 @@
                     }
                 });
 
-                /*
-                 * Do NOT render a potentially incorrect global session list
-                 * when the backend has not supplied the student's mapped
-                 * subjects. Showing no subjects is safer than showing another
-                 * branch's curriculum.
-                 */
                 if (mappedSubjectMap.size === 0) {
                     const branchLabel = actualStudentBranch || 'your branch';
 
@@ -2271,17 +2296,6 @@
                     return;
                 }
 
-                /*
-                 * Filter class sessions strictly against the mapped curriculum.
-                 *
-                 * A session matches only when:
-                 *   session.subject_code === mapped.subject_code
-                 * OR
-                 *   session.subject_name === mapped.subject_name
-                 *
-                 * Exact matching is intentional. A combined value such as
-                 * "RMIPR, RMT507" will NOT match the mapped subject "RMIPR".
-                 */
                 const allowedSessions = conductedSessions.filter(session => {
                     const sessionCode = normalizeSubject(
                         session?.subject_code ||
@@ -2307,10 +2321,6 @@
                             return true;
                         }
 
-                        /*
-                         * Some records may have only a subject_code while the
-                         * timetable's subject_name is the same value.
-                         */
                         if (mapped.code && sessionName && mapped.code === sessionName) {
                             return true;
                         }
@@ -2323,17 +2333,7 @@
                     return false;
                 });
 
-                /*
-                 * Keep the subject columns in mapped curriculum order, not in
-                 * the arbitrary order of class_sessions.
-                 */
                 const subjectsArray = Array.from(mappedSubjectMap.values());
-
-                /*
-                 * Map every valid session to its mapped subject.
-                 * We keep an array per date+subject because a subject can have
-                 * more than one class period on the same day.
-                 */
                 const datesMap = {};
 
                 allowedSessions.forEach(session => {
@@ -2385,15 +2385,7 @@
                 });
 
                 const sortedDates = Object.keys(datesMap).sort().reverse();
-
-                /*
-                 * Show the student's branch and semester context in the table
-                 * header. This also makes it immediately obvious that the
-                 * register is not using a global AIML list.
-                 */
-                const branchText = actualStudentBranch
-                    ? ` | Branch: ${actualStudentBranch}`
-                    : '';
+                const branchText = actualStudentBranch ? ` | Branch: ${actualStudentBranch}` : '';
 
                 let headerHTML = `
                     <tr>
@@ -2404,7 +2396,6 @@
 
                 subjectsArray.forEach(subject => {
                     const label = subject.label || subject.code || subject.name || 'Course';
-
                     headerHTML += `
                         <th style="text-align:center; min-width:160px;">
                             ${label}
@@ -2415,9 +2406,6 @@
                 headerHTML += `</tr>`;
                 head.innerHTML = headerHTML;
 
-                /*
-                 * No valid mapped sessions = no unrelated subjects.
-                 */
                 if (sortedDates.length === 0) {
                     body.innerHTML = `
                         <tr>
@@ -2433,15 +2421,6 @@
                             </td>
                         </tr>
                     `;
-
-                    console.info("Student attendance register:", {
-                        studentId,
-                        branch: actualStudentBranch,
-                        semester: requestedSemester,
-                        mappedSubjects: subjectsArray.map(s => s.label),
-                        validSessions: 0
-                    });
-
                     return;
                 }
 
@@ -2468,11 +2447,6 @@
                             return;
                         }
 
-                        /*
-                         * Attendance is present when at least one of the
-                         * mapped sessions for that subject/date is present.
-                         * This avoids overwriting one class period with another.
-                         */
                         const isPresent = sessionCodes.some(sessionCode => {
                             const key = normalizeSubject(sessionCode);
                             return Boolean(studentScanMap[key]);
@@ -2501,23 +2475,12 @@
                     body.insertAdjacentHTML('beforeend', rowHTML);
                 });
 
-                console.info("Student attendance register loaded:", {
-                    studentId,
-                    branch: actualStudentBranch,
-                    semester: requestedSemester,
-                    mappedSubjects: subjectsArray.map(s => s.label),
-                    conductedSessionsReturned: conductedSessions.length,
-                    validMappedSessions: allowedSessions.length,
-                    datesShown: sortedDates.length
-                });
-
                 firePremiumToastAlert(
                     `📋 Personal attendance register loaded${actualStudentBranch ? ` for ${actualStudentBranch}` : ''}!`
                 );
 
             } catch (err) {
                 console.error("Personal attendance matrix error:", err);
-
                 body.innerHTML = `
                     <tr>
                         <td colspan="2"
@@ -2586,13 +2549,16 @@
             } catch (e) { console.error(e); }
         }
 
+        // ⏱️ TIMESTAMP-LOCKED SESSION LAUNCHER (Immune to background tab throttling)
         window.initializeFixedThreeMinuteSession = async function() {
             try {
                 if (sessionTimerCountdownReference) clearInterval(sessionTimerCountdownReference);
                 if (backgroundPollerReference) clearInterval(backgroundPollerReference);
 
                 scannedStudentUsnsCache = []; 
-                secondsRemainingInSession = 300; // ⏱️ Reset to 5 minutes
+                
+                const sessionDurationMs = 5 * 60 * 1000; // 5 Minutes
+                const sessionEndTime = Date.now() + sessionDurationMs;
 
                 currentGeneratedSessionToken = "AIT_" + Math.floor(100000 + Math.random() * 900000);
                 if (document.getElementById('currentActiveSessionCode')) document.getElementById('currentActiveSessionCode').innerText = currentGeneratedSessionToken;
@@ -2614,13 +2580,24 @@
                 backgroundPollerReference = setInterval(loadAttendance, 3000);
 
                 sessionTimerCountdownReference = setInterval(() => {
-                    secondsRemainingInSession--;
+                    const now = Date.now();
+                    const millisRemaining = sessionEndTime - now;
+                    secondsRemainingInSession = Math.ceil(millisRemaining / 1000);
+
                     let mins = Math.floor(secondsRemainingInSession / 60);
                     let secs = secondsRemainingInSession % 60;
+                    
+                    if (mins < 0) mins = 0;
+                    if (secs < 0) secs = 0;
+
                     if (document.getElementById('countdownTimerReadout')) {
                         document.getElementById('countdownTimerReadout').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
                     }
-                    if (secondsRemainingInSession <= 0) executeSessionLockdownAndReconciliation();
+
+                    if (millisRemaining <= 0) {
+                        clearInterval(sessionTimerCountdownReference);
+                        executeSessionLockdownAndReconciliation();
+                    }
                 }, 1000);
 
                 firePremiumToastAlert("⚡ 5-Minute Session Launched!");

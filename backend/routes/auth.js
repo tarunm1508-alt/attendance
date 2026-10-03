@@ -17,7 +17,7 @@ router.post("/login-challenge", async (req, res) => {
              WHERE UPPER(usn) = UPPER($1) 
                AND (
                    LOWER(TRIM(role)) = LOWER(TRIM($2)) 
-                   OR ($2 IN ('hod', 'teacher') AND LOWER(TRIM(role)) IN ('hod', 'teacher'))
+                   OR (LOWER(TRIM($2)) IN ('hod', 'teacher', 'faculty') AND LOWER(TRIM(role)) IN ('hod', 'teacher', 'faculty'))
                )
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
             [cleanUsn, cleanRole, targetTenant]
@@ -73,7 +73,7 @@ router.post("/combined-login", async (req, res) => {
              WHERE UPPER(usn) = UPPER($1) 
                AND (
                    LOWER(TRIM(role)) = LOWER(TRIM($2)) 
-                   OR ($2 IN ('hod', 'teacher') AND LOWER(TRIM(role)) IN ('hod', 'teacher'))
+                   OR (LOWER(TRIM($2)) IN ('hod', 'teacher', 'faculty') AND LOWER(TRIM(role)) IN ('hod', 'teacher', 'faculty'))
                )
                AND COALESCE(institution_id, 'DR_AIT') ILIKE $3`,
             [cleanUsn, cleanRole, targetTenant]
@@ -165,7 +165,7 @@ router.post("/signup", async (req, res) => {
                 cleanRole, 
                 name || cleanUsn, 
                 childUsn ? childUsn.trim().toUpperCase() : null, 
-                cleanRole === 'teacher' || cleanRole === 'hod' ? subjectName : null, 
+                ['teacher', 'faculty', 'hod'].includes(cleanRole) ? subjectName : null, 
                 branch || 'AIML',
                 tenant, 
                 phoneNumber || '+919876543210',
@@ -292,7 +292,7 @@ router.post("/submit-attendance", async (req, res) => {
     }
 });
 
-// 5. AUTOMATED LOCKDOWN COMPLIANCE COMMUNICATIONS BROKER (Cleaned up terminal logs)
+// 5. AUTOMATED LOCKDOWN COMPLIANCE COMMUNICATIONS BROKER
 router.post("/end-session", async (req, res) => {
     const { sessionCode, subjectName, institutionId } = req.body;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
@@ -302,9 +302,6 @@ router.post("/end-session", async (req, res) => {
         const presentStudents = await pool.query("SELECT student_id FROM users_attendance WHERE session_code = $1 AND institution_id = $2", [sessionCode, tenant]);
         const presentUsns = presentStudents.rows.map(r => r.student_id.toUpperCase());
 
-        const totalConductedResult = await pool.query("SELECT COUNT(*) as conducted FROM class_sessions WHERE subject_name = $1 AND institution_id = $2", [targetSubject, tenant]);
-        const totalConducted = parseInt(totalConductedResult.rows[0].conducted) || 1;
-
         let absentCount = 0;
         for (let student of allStudents.rows) {
             if (!presentUsns.includes(student.usn.toUpperCase())) {
@@ -312,7 +309,6 @@ router.post("/end-session", async (req, res) => {
             }
         }
 
-        // Clean single line log instead of repeating for every student
         console.log(`📱 [SESSION CLOSED] Session: ${sessionCode} | Subject: ${targetSubject} | Total Absentees Flagged: ${absentCount}`);
 
         return res.json({ success: true });
@@ -632,14 +628,13 @@ router.get("/teacher/export-attendance-pdf", async (req, res) => {
     }
 });
 
-// 7. FIXED ALL-SEMESTER DATA-DRIVEN METRICS PERF ENDPOINT (WITH SECURE USN & SEMESTER GPA ISOLATION)
+// 7. FIXED ALL-SEMESTER DATA-DRIVEN METRICS PERF ENDPOINT
 router.get("/student-subject-metrics", async (req, res) => {
     const { studentId, semester, institutionId } = req.query;
     const tenant = institutionId ? institutionId.trim() : 'DR_AIT';
     const cleanStudentId = studentId ? studentId.trim().toUpperCase() : '';
     const semNumber = semester ? parseInt(semester) : 5;
 
-    // 🔒 Enforce strict validation so that requests missing a studentId are rejected instead of defaulting/leaking
     if (!cleanStudentId) {
         return res.status(400).json({ success: false, error: "Student ID (USN) is required." });
     }
@@ -789,7 +784,7 @@ router.get("/teacher-mapped-slots", async (req, res) => {
 });
 
 // ==========================================================================
-// 11. FORGOT PASSWORD ENDPOINTS (Secure Recovery & Device Unbinding)
+// 11. FORGOT PASSWORD ENDPOINTS
 // ==========================================================================
 router.post("/forgot-password-request", async (req, res) => {
     const { usn, institutionId } = req.body;
@@ -853,7 +848,7 @@ router.post("/reset-password-confirm", async (req, res) => {
         });
     } catch (err) {
         console.error("💥 RESET CONFIRM ERROR:", err);
-        return res.status(500).json({ success: false, message: err.message });
+        return res.status(500).json({ success: false, error: err.message });
     }
 });
 
