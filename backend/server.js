@@ -3,7 +3,37 @@ const cors = require("cors");
 const path = require("path");
 const pool = require("./db");
 
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const hpp = require("hpp");
+
 const app = express();
+
+/* ==========================================================================
+   🔒 ENTERPRISE SECURITY HARDENING LAYER
+   ========================================================================== */
+// 1. Secure HTTP headers (Prevents clickjacking, XSS, and MIME-sniffing)
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
+
+// 2. Global Rate Limiter (Prevents brute-force / DDoS attacks)
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 300, // Limit each IP to 300 requests per window
+    standardHeaders: true,
+    legacyHeaders: false,
+    validate: {
+        trustProxy: false,
+        xForwardedForHeader: false
+    },
+    message: { success: false, message: "Too many requests from this IP, please try again later." }
+});
+app.use("/api/", globalLimiter);
+
+// 3. Prevent HTTP Parameter Pollution attacks
+app.use(hpp());
 
 /* ==========================================================================
    MIDDLEWARE
@@ -14,7 +44,9 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
-app.use(express.json({ limit: "2mb" }));
+
+// 4. Strict JSON body limit (Prevents memory exhaustion via giant JSON payloads)
+app.use(express.json({ limit: "500kb" }));
 
 app.use(express.static(path.join(__dirname, "../frontend")));
 app.use("/frontend", express.static(path.join(__dirname, "../frontend")));
@@ -1011,7 +1043,7 @@ app.post("/api/admin/bulk-upload-marks", async (req, res) => {
             }
 
             if (!Number.isInteger(uploadedSem) || uploadedSem < 1 || uploadedSem > 8) {
-                throw new Error(`Invalid semester for ${usn}: ${item.sem}`);
+                throw new Error(`Invalid semester for ${usn}:${item.sem}`);
             }
 
             const student = await pool.query(`
@@ -1454,7 +1486,7 @@ app.post("/api/hod/save-weekly-timetable", async (req, res) => {
                     VALUES ($1,$2,$3,$4,$5,$6)
                 `, [
                     teacherId,
-                    `TIMETABLE ASSIGNMENT: ${subjectName || subjectCode} (${branch} Sem ${sem})`,
+                    `TIMETABLE ASSIGNMENT: ${subjectName || subjectCode} (${branch} Sem${sem})`,
                     subjectName || subjectCode,
                     item.day,
                     clean(item.timeSlot),
@@ -1860,7 +1892,7 @@ app.delete("/api/teacher/fdp-records", async (req, res) => {
 
     try {
         await pool.query(`
-            DELETE FROM faculty_fdp_attended
+            DELETE FROM faculty_publications
             WHERE id = $1
               AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
                   UPPER(TRIM($2))
@@ -2124,7 +2156,7 @@ const server = app.listen(PORT, () => {
     console.log("==================================================");
     console.log(`SERVER RUNNING ON PORT ${PORT}`);
     console.log("STUDENT MARKS: USN + SEMESTER DIRECT FETCH ENABLED");
-    console.log("ATTENDANCE REGISTER: STRICT BRANCH + SEMESTER ENABLED");
+    console.log("ATTENDANCE REGISTER: STRICT BRANCH + SEMESTER FILTERING ENABLED");
     console.log("==================================================");
 });
 
