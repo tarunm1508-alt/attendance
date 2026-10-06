@@ -464,11 +464,86 @@
                 <!-- 🚀 EXECUTIVE QUICK-JUMP NAVIGATION BAR -->
                 <div style="position: sticky; top: 16px; z-index: 1000; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--bento-border); padding: 12px 18px; border-radius: 16px; display: flex; gap: 10px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 24px;">
                     <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); align-self: center; text-transform: uppercase; margin-right: 4px;">⚡ Jump To:</span>
+                    <button onclick="scrollToSection('teacherProfileCredentialsHub')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">👤 My Profile & Credentials</button>
                     <button onclick="scrollToSection('teacherPubsHub')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">📚 Research Hub</button>
                     <button onclick="scrollToSection('teacherFdpHub')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">🏛️ FDP Records</button>
                     <button onclick="scrollToSection('teacherSlotSelector')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">🎯 Class Slots</button>
                     <button onclick="scrollToSection('teacherQrDispatcher')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">⚡ QR Dispatcher</button>
                     <button onclick="scrollToSection('teacherViewsBar')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">📊 Stream & Registers</button>
+                </div>
+
+                <!-- 👤 TEACHER PROFESSIONAL PROFILE & CREDENTIALS HUB (Phase 1) -->
+                <div id="teacherProfileCredentialsHub" class="bento-card" style="border-left: 5px solid var(--accent-purple); margin-bottom: 24px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 22px;">👤</span>
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">My Professional & Service Records (NAAC / NBA Audit)</h3>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Manage your official service credentials, government IDs, qualifications, and optional research profile links.</p>
+                            </div>
+                        </div>
+                        <button onclick="saveTeacherProfessionalProfile()" class="btn btn-blue" style="padding: 10px 20px; font-size: 12px;">Save Profile Credentials 💾</button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--bento-border);">
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">PAN NUMBER</label>
+                            <input type="text" id="profPan" placeholder="e.g., ABCDE1234F" style="width: 100%; text-transform: uppercase;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">AADHAR NUMBER</label>
+                            <input type="text" id="profAadhar" placeholder="e.g., 1234 5678 9012" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF BIRTH</label>
+                            <input type="date" id="profDob" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">JOINING DATE</label>
+                            <input type="date" id="profJoiningDate" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CURRENT DESIGNATION</label>
+                            <select id="profDesignation" style="width: 100%;">
+                                <option value="Professor">Professor</option>
+                                <option value="Associate Professor">Associate Professor</option>
+                                <option value="Assistant Professor" selected>Assistant Professor</option>
+                                <option value="Guest Faculty">Guest Faculty</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF LAST PROMOTION</label>
+                            <input type="date" id="profPromotionDate" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">HIGHEST QUALIFICATION</label>
+                            <input type="text" id="profQualification" placeholder="e.g., Ph.D. in AI, M.Tech" style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 20px; border-top: 1px dashed var(--bento-border); padding-top: 16px;">
+                        <h4 style="font-size: 13px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">🔗 Optional Academic Profile Links (Provide any one or more)</h4>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Link your official repositories for automated verification during institutional reviews.</p>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">Google Scholar Profile URL</label>
+                                <input type="text" id="profGoogleScholar" placeholder="https://scholar.google.com/..." style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">ORCID iD Link</label>
+                                <input type="text" id="profOrcid" placeholder="https://orcid.org/0000-..." style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">VIDWAN Profile URL</label>
+                                <input type="text" id="profVidwan" placeholder="https://vidwan.inflibnet.ac.in/..." style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">IRINS Profile URL</label>
+                                <input type="text" id="profIrins" placeholder="https://drait.irins.org/..." style="width: 100%;">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- 📚 TEACHER RESEARCH & PUBLICATIONS HUB -->
@@ -1141,7 +1216,7 @@
         let teacherBranch = localStorage.getItem('userBranch') || 'AIML';
 
         let currentGeneratedSessionToken = ""; 
-        let secondsRemainingInSession = 300; // ⏱️ 5 minutes
+        let secondsRemainingInSession = 300; // ⏱️️ 5 minutes qr prescense session
         let sessionTimerCountdownReference = null;
         let backgroundPollerReference = null;
         let scatterChartInstance = null;
@@ -1204,6 +1279,77 @@
         function closeMarksEntryModal() {
             const modal = document.getElementById('marksEntryModal');
             if (modal) modal.style.display = 'none';
+        }
+
+        // =========================================================================
+        // 👤 TEACHER PROFESSIONAL PROFILE & CREDENTIALS HANDLERS (Phase 1)
+        // =========================================================================
+        async function loadTeacherProfessionalProfile() {
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/profile?teacherId=${encodeURIComponent(userUsn)}&institutionId=${encodeURIComponent(institutionId)}`);
+                const data = await res.json();
+                if (res.ok && data.success && data.profile) {
+                    const p = data.profile;
+                    if (document.getElementById('profPan')) document.getElementById('profPan').value = p.pan_number || '';
+                    if (document.getElementById('profAadhar')) document.getElementById('profAadhar').value = p.aadhar_number || '';
+                    if (document.getElementById('profDob')) document.getElementById('profDob').value = p.dob ? p.dob.split('T')[0] : '';
+                    if (document.getElementById('profJoiningDate')) document.getElementById('profJoiningDate').value = p.joining_date ? p.joining_date.split('T')[0] : '';
+                    if (document.getElementById('profDesignation')) document.getElementById('profDesignation').value = p.current_designation || 'Assistant Professor';
+                    if (document.getElementById('profPromotionDate')) document.getElementById('profPromotionDate').value = p.promotion_date ? p.promotion_date.split('T')[0] : '';
+                    if (document.getElementById('profQualification')) document.getElementById('profQualification').value = p.highest_qualification || '';
+                    if (document.getElementById('profGoogleScholar')) document.getElementById('profGoogleScholar').value = p.google_scholar_url || '';
+                    if (document.getElementById('profOrcid')) document.getElementById('profOrcid').value = p.orcid_id || '';
+                    if (document.getElementById('profVidwan')) document.getElementById('profVidwan').value = p.vidwan_id || '';
+                    if (document.getElementById('profIrins')) document.getElementById('profIrins').value = p.irins_url || '';
+                }
+            } catch (err) {
+                console.error("Error loading teacher profile credentials:", err);
+            }
+        }
+
+        async function saveTeacherProfessionalProfile() {
+            const panNumber = document.getElementById('profPan')?.value.trim().toUpperCase();
+            const aadharNumber = document.getElementById('profAadhar')?.value.trim();
+            const dob = document.getElementById('profDob')?.value;
+            const joiningDate = document.getElementById('profJoiningDate')?.value;
+            const currentDesignation = document.getElementById('profDesignation')?.value;
+            const promotionDate = document.getElementById('profPromotionDate')?.value;
+            const highestQualification = document.getElementById('profQualification')?.value.trim();
+            const googleScholarUrl = document.getElementById('profGoogleScholar')?.value.trim();
+            const orcidId = document.getElementById('profOrcid')?.value.trim();
+            const vidwanId = document.getElementById('profVidwan')?.value.trim();
+            const irinsUrl = document.getElementById('profIrins')?.value.trim();
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        teacherId: userUsn,
+                        institutionId: institutionId,
+                        panNumber,
+                        aadharNumber,
+                        dob,
+                        joiningDate,
+                        currentDesignation,
+                        promotionDate,
+                        highestQualification,
+                        googleScholarUrl,
+                        orcidId,
+                        vidwanId,
+                        irinsUrl
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    firePremiumToastAlert("✅ Professional credentials & profile links saved successfully!");
+                } else {
+                    firePremiumToastAlert(`❌ ${data.error || 'Failed to save profile credentials.'}`, "var(--accent-red)");
+                }
+            } catch (err) {
+                console.error("Save profile error:", err);
+                firePremiumToastAlert("❌ Network error saving profile credentials.", "var(--accent-red)");
+            }
         }
 
         // =========================================================================
@@ -1672,6 +1818,7 @@
                 if (document.getElementById('directMessagingDesk')) document.getElementById('directMessagingDesk').style.display = 'block';
                 if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 ${role.toUpperCase()}: ${userName} | TENANT: ${institutionId}`;
                 await fetchTeacherAssignedClasses();
+                loadTeacherProfessionalProfile();
                 loadTeacherPublications();
                 loadTeacherFdpRecords();
                 loadAttendance();

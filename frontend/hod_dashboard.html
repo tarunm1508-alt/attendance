@@ -19,13 +19,17 @@
             --text-dark: #0f172a;
             --text-muted: #64748b;
             --break-bg: #f1f5f9;
+            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
-        body { background-color: var(--bg-canvas); color: var(--text-dark); padding: 24px 20px; min-height: 100vh; }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); padding: 30px; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; }
         
-        .container { max-width: 1350px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
-        .bento-card { background: white; border: 1px solid var(--border-clean); border-radius: 18px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
+        /* 🎯 TRUE FULL-PAGE FLUID CONTAINER STRETCH */
+        .container { max-width: 1100px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; transition: max-width 0.25s ease, width 0.25s ease; }
+        .container.full-page-mode { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
+
+        .bento-card { background: white; border: 1px solid var(--border-clean); border-radius: 20px; padding: 28px; box-shadow: var(--shadow-premium); width: 100%; }
 
         /* HOD Profile Header */
         .profile-banner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
@@ -63,12 +67,8 @@
         .slot-cell { display: flex; flex-direction: column; gap: 4px; width: 140px; padding: 2px; }
         
         .split-sub-room-box {
-            display: flex;
-            flex-direction: column;
-            border: 1.5px solid var(--primary-blue);
-            border-radius: 6px;
-            background: #ffffff;
-            overflow: hidden;
+            display: flex; flex-direction: column; border: 1.5px solid var(--primary-blue);
+            border-radius: 6px; background: #ffffff; overflow: hidden;
         }
         .slot-input { width: 100%; padding: 4px; font-size: 11px; border: none; font-weight: 800; text-transform: uppercase; background: transparent; color: var(--text-dark); text-align: center; outline: none; }
         .split-divider { width: 100%; height: 1.5px; background: var(--border-clean); }
@@ -81,37 +81,31 @@
         .btn-save { background: var(--accent-green); color: white; border: none; font-weight: 800; cursor: pointer; padding: 12px 24px; border-radius: 10px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
         .btn-save:hover { opacity: 0.9; }
 
+        /* Full-Page Workspace Header Bar */
+        .back-nav-bar {
+            background: #ffffff; border: 1px solid var(--border-clean); padding: 16px 28px; border-radius: 0 0 16px 16px;
+            display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-premium);
+            margin-bottom: 24px; width: 100%; position: sticky; top: 0; z-index: 1000;
+        }
+
         /* Sleek Floating Toast Popup Notification */
         #customToastPopup {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: #0f172a;
-            color: white;
-            padding: 14px 22px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 13px;
-            z-index: 10000;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transform: translateY(20px);
-            opacity: 0;
+            position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: white;
+            padding: 14px 22px; border-radius: 14px; font-weight: 700; font-size: 13px;
+            z-index: 10000; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.1); transform: translateY(20px); opacity: 0;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        #customToastPopup.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
+        #customToastPopup.show { transform: translateY(0); opacity: 1; }
     </style>
 </head>
 <body>
 
     <div id="customToastPopup"></div>
 
-    <div class="container" id="mainDashboardContainer" style="display: flex;">
-        <!-- 👔 1. HOD Profile Header -->
-        <div class="bento-card">
+    <div class="container" id="mainDashboardContainer">
+        <!-- 👔 1. HOD Profile Header (Hidden when inside a full-page module) -->
+        <div class="bento-card" id="hodProfileHeaderCard">
             <div class="profile-banner">
                 <div class="hod-badge">
                     <div class="avatar-circle">👔</div>
@@ -124,383 +118,561 @@
             </div>
         </div>
 
-        <!-- 🚀 EXECUTIVE QUICK-JUMP NAVIGATION BAR -->
-        <div style="position: sticky; top: 16px; z-index: 1000; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--border-clean); padding: 12px 18px; border-radius: 16px; display: flex; gap: 10px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.04);">
-            <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); align-self: center; text-transform: uppercase; margin-right: 4px;">⚡ Jump To:</span>
-            <button onclick="scrollToSection('hodPubsCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">📚 Research Hub</button>
-            <button onclick="scrollToSection('hodFdpCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">🏛️ FDP Records</button>
-            <button onclick="scrollToSection('hodMedicalCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">🩺 Medical Desk</button>
-            <button onclick="scrollToSection('hodMentorCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">🎓 Proctor Tool</button>
-            <button onclick="scrollToSection('hodMarksCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">📊 Marks Uploader</button>
-            <button onclick="scrollToSection('hodCommsCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">💬 Broadcast Desk</button>
-            <button onclick="scrollToSection('hodSwapsCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">🔄 Swap Approvals</button>
-            <button onclick="scrollToSection('timetableMatrixCard')" class="btn" style="background: #f1f5f9; color: var(--text-dark); font-size: 11px; padding: 6px 14px; white-space: nowrap;">📅 Master Timetable</button>
+        <!-- 🏛️ HOD LANDING CARD GRID (2 Cards per Row, Centered) -->
+        <div id="hodLandingGridContainer" class="bento-card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
+            <div style="font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;">
+                🏛️ HOD Executive Management Modules — Select Workspace
+            </div>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                
+                <!-- Card 1: Research Hub -->
+                <div onclick="switchHodWorkspace('research')" style="background: white; border: 2px solid var(--primary-blue); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">📚</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Research Hub</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Review faculty research papers, journals, Scopus/WoS quartile rankings, and export department publication reports.</p>
+                </div>
+
+                <!-- Card 2: Marks Uploader -->
+                <div onclick="switchHodWorkspace('marks')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">📝</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Marks Uploader</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Inject historical CIE and SEE scores across past semesters and manage multi-tier student evaluation scorecards.</p>
+                </div>
+
+                <!-- Card 3: Medical Desk -->
+                <div onclick="switchHodWorkspace('medical')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">🩺</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Medical Desk</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Manually excuse absent students due to health issues or approved medical leave for active session codes.</p>
+                </div>
+
+                <!-- Card 4: Swap Approvals -->
+                <div onclick="switchHodWorkspace('swaps')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">🔄</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Swap Approvals</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Review and authorize or reject faculty schedule swap requests and timetable adjustment notes.</p>
+                </div>
+
+                <!-- Card 5: Master Timetable -->
+                <div onclick="switchHodWorkspace('timetable')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">📅</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Master Timetable</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Build and dispatch weekly matrix schedules, assign department faculty, and export high-resolution PDFs.</p>
+                </div>
+
+                <!-- Card 6: Broadcast Desk -->
+                <div onclick="switchHodWorkspace('broadcast')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">📢</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Broadcast Desk</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Send official announcements and department circulars directly to students, parents, or faculty members.</p>
+                </div>
+
+                <!-- Card 7: Proctor Tool -->
+                <div onclick="switchHodWorkspace('proctor')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">🎓</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Proctor Tool</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Appoint student batches by USN range to faculty mentors for guidance and monitoring.</p>
+                </div>
+
+                <!-- Card 8: FDP Records -->
+                <div onclick="switchHodWorkspace('fdp')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">🏛️</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">FDP Records</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Track faculty professional development programs, ATAL/DST sponsorships, and training records.</p>
+                </div>
+
+                <!-- Card 9: Message Inbox -->
+                <div onclick="switchHodWorkspace('messages')" style="background: white; border: 2px solid var(--primary-blue); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s; grid-column: span 2;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">💬</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Message Inbox & Faculty Comms <span id="inboxCardBadge" style="background: var(--primary-blue); color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">0 New</span></h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Read personal communications, leave notes, and direct inquiries sent by department faculty and college administrators.</p>
+                </div>
+
+                <!-- Card 10: Faculty Directory & Service Records (Phase 1) -->
+                <div onclick="switchHodWorkspace('faculty_directory')" style="background: white; border: 2px solid var(--accent-purple); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s; grid-column: span 2;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+                        <span style="font-size: 26px;">👥</span>
+                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Faculty Directory & Service Records</h3>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Manage verified faculty service records, professional credentials (PAN, Aadhar, qualifications), and one-click academic profile links for NAAC/NBA audits.</p>
+                </div>
+
+            </div>
         </div>
 
-        <!-- 📊 1.5 DEPARTMENT RESEARCH & PUBLICATIONS HUB -->
-        <div id="hodPubsCard" class="bento-card" style="border-left: 5px solid var(--accent-purple);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 22px;">📊</span>
-                    <div>
-                        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Department Research & Faculty Publications Hub</h3>
-                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Review faculty research papers, journals, quartile rankings, and citation metrics submitted across your branch.</p>
+        <!-- ==========================================================================
+            TRUE FULL-WIDTH WORKSPACE PANES
+            ========================================================================== -->
+
+        <!-- 📚 1. Research Hub Pane -->
+        <div id="hodPane_research" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">📚 Research Hub Full-Page Workspace</span>
+            </div>
+            <div class="bento-card" style="border-left: 5px solid var(--accent-purple); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">📊</span>
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Department Research & Faculty Publications Hub</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Review faculty research papers, journals, quartile rankings, and citation metrics submitted across your branch.</p>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border-clean);">
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Year:</label>
+                            <select id="pubsYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
+                                <option value="2025-2026">2025 - 2026</option>
+                                <option value="2026-2027" selected>2026 - 2027</option>
+                                <option value="2027-2028">2027 - 2028</option>
+                            </select>
+                        </div>
+                        <button onclick="exportDepartmentPublicationsReport()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer;">
+                            📥 Export Report
+                        </button>
                     </div>
                 </div>
-                
-                <!-- 🎯 SELECT YEAR DROPDOWN INSIDE RESEARCH HUB -->
-                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+
+                <div style="width: 100%; overflow-x: auto; border: 1px solid var(--border-clean); border-radius: 12px; margin-top: 12px;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; background: white; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 5%;">Sl. No.</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Authors</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 25%;">Title</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Conference / Journal / Book Chapter</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 14%;">Scopus / WoS / SCI Indexed</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 10%;">Year of Publication</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 10%;">Q1 / Q2 / Q3 / Q4</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hodPubsTableBody">
+                            <tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">Loading department faculty publications...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🏛️ 2. FDP Records Pane -->
+        <div id="hodPane_fdp" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">🏛️ FDP Records Full-Page Workspace</span>
+            </div>
+            <div class="bento-card" style="border-left: 5px solid var(--primary-blue); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">🏛️</span>
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Department FDP Attended by Faculty</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Review Faculty Development Programs, ATAL/DST sponsorships, and duration dates.</p>
+                        </div>
+                    </div>
+
                     <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border-clean);">
                         <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Year:</label>
-                        <select id="pubsYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
+                        <select id="fdpYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
                             <option value="2025-2026">2025 - 2026</option>
                             <option value="2026-2027" selected>2026 - 2027</option>
                             <option value="2027-2028">2027 - 2028</option>
                         </select>
                     </div>
-                    <button onclick="exportDepartmentPublicationsReport()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer;">
-                        📥 Export Report
-                    </button>
                 </div>
-            </div>
 
-            <div style="width: 100%; overflow-x: auto; border: 1px solid var(--border-clean); border-radius: 12px; margin-top: 12px;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left; background: white; font-size: 12px;">
-                    <thead>
-                        <tr style="background: #f1f5f9;">
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 5%;">Sl. No.</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Authors</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 25%;">Title</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Conference / Journal / Book Chapter</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 14%;">Scopus / WoS / SCI Indexed</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 10%;">Year of Publication</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 10%;">Q1 / Q2 / Q3 / Q4</th>
-                        </tr>
-                    </thead>
-                    <tbody id="hodPubsTableBody">
-                        <tr>
-                            <td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">Loading department faculty publications...</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <div style="width: 100%; overflow-x: auto; border: 1px solid var(--border-clean); border-radius: 12px; margin-top: 12px;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; background: white; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 6%;">Sl. No.</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Name of Faculty</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 22%;">Title of FDP (Online / Offline)</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 14%;">Sponsorship (ATAL / VGST / DST)</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 20%;">Organized by (Full Address)</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 12%;">From - To Dates</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 8%;">No. of Participants</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hodFdpTableBody">
+                            <tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">Loading department FDP records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- 🏛️ FDP ATTENDED BY FACULTY SECTION -->
-        <div id="hodFdpCard" class="bento-card" style="border-left: 5px solid var(--primary-blue);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 22px;">🏛️</span>
+        <!-- 🩺 3. Medical Desk Pane -->
+        <div id="hodPane_medical" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">🩺 Medical Desk Full-Page Workspace</span>
+            </div>
+            <div class="bento-card" style="border-left: 5px solid var(--accent-red); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                    <span style="font-size: 20px;">🩺</span>
+                    <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Medical / Leave Attendance Excuse Desk</h3>
+                </div>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+                    Manually excuse absent students due to health issues or approved leave by granting them attendance for an active session code.
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean);">
                     <div>
-                        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Department FDP Attended by Faculty</h3>
-                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Review Faculty Development Programs, ATAL/DST sponsorships, and duration dates.</p>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">STUDENT USN</label>
+                        <input type="text" id="overrideStudentUsn" placeholder="e.g., 1DA24AI044" style="width: 100%; text-transform: uppercase;">
                     </div>
-                </div>
-
-                <!-- 🎯 SELECT YEAR DROPDOWN INSIDE FDP HUB -->
-                <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border-clean);">
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Year:</label>
-                    <select id="fdpYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
-                        <option value="2025-2026">2025 - 2026</option>
-                        <option value="2026-2027" selected>2026 - 2027</option>
-                        <option value="2027-2028">2027 - 2028</option>
-                    </select>
-                </div>
-            </div>
-
-            <div style="width: 100%; overflow-x: auto; border: 1px solid var(--border-clean); border-radius: 12px; margin-top: 12px;">
-                <table style="width: 100%; border-collapse: collapse; text-align: left; background: white; font-size: 12px;">
-                    <thead>
-                        <tr style="background: #f1f5f9;">
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 6%;">Sl. No.</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Name of Faculty</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 22%;">Title of FDP (Online / Offline)</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 14%;">Sponsorship (ATAL / VGST / DST)</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); width: 20%;">Organized by (Full Address)</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 12%;">From - To Dates</th>
-                            <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 8%;">No. of Participants</th>
-                        </tr>
-                    </thead>
-                    <tbody id="hodFdpTableBody">
-                        <tr>
-                            <td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">Loading department FDP records...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- 🩺 2. MEDICAL / LEAVE ATTENDANCE EXCUSE DESK -->
-        <div id="hodMedicalCard" class="bento-card" style="border-left: 5px solid var(--accent-red);">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
-                <span style="font-size: 20px;">🩺</span>
-                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Medical / Leave Attendance Excuse Desk</h3>
-            </div>
-            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
-                Manually excuse absent students due to health issues or approved leave by granting them attendance for an active session code.
-            </p>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean);">
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">STUDENT USN</label>
-                    <input type="text" id="overrideStudentUsn" placeholder="e.g., 1DA24AI044" style="width: 100%; text-transform: uppercase;">
-                </div>
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">ACTIVE SESSION CODE</label>
-                    <input type="text" id="overrideSessionCode" placeholder="e.g., AI_SESS_101" style="width: 100%; text-transform: uppercase;">
-                </div>
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SUBJECT NAME</label>
-                    <input type="text" id="overrideSubjectName" value="AI" placeholder="e.g., Artificial Intelligence" style="width: 100%;">
-                </div>
-                <div style="display: flex; align-items: flex-end;">
-                    <button onclick="submitHodAttendanceOverride()" style="background: var(--accent-red); color: white; border: none; padding: 11px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; height: 42px; width: 100%;">
-                        ✅ Excuse & Mark Present
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- 🎓 3. PROCTOR & MENTORSHIP ALLOCATION TOOL -->
-        <div id="hodMentorCard" class="bento-card" style="border-left: 5px solid var(--accent-purple);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 22px;">🎓</span>
                     <div>
-                        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Proctor & Mentorship Allocation Tool</h3>
-                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Appoint students to a faculty mentor by USN range.</p>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">ACTIVE SESSION CODE</label>
+                        <input type="text" id="overrideSessionCode" placeholder="e.g., AI_SESS_101" style="width: 100%; text-transform: uppercase;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SUBJECT NAME</label>
+                        <input type="text" id="overrideSubjectName" value="AI" placeholder="e.g., Artificial Intelligence" style="width: 100%;">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button onclick="submitHodAttendanceOverride()" style="background: var(--accent-red); color: white; border: none; padding: 11px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; height: 42px; width: 100%;">
+                            ✅ Excuse & Mark Present
+                        </button>
                     </div>
                 </div>
             </div>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean);">
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">1. SELECT FACULTY MENTOR</label>
-                    <select id="mentorSelectDropdown" style="width: 100%;">
-                        <option value="">-- Select Teacher --</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">2. USN PREFIX</label>
-                    <input type="text" id="usnPrefixInput" value="1DA24AI" placeholder="e.g. 1DA24AI" style="width: 100%; text-transform: uppercase;">
-                </div>
-
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">3. START NO.</label>
-                    <input type="number" id="usnStartInput" placeholder="1" style="width: 100%;">
-                </div>
-
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">4. END NO.</label>
-                    <input type="number" id="usnEndInput" placeholder="20" style="width: 100%;">
-                </div>
-            </div>
-
-            <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <span style="font-size: 12px; color: var(--text-muted); font-style: italic;">
-                    Example: Prefix '1DA24AI', Start '1', End '20' will appoint 1DA24AI001 to 1DA24AI020 to selected mentor.
-                </span>
-
-                <button onclick="submitBatchMentorshipAssignment()" style="background: var(--accent-purple); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">
-                    🚀 Appoint Mentees to Faculty
-                </button>
-            </div>
         </div>
 
-        <!-- 📝 4. HOD HISTORICAL & PAST SEMESTER MARKS BATCH WORKSTATION -->
-        <div id="hodMarksCard" class="bento-card" style="border-left: 5px solid var(--accent-green);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 22px;">📊</span>
-                    <div>
-                        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Past Semester Marks Batch Uploader (Years 1 - 4)</h3>
-                        <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Inject historical CIE and SEE scores for any student across past semesters instantly.</p>
+        <!-- 🎓 4. Proctor Tool Pane -->
+        <div id="hodPane_proctor" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">🎓 Proctor Tool Full-Page Workspace</span>
+            </div>
+            <div class="bento-card" style="border-left: 5px solid var(--accent-purple); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">🎓</span>
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Proctor & Mentorship Allocation Tool</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Appoint students to a faculty mentor by USN range.</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean); margin-bottom: 14px;">
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">TARGET STUDENT USN</label>
-                    <input type="text" id="batchStudentUsn" placeholder="e.g., 1DA24AI015" style="width: 100%; text-transform: uppercase;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean);">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">1. SELECT FACULTY MENTOR</label>
+                        <select id="mentorSelectDropdown" style="width: 100%;">
+                            <option value="">-- Select Faculty --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">2. USN PREFIX</label>
+                        <input type="text" id="usnPrefixInput" value="1DA24AI" placeholder="e.g. 1DA24AI" style="width: 100%; text-transform: uppercase;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">3. START NO.</label>
+                        <input type="number" id="usnStartInput" placeholder="1" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">4. END NO.</label>
+                        <input type="number" id="usnEndInput" placeholder="20" style="width: 100%;">
+                    </div>
                 </div>
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SEMESTER NUMBER</label>
-                    <select id="batchSemNum" style="width: 100%;">
-                        <option value="1">Semester 1</option>
-                        <option value="2">Semester 2</option>
-                        <option value="3" selected>Semester 3</option>
-                        <option value="4">Semester 4</option>
-                        <option value="5">Semester 5</option>
-                        <option value="6">Semester 6</option>
-                        <option value="7">Semester 7</option>
-                        <option value="8">Semester 8</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SUBJECT CODE</label>
-                    <input type="text" id="batchSubCode" placeholder="e.g., AIML301" style="width: 100%; text-transform: uppercase;">
-                </div>
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SUBJECT NAME</label>
-                    <input type="text" id="batchSubName" placeholder="e.g., Machine Learning" style="width: 100%;">
-                </div>
-            </div>
 
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 12px; align-items: center; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean);">
-                <div>
-                    <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CIE 1 (Max 25)</label>
-                    <input type="number" id="batchCie1" value="0" min="0" max="25" style="width: 100%;">
-                </div>
-                <div>
-                    <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CIE 2 (Max 25)</label>
-                    <input type="number" id="batchCie2" value="0" min="0" max="25" style="width: 100%;">
-                </div>
-                <div>
-                    <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CIE 3 (Max 25)</label>
-                    <input type="number" id="batchCie3" value="0" min="0" max="25" style="width: 100%;">
-                </div>
-                <div>
-                    <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SEE EXAM (Max 100)</label>
-                    <input type="number" id="batchSee" value="0" min="0" max="100" style="width: 100%;">
-                </div>
-                <div style="display: flex; align-items: flex-end;">
-                    <button onclick="submitHodBatchMarkEntry()" style="background: var(--accent-green); color: white; border: none; padding: 11px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; height: 42px;">
-                        💾 Commit Marks
+                <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <span style="font-size: 12px; color: var(--text-muted); font-style: italic;">
+                        Example: Prefix '1DA24AI', Start '1', End '20' will appoint 1DA24AI001 to 1DA24AI020 to selected mentor.
+                    </span>
+                    <button onclick="submitBatchMentorshipAssignment()" style="background: var(--accent-purple); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">
+                        🚀 Appoint Mentees to Faculty
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- 💬 5. HOD COMMAND MESSAGING & BROADCAST DESK -->
-        <div id="hodCommsCard" class="bento-card" style="border-left: 5px solid var(--accent-green);">
-            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
-                <span style="font-size: 20px;">💬</span>
-                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">HOD Command Messaging & Broadcast Desk</h3>
+        <!-- 📝 5. Marks Uploader Pane -->
+        <div id="hodPane_marks" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">📝 Marks Uploader Full-Page Workspace</span>
             </div>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean); margin-bottom: 14px;">
-                <div>
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SEND TO (RECIPIENT / GROUP)</label>
-                    <select id="hodMsgRecipient" style="width: 100%;">
-                        <option value="ALL_STUDENTS">📢 Broadcast to All Students</option>
-                        <option value="ALL_PARENTS">📢 Broadcast to All Parents</option>
-                        <option value="ALL_TEACHERS">📢 Broadcast to All Faculty</option>
-                    </select>
+            <div class="bento-card" style="border-left: 5px solid var(--accent-green); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">📊</span>
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Past Semester Marks Batch Uploader (Years 1 - 4)</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Inject historical CIE and SEE scores for any student across past semesters instantly.</p>
+                        </div>
+                    </div>
                 </div>
-                <div style="grid-column: 1 / -1;">
-                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">MESSAGE CONTENT</label>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean); margin-bottom: 14px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">TARGET STUDENT USN</label>
+                        <input type="text" id="batchStudentUsn" placeholder="e.g., 1DA24AI015" style="width: 100%; text-transform: uppercase;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SEMESTER NUMBER</label>
+                        <select id="batchSemNum" style="width: 100%;">
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3" selected>Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SUBJECT CODE</label>
+                        <input type="text" id="batchSubCode" placeholder="e.g., AIML301" style="width: 100%; text-transform: uppercase;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SUBJECT NAME</label>
+                        <input type="text" id="batchSubName" placeholder="e.g., Machine Learning" style="width: 100%;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 12px; align-items: center; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean);">
+                    <div>
+                        <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CIE 1 (Max 25)</label>
+                        <input type="number" id="batchCie1" value="0" min="0" max="25" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CIE 2 (Max 25)</label>
+                        <input type="number" id="batchCie2" value="0" min="0" max="25" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CIE 3 (Max 25)</label>
+                        <input type="number" id="batchCie3" value="0" min="0" max="25" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 10px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SEE EXAM (Max 100)</label>
+                        <input type="number" id="batchSee" value="0" min="0" max="100" style="width: 100%;">
+                    </div>
+                    <div style="display: flex; align-items: flex-end;">
+                        <button onclick="submitHodBatchMarkEntry()" style="background: var(--accent-green); color: white; border: none; padding: 11px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; height: 42px;">
+                            💾 Commit Marks
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 💬 6. Broadcast Desk Pane -->
+        <div id="hodPane_broadcast" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">📢 Broadcast Desk Full-Page Workspace</span>
+            </div>
+            <div class="bento-card" style="border-left: 5px solid var(--accent-green); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                    <span style="font-size: 20px;">💬</span>
+                    <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">HOD Command Messaging & Broadcast Desk</h3>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean); margin-bottom: 14px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">SEND TO (RECIPIENT / GROUP)</label>
+                        <select id="hodMsgRecipient" style="width: 100%;">
+                            <option value="ALL_STUDENTS">📢 Broadcast to All Students</option>
+                            <option value="ALL_PARENTS">📢 Broadcast to All Parents</option>
+                            <option value="ALL_TEACHERS">📢 Broadcast to All Faculty</option>
+                        </select>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">MESSAGE CONTENT</label>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="hodMsgText" placeholder="Type instructions, swap approvals, or circular details here..." style="flex: 1;">
+                            <button onclick="sendHodMessage()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 800; cursor: pointer;">Send 🚀</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="hodLiveChatFeed" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto;">
+                    <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px;">Loading chat ledger...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🔄 7. Swap Approvals Pane -->
+        <div id="hodPane_swaps" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">🔄 Swap Approvals Full-Page Workspace</span>
+            </div>
+            <div class="bento-card" style="border-left: 5px solid var(--primary-blue); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 20px;">🔄</span>
+                        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Faculty Swap & Leave Approvals</h3>
+                        <span id="swapBadge" style="background: var(--primary-blue); color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 Pending</span>
+                    </div>
+                    <button onclick="manualRefreshSwaps()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh</button>
+                </div>
+
+                <div id="hodSwapRequestsFeed" style="display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto;">
+                    <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px;">Checking requests...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📅 8. Master Timetable Pane -->
+        <div id="hodPane_timetable" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">📅 Master Timetable Full-Page Workspace</span>
+            </div>
+            <div class="bento-card" style="border-radius: 0 0 20px 20px;">
+                <div style="font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">1. Select Academic Scheme Category</div>
+                
+                <div class="scheme-toggle-bar">
+                    <div class="scheme-tab active-odd" id="tabOdd" onclick="switchAcademicScheme('ODD')">
+                        ⚡ ODD SEMESTERS SCHEME (Sem 1, 3, 5, 7)
+                    </div>
+                    <div class="scheme-tab" id="tabEven" onclick="switchAcademicScheme('EVEN')">
+                        ⚡ EVEN SEMESTERS SCHEME (Sem 2, 4, 6, 8)
+                    </div>
+                </div>
+
+                <div style="margin-top: 16px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">2. Active Target Semester</div>
+                <div class="sem-selector-row" id="semesterPillsContainer"></div>
+
+                <div class="controls-row">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <label style="font-size: 12px; font-weight: 800; color: var(--text-muted);">ACADEMIC BATCH:</label>
+                        <select id="batchYear" onchange="reloadTimetableGrid()">
+                            <option value="2024-2028" selected>2024 - 2028 Batch</option>
+                            <option value="2023-2027">2023 - 2027 Batch</option>
+                            <option value="2025-2029">2025 - 2029 Batch</option>
+                            <option value="2026-2030">2026 - 2030 Batch</option>
+                        </select>
+                    </div>
+
                     <div style="display: flex; gap: 10px;">
-                        <input type="text" id="hodMsgText" placeholder="Type instructions, swap approvals, or circular details here..." style="flex: 1;">
-                        <button onclick="sendHodMessage()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 800; cursor: pointer;">Send 🚀</button>
+                        <button class="btn-save" onclick="saveFullTimetable()">💾 Save & Dispatch</button>
+                        <button class="btn-save" onclick="generatePrincipalPdf()" style="background: var(--primary-blue);">📥 Download Timetable PDF</button>
                     </div>
                 </div>
             </div>
 
-            <div id="hodLiveChatFeed" style="display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto;">
-                <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px;">Loading chat ledger...</div>
-            </div>
-        </div>
-
-        <!-- 🔄 6. FACULTY SWAP & LEAVE APPROVALS INBOX -->
-        <div id="hodSwapsCard" class="bento-card" style="border-left: 5px solid var(--primary-blue);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 20px;">🔄</span>
-                    <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Faculty Swap & Leave Approvals</h3>
-                    <span id="swapBadge" style="background: var(--primary-blue); color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 Pending</span>
-                </div>
-                <button onclick="manualRefreshSwaps()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh</button>
-            </div>
-
-            <div id="hodSwapRequestsFeed" style="display: flex; flex-direction: column; gap: 10px; max-height: 220px; overflow-y: auto;">
-                <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px;">Checking requests...</div>
-            </div>
-        </div>
-
-        <!-- 🔔 7. EXECUTIVE MESSAGES & ANNOUNCEMENTS BOX -->
-        <div class="bento-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 20px;">🔔</span>
-                    <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Executive Messages & Activity Inbox</h3>
-                    <span id="hodMessageBadge" style="background: var(--primary-blue); color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 New</span>
-                </div>
-                <div style="display: flex; gap: 8px;">
-                    <button onclick="manualRefreshMessages()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh Messages</button>
-                    <button onclick="loadHodArchivedPastMessages()" style="background: #eff6ff; color: var(--primary-blue); border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">📂 Past Messages</button>
-                </div>
-            </div>
-
-            <div id="hodMessagesFeed" style="display: flex; flex-direction: column; gap: 10px; max-height: 200px; overflow-y: auto;">
-                <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 16px;">Loading messages...</div>
-            </div>
-        </div>
-
-        <!-- 📅 8. SCHEME & SEMESTER FILTER WORKSTATION -->
-        <div class="bento-card">
-            <div style="font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">1. Select Academic Scheme Category</div>
-            
-            <div class="scheme-toggle-bar">
-                <div class="scheme-tab active-odd" id="tabOdd" onclick="switchAcademicScheme('ODD')">
-                    ⚡ ODD SEMESTERS SCHEME (Sem 1, 3, 5, 7)
-                </div>
-                <div class="scheme-tab" id="tabEven" onclick="switchAcademicScheme('EVEN')">
-                    ⚡ EVEN SEMESTERS SCHEME (Sem 2, 4, 6, 8)
-                </div>
-            </div>
-
-            <div style="margin-top: 16px; font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">2. Active Target Semester</div>
-            <div class="sem-selector-row" id="semesterPillsContainer"></div>
-
-            <div class="controls-row">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <label style="font-size: 12px; font-weight: 800; color: var(--text-muted);">ACADEMIC BATCH:</label>
-                    <select id="batchYear" onchange="reloadTimetableGrid()">
-                        <option value="2024-2028" selected>2024 - 2028 Batch</option>
-                        <option value="2023-2027">2023 - 2027 Batch</option>
-                        <option value="2025-2029">2025 - 2029 Batch</option>
-                        <option value="2026-2030">2026 - 2030 Batch</option>
-                    </select>
+            <!-- 🗓️️ DR. AIT WEEKLY TIMETABLE GRID -->
+            <div class="bento-card" id="timetableMatrixCard" style="margin-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 id="gridTitleLabel" style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">
+                        Master Timetable Grid
+                    </h3>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--accent-green); background: #ecfdf5; padding: 4px 10px; border-radius: 8px;">
+                        ● Live Editing Mode
+                    </span>
                 </div>
 
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn-save" onclick="saveFullTimetable()">💾 Save & Dispatch</button>
-                    <button class="btn-save" onclick="generatePrincipalPdf()" style="background: var(--primary-blue);">📥 Download Timetable PDF</button>
+                <div class="table-responsive">
+                    <table class="tt-table">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="width: 60px;">DAY</th>
+                                <th><span class="period-header">PERIOD I</span><span class="time-header">09:00 - 09:55</span></th>
+                                <th><span class="period-header">PERIOD II</span><span class="time-header">09:55 - 10:50</span></th>
+                                <th rowspan="2" class="break-cell" style="width: 30px;">TEA BREAK<br>(10:50-11:10)</th>
+                                <th><span class="period-header">PERIOD III</span><span class="time-header">11:10 - 12:05</span></th>
+                                <th><span class="period-header">PERIOD IV</span><span class="time-header">12:05 - 01:00</span></th>
+                                <th rowspan="2" class="break-cell" style="width: 30px;">LUNCH BREAK<br>(01:00-01:45)</th>
+                                <th><span class="period-header">PERIOD V</span><span class="time-header">01:45 - 02:40</span></th>
+                                <th><span class="period-header">PERIOD VI</span><span class="time-header">02:40 - 03:35</span></th>
+                                <th><span class="period-header">PERIOD VII</span><span class="time-header">03:35 - 04:30</span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="timetableGridBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        <!-- 🗓️ 9. DR. AIT WEEKLY TIMETABLE GRID -->
-        <div class="bento-card" id="timetableMatrixCard">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <h3 id="gridTitleLabel" style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">
-                    Master Timetable Grid
-                </h3>
-                <span style="font-size: 12px; font-weight: 700; color: var(--accent-green); background: #ecfdf5; padding: 4px 10px; border-radius: 8px;">
-                    ● Live Editing Mode
-                </span>
+        <!-- 💬 9. Message Inbox & Faculty Comms Full-Page Workspace -->
+        <div id="hodPane_messages" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">💬 Message Inbox & Faculty Comms Workspace</span>
             </div>
+            <div class="bento-card" style="border-left: 5px solid var(--primary-blue); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">🔔</span>
+                        <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Executive Messages & Faculty Communications</h3>
+                        <span id="hodMessageBadge" style="background: var(--primary-blue); color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 New</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="manualRefreshMessages()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh Messages</button>
+                        <button onclick="loadHodArchivedPastMessages()" style="background: #eff6ff; color: var(--primary-blue); border: 1px solid #bfdbfe; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">📂 Past Messages</button>
+                    </div>
+                </div>
 
-            <div class="table-responsive">
-                <table class="tt-table">
-                    <thead>
-                        <tr>
-                            <th rowspan="2" style="width: 60px;">DAY</th>
-                            <th><span class="period-header">PERIOD I</span><span class="time-header">09:00 - 09:55</span></th>
-                            <th><span class="period-header">PERIOD II</span><span class="time-header">09:55 - 10:50</span></th>
-                            <th rowspan="2" class="break-cell" style="width: 30px;">TEA BREAK<br>(10:50-11:10)</th>
-                            <th><span class="period-header">PERIOD III</span><span class="time-header">11:10 - 12:05</span></th>
-                            <th><span class="period-header">PERIOD IV</span><span class="time-header">12:05 - 01:00</span></th>
-                            <th rowspan="2" class="break-cell" style="width: 30px;">LUNCH BREAK<br>(01:00-01:45)</th>
-                            <th><span class="period-header">PERIOD V</span><span class="time-header">01:45 - 02:40</span></th>
-                            <th><span class="period-header">PERIOD VI</span><span class="time-header">02:40 - 03:35</span></th>
-                            <th><span class="period-header">PERIOD VII</span><span class="time-header">03:35 - 04:30</span></th>
-                        </tr>
-                    </thead>
-                    <tbody id="timetableGridBody"></tbody>
-                </table>
+                <div id="hodMessagesFeed" style="display: flex; flex-direction: column; gap: 10px; max-height: 450px; overflow-y: auto;">
+                    <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 20px;">Loading messages...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 👥 10. Faculty Directory & Service Records Full-Page Workspace (Phase 1) -->
+        <div id="hodPane_faculty_directory" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">👥 Faculty Directory & Service Records Workspace</span>
+            </div>
+            <div class="bento-card" style="border-left: 5px solid var(--accent-purple); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">📋</span>
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Department Faculty Service & Credentials Ledger</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Verified audit-ready records of all faculty members in the department.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="loadDepartmentFacultyDirectory()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 8px 14px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh Records</button>
+                        <button onclick="exportFacultyDirectoryReport()" style="background: var(--primary-blue); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 800; font-size: 12px; cursor: pointer;">📥 Export Audit CSV</button>
+                    </div>
+                </div>
+
+                <div style="width: 100%; overflow-x: auto; border: 1px solid var(--border-clean); border-radius: 12px; margin-top: 12px;">
+                    <table style="width: 100%; border-collapse: collapse; text-align: left; background: white; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #f1f5f9;">
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 4%;">Sl.</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 15%;">Faculty Name & ID</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 12%;">Designation & Qual.</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 12%;">DOB & Joining Date</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 12%;">Promotion Date</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 12%;">Govt. IDs (PAN / Aadhar)</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 23%;">Verified Academic Profiles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="hodFacultyDirectoryTableBody">
+                            <tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">Loading faculty service records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -534,19 +706,37 @@
         let teachersList = [];
         let departmentPublications = [];
         let departmentFdpRecords = [];
+        let departmentFacultyList = [];
 
-        // ⚡ SMOOTH SCROLL HELPER FOR JUMP BUTTONS
-        function scrollToSection(elementId) {
-            const targetElement = document.getElementById(elementId);
-            if (targetElement) {
-                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                targetElement.style.transition = 'border-color 0.3s ease';
-                const originalBorder = targetElement.style.borderColor;
-                targetElement.style.borderColor = 'var(--primary-blue)';
-                setTimeout(() => {
-                    targetElement.style.borderColor = originalBorder;
-                }, 1000);
+        // 🏛️ SWITCH WORKSPACE (Expands container to 100% full-page width, hides profile header & landing grid)
+        function switchHodWorkspace(moduleKey) {
+            document.getElementById('mainDashboardContainer').classList.add('full-page-mode');
+            document.getElementById('hodLandingGridContainer').style.display = 'none';
+            document.getElementById('hodProfileHeaderCard').style.display = 'none';
+
+            const panes = document.querySelectorAll('.hod-workspace-pane');
+            panes.forEach(pane => pane.style.display = 'none');
+
+            const targetPane = document.getElementById(`hodPane_${moduleKey}`);
+            if (targetPane) {
+                targetPane.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+
+            showPopupNotification(`📂 Opened ${moduleKey.toUpperCase()} Full-Page Workspace`);
+        }
+
+        // ⬅️ RETURN TO LANDING MENU GRID (Restores container max-width, profile header, and card grid)
+        function returnToHodLanding() {
+            document.getElementById('mainDashboardContainer').classList.remove('full-page-mode');
+
+            const panes = document.querySelectorAll('.hod-workspace-pane');
+            panes.forEach(pane => pane.style.display = 'none');
+
+            document.getElementById('hodLandingGridContainer').style.display = 'block';
+            document.getElementById('hodProfileHeaderCard').style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            showPopupNotification(`🏠 Returned to Executive Menu`);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -558,13 +748,17 @@
             document.getElementById('displayHodDept').innerText = `Department Head | ${userBranch} Branch (${institutionId})`;
 
             renderSemesterPills();
+            
+            // 🎯 FIXED SEQUENCE: Fetch teachers FIRST so they are available when rendering the timetable grid
+            await fetchTeachers();
+
             await loadHodNotifications();
             await loadHodSwapRequests();
-            await fetchTeachers();
             await reloadTimetableGrid();
             await loadHodChatLedger();
             await loadDepartmentPublications();
             await loadDepartmentFdpRecords();
+            await loadDepartmentFacultyDirectory();
         }
 
         function switchAcademicYear(yearStr) {
@@ -579,9 +773,71 @@
             showPopupNotification(`📅 Switched to Academic Year ${yearStr}`);
         }
 
-        // =========================================================================
-        // 📊 DEPARTMENT PUBLICATIONS HUB LOADERS & EXPORTERS
-        // =========================================================================
+        async function loadDepartmentFacultyDirectory() {
+            const tbody = document.getElementById('hodFacultyDirectoryTableBody');
+            if (!tbody) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/hod/teachers?branch=${encodeURIComponent(userBranch)}&institutionId=${encodeURIComponent(institutionId)}`);
+                const data = await res.json();
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">No faculty members registered for ${userBranch}.</td></tr>`;
+                    departmentFacultyList = [];
+                    return;
+                }
+
+                departmentFacultyList = data;
+                tbody.innerHTML = "";
+                departmentFacultyList.forEach((t, index) => {
+                    let profileBadges = '';
+                    if (t.google_scholar_url) profileBadges += `<a href="${t.google_scholar_url}" target="_blank" style="display:inline-block; background:#eff6ff; color:#1e40af; padding:3px 8px; border-radius:6px; font-weight:700; text-decoration:none; margin:2px;">📚 Scholar</a>`;
+                    if (t.orcid_id) profileBadges += `<a href="${t.orcid_id}" target="_blank" style="display:inline-block; background:#f0fdf4; color:#047857; padding:3px 8px; border-radius:6px; font-weight:700; text-decoration:none; margin:2px;">🆔 ORCID</a>`;
+                    if (t.vidwan_id) profileBadges += `<a href="${t.vidwan_id}" target="_blank" style="display:inline-block; background:#f5f3ff; color:#6d28d9; padding:3px 8px; border-radius:6px; font-weight:700; text-decoration:none; margin:2px;">🎓 Vidwan</a>`;
+                    if (t.irins_url) profileBadges += `<a href="${t.irins_url}" target="_blank" style="display:inline-block; background:#fff7ed; color:#c2410c; padding:3px 8px; border-radius:6px; font-weight:700; text-decoration:none; margin:2px;">🏛️ IRINS</a>`;
+                    
+                    if (!profileBadges) {
+                        profileBadges = `<span style="color:var(--text-muted); font-style:italic; font-size:11px;">Not linked yet</span>`;
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; font-weight: 700;">${index + 1}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);"><strong>${t.name}</strong><br><small style="color:var(--text-muted);">${t.usn}</small></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);">${t.current_designation || 'Assistant Professor'}<br><small style="color:var(--primary-blue); font-weight:700;">${t.highest_qualification || 'M.Tech'}</small></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);"><small>DOB: ${t.dob ? new Date(t.dob).toLocaleDateString() : 'N/A'}</small><br><small>Joined: ${t.joining_date ? new Date(t.joining_date).toLocaleDateString() : 'N/A'}</small></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);">${t.promotion_date ? new Date(t.promotion_date).toLocaleDateString() : '<span style="color:var(--text-muted); font-style:italic;">N/A</span>'}</td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);"><small>PAN: ${t.pan_number || 'N/A'}</small><br><small>Aadhar: ${t.aadhar_number ? '•••• •••• ' + t.aadhar_number.slice(-4) : 'N/A'}</small></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean);">${profileBadges}</td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--accent-red);">Failed to load faculty directory.</td></tr>`;
+            }
+        }
+
+        function exportFacultyDirectoryReport() {
+            if (!departmentFacultyList || departmentFacultyList.length === 0) {
+                alert("⚠️ No faculty records available to export.");
+                return;
+            }
+
+            let csvContent = "data:text/csv;charset=utf-8,Sl No,Name,ID,Designation,Qualification,DOB,Joining Date,Promotion Date,PAN,Google Scholar,ORCID,Vidwan,IRINS\n";
+            departmentFacultyList.forEach((t, index) => {
+                csvContent += `${index + 1},"${t.name}","${t.usn}","${t.current_designation || 'Assistant Professor'}","${t.highest_qualification || 'M.Tech'}","${t.dob || ''}","${t.joining_date || ''}","${t.promotion_date || ''}","${t.pan_number || ''}","${t.google_scholar_url || ''}","${t.orcid_id || ''}","${t.vidwan_id || ''}","${t.irins_url || ''}"\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `DrAIT_${userBranch}_Faculty_Service_Directory.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showPopupNotification("✅ Faculty service directory report downloaded!");
+        }
+
         async function loadDepartmentPublications() {
             const tbody = document.getElementById('hodPubsTableBody');
             if (!tbody) return;
@@ -652,7 +908,7 @@
 
         function exportDepartmentPublicationsReport() {
             if (!departmentPublications || departmentPublications.length === 0) {
-                alert("⚠️ No publication records available to export.");
+                alert("⚠️️ No publication records available to export.");
                 return;
             }
 
@@ -677,18 +933,245 @@
 
         async function fetchTeachers() {
             try {
-                const res = await fetch(`${API_BASE}/api/hod/teachers?branch=${encodeURIComponent(userBranch)}&institutionId=${institutionId}`);
-                teachersList = await res.json();
+                const res = await fetch(`${API_BASE}/api/hod/teachers?institutionId=${encodeURIComponent(institutionId)}`);
+                if (!res.ok) throw new Error(`Teacher API returned ${res.status}`);
+
+                const raw = await res.json();
+                teachersList = Array.isArray(raw)
+                    ? raw
+                    : (raw.teachers || raw.faculty || raw.data || raw.rows || []);
+
+                if (!Array.isArray(teachersList)) teachersList = [];
+
+                console.log("Loaded institution faculty list:", teachersList.length, teachersList);
 
                 const mentorSelect = document.getElementById('mentorSelectDropdown');
                 if (mentorSelect) {
                     fillMentorDropdownOptions(mentorSelect, "");
                 }
-            } catch (err) { console.error("Teacher load error:", err); }
+            } catch (err) {
+                teachersList = [];
+                console.error("Teacher load error:", err);
+                const mentorSelect = document.getElementById('mentorSelectDropdown');
+                if (mentorSelect) {
+                    mentorSelect.innerHTML = `<option value="">-- Faculty data unavailable --</option>`;
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // TIMETABLE FACULTY/DEPARTMENT HELPERS
+        // These helpers deliberately accept several backend field names.
+        // That keeps the HOD timetable compatible with existing timetable
+        // rows even if the API returns teacher_id/assigned_teacher_id,
+        // teacher_name/faculty_name, branch/department, etc.
+        // ------------------------------------------------------------------
+        function getTeacherId(t) {
+            return String(
+                t?.usn ??
+                t?.teacher_id ??
+                t?.teacherId ??
+                t?.faculty_id ??
+                t?.facultyId ??
+                t?.employee_id ??
+                t?.employeeId ??
+                t?.id ??
+                ''
+            ).trim();
+        }
+
+        function getTeacherName(t) {
+            return String(
+                t?.name ??
+                t?.teacher_name ??
+                t?.teacherName ??
+                t?.faculty_name ??
+                t?.facultyName ??
+                t?.full_name ??
+                t?.fullName ??
+                ''
+            ).trim();
+        }
+
+        function getTeacherDepartment(t) {
+            return String(
+                t?.branch ??
+                t?.department ??
+                t?.dept ??
+                t?.department_name ??
+                t?.departmentName ??
+                t?.faculty_branch ??
+                t?.facultyBranch ??
+                ''
+            ).trim();
+        }
+
+        function canonicalDepartment(value) {
+            const v = String(value || '').trim().toUpperCase();
+            if (!v) return '';
+
+            if (v.includes('MATHEMAT') || v === 'MATH' || v === 'MATHS') return 'MATHS';
+            if (v.includes('PHYS')) return 'PHYSICS';
+            if (v.includes('CHEM')) return 'CHEM';
+            if (v.includes('BIOL')) return 'BIOLOGY';
+            if (v.includes('CDN') || v.includes('HAT') || v.includes('APTITUDE')) return 'CDN';
+
+            // Remove common UI suffixes such as "Dept", "Department", "Branch".
+            return v
+                .replace(/DEPARTMENT/g, '')
+                .replace(/DEPT/g, '')
+                .replace(/BRANCH/g, '')
+                .replace(/[\[\]\(\)]/g, '')
+                .trim();
+        }
+
+        function getSlotTeacherId(slot) {
+            return String(
+                slot?.assigned_teacher_id ??
+                slot?.teacher_id ??
+                slot?.teacherId ??
+                slot?.faculty_id ??
+                slot?.facultyId ??
+                slot?.assignedTeacherId ??
+                ''
+            ).trim();
+        }
+
+        function getSlotTeacherName(slot) {
+            return String(
+                slot?.teacher_name ??
+                slot?.teacherName ??
+                slot?.faculty_name ??
+                slot?.facultyName ??
+                slot?.assigned_teacher_name ??
+                slot?.assignedTeacherName ??
+                ''
+            ).trim();
+        }
+
+        function getSlotDepartment(slot) {
+            return String(
+                slot?.department ??
+                slot?.department_name ??
+                slot?.departmentName ??
+                slot?.dept ??
+                slot?.branch ??
+                slot?.teacher_branch ??
+                slot?.teacherBranch ??
+                slot?.faculty_branch ??
+                slot?.facultyBranch ??
+                ''
+            ).trim();
+        }
+
+        function getSlotDay(slot) {
+            return String(slot?.day_of_week ?? slot?.day ?? slot?.weekday ?? '').trim().toUpperCase();
+        }
+
+        function getSlotPeriodId(slot) {
+            return Number(slot?.period_id ?? slot?.periodId ?? slot?.period ?? 0);
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getDepartmentLabel(dept) {
+            const c = canonicalDepartment(dept);
+            if (c === 'MATHS') return 'Mathematics';
+            if (c === 'PHYSICS') return 'Physics';
+            if (c === 'CHEM') return 'Chemistry';
+            if (c === 'BIOLOGY') return 'Biology';
+            if (c === 'CDN') return 'Aptitude / CDN';
+            if (c) return `${c} Dept`;
+            return 'Department';
+        }
+
+        function buildDepartmentOptions(selectedDept = '') {
+            const selectedCanonical = canonicalDepartment(selectedDept);
+            const departments = new Map();
+
+            const addDept = (rawDept, label = '') => {
+                const canonical = canonicalDepartment(rawDept);
+                if (!canonical) return;
+                if (!departments.has(canonical)) {
+                    departments.set(canonical, label || getDepartmentLabel(canonical));
+                }
+            };
+
+            // Always keep the current HOD branch available.
+            addDept(userBranch, `${userBranch} Dept`);
+
+            // Add every department/branch actually returned by the faculty API.
+            teachersList.forEach(t => {
+                const raw = getTeacherDepartment(t);
+                addDept(raw, getDepartmentLabel(raw));
+            });
+
+            // A saved timetable row may contain a department not present in
+            // the current faculty response. Keep it visible instead of losing
+            // the saved mapping.
+            addDept(selectedDept, getDepartmentLabel(selectedDept));
+
+            let html = `<option value="">-- Select Dept --</option>`;
+            departments.forEach((label, canonical) => {
+                const selected = canonical === selectedCanonical ? ' selected' : '';
+                html += `<option value="${escapeHtml(canonical)}"${selected}>${escapeHtml(label)}</option>`;
+            });
+            return html;
+        }
+
+        function teacherMatchesDepartment(teacher, selectedDept) {
+            const wanted = canonicalDepartment(selectedDept);
+            const actual = canonicalDepartment(getTeacherDepartment(teacher));
+
+            if (!wanted || !actual) return false;
+            if (wanted === actual) return true;
+
+            // Support common cases where the database stores the branch as
+            // "AIML Dept", "AIML Department", etc.
+            return actual.includes(wanted) || wanted.includes(actual);
+        }
+
+        function findTeacherById(teacherId) {
+            const wanted = String(teacherId || '').trim().toUpperCase();
+            if (!wanted) return null;
+
+            return teachersList.find(t =>
+                getTeacherId(t).toUpperCase() === wanted
+            ) || null;
+        }
+
+        function addSavedTeacherOption(teacherSelect, teacherId, teacherName, teacherBranch) {
+            if (!teacherSelect || !teacherId) return;
+
+            const exists = Array.from(teacherSelect.options).some(
+                opt => String(opt.value).toUpperCase() === String(teacherId).toUpperCase()
+            );
+
+            if (!exists) {
+                const label = teacherName
+                    ? `${teacherName} (${teacherId})${teacherBranch ? ` - [${teacherBranch}]` : ''}`
+                    : `${teacherId}${teacherBranch ? ` - [${teacherBranch}]` : ''}`;
+
+                const opt = document.createElement('option');
+                opt.value = teacherId;
+                opt.textContent = label;
+                opt.setAttribute('data-name', teacherName || '');
+                opt.setAttribute('data-branch', teacherBranch || '');
+                teacherSelect.appendChild(opt);
+            }
+
+            teacherSelect.value = teacherId;
         }
 
         function fillMentorDropdownOptions(selectElement, selectedTeacherId) {
-            let coreOpts = "", mathOpts = "", phyOpts = "", chemOpts = "", bioOpts = "", cdnOpts = "";
+            let coreOpts = "", mathOpts = "", phyOpts = "", chemOpts = "", bioOpts = "", cdnOpts = "", otherOpts = "";
             
             teachersList.forEach(t => {
                 const b = (t.branch || '').toUpperCase();
@@ -699,47 +1182,106 @@
                 else if (b.includes('CHEM')) chemOpts += opt;
                 else if (b.includes('BIOL')) bioOpts += opt;
                 else if (b.includes('CDN') || b.includes('HAT')) cdnOpts += opt;
-                else coreOpts += opt;
+                else if (b.includes(userBranch.toUpperCase())) coreOpts += opt;
+                else otherOpts += opt;
             });
 
-            selectElement.innerHTML = `<option value="">-- Select Teacher --</option>` +
+            selectElement.innerHTML = `<option value="">-- Select Faculty --</option>` +
                 (coreOpts ? `<optgroup label="${userBranch} Department">${coreOpts}</optgroup>` : '') +
                 (mathOpts ? `<optgroup label="Mathematics Department">${mathOpts}</optgroup>` : '') +
                 (phyOpts ? `<optgroup label="Physics Department">${phyOpts}</optgroup>` : '') +
                 (chemOpts ? `<optgroup label="Chemistry Department">${chemOpts}</optgroup>` : '') +
                 (bioOpts ? `<optgroup label="Biology Department">${bioOpts}</optgroup>` : '') +
-                (cdnOpts ? `<optgroup label="Aptitude / CDN Department">${cdnOpts}</optgroup>` : '');
+                (cdnOpts ? `<optgroup label="Aptitude / CDN Department">${cdnOpts}</optgroup>` : '') +
+                (otherOpts ? `<optgroup label="Other Departments">${otherOpts}</optgroup>` : '');
         }
 
-        function filterTeachersForSlot(day, periodId, preselectedTeacherId = '') {
+        function filterTeachersForSlot(day, periodId, preselectedTeacherId = '', preselectedDept = '', preselectedTeacherName = '', preselectedTeacherBranch = '') {
             const deptSelect = document.getElementById(`dept_${day}_${periodId}`);
             const teacherSelect = document.getElementById(`teacher_${day}_${periodId}`);
-            const chosenDept = (deptSelect.value || '').toUpperCase();
+            if (!deptSelect || !teacherSelect) return;
+
+            if (preselectedDept) {
+                const canonicalSavedDept = canonicalDepartment(preselectedDept);
+                const hasDeptOption = Array.from(deptSelect.options).some(
+                    opt => canonicalDepartment(opt.value) === canonicalSavedDept
+                );
+
+                if (!hasDeptOption && canonicalSavedDept) {
+                    const opt = document.createElement('option');
+                    opt.value = canonicalSavedDept;
+                    opt.textContent = getDepartmentLabel(canonicalSavedDept);
+                    deptSelect.appendChild(opt);
+                }
+
+                deptSelect.value = canonicalSavedDept;
+            }
+
+            const chosenDept = canonicalDepartment(deptSelect.value);
+
+            teacherSelect.innerHTML = `<option value="">-- Select Faculty --</option>`;
 
             if (!chosenDept) {
-                teacherSelect.innerHTML = `<option value="">-- Select Teacher --</option>`;
+                // If a saved faculty exists but its department is unavailable,
+                // still show the saved faculty instead of silently blanking it.
+                if (preselectedTeacherId) {
+                    addSavedTeacherOption(
+                        teacherSelect,
+                        preselectedTeacherId,
+                        preselectedTeacherName,
+                        preselectedTeacherBranch
+                    );
+                }
                 return;
             }
 
-            let filteredOpts = "";
+            let matchedCount = 0;
+
             teachersList.forEach(t => {
-                const b = (t.branch || '').toUpperCase();
-                let matches = false;
+                const teacherId = getTeacherId(t);
+                const teacherName = getTeacherName(t);
+                if (!teacherId || !teacherMatchesDepartment(t, chosenDept)) return;
 
-                if (chosenDept === 'MATHS' && (b.includes('MATH') || b.includes('MATHEMATICS'))) matches = true;
-                else if (chosenDept === 'PHYSICS' && b.includes('PHYS')) matches = true;
-                else if (chosenDept === 'CHEM' && b.includes('CHEM')) matches = true;
-                else if (chosenDept === 'BIOLOGY' && b.includes('BIOL')) matches = true;
-                else if (chosenDept === 'CDN' && (b.includes('CDN') || b.includes('HAT'))) matches = true;
-                else if (chosenDept === userBranch.toUpperCase() && !b.includes('MATH') && !b.includes('PHYS') && !b.includes('CHEM') && !b.includes('BIOL') && !b.includes('CDN') && !b.includes('HAT')) matches = true;
+                const option = document.createElement('option');
+                option.value = teacherId;
+                option.textContent = `${teacherName || teacherId} (${teacherId})`;
+                option.setAttribute('data-name', teacherName);
+                option.setAttribute('data-branch', getTeacherDepartment(t));
 
-                if (matches) {
-                    const isSel = (t.usn.toUpperCase() === (preselectedTeacherId || '').toUpperCase()) ? 'selected' : '';
-                    filteredOpts += `<option value="${t.usn}" data-name="${t.name}" ${isSel}>${t.name} (${t.usn})</option>`;
+                if (
+                    preselectedTeacherId &&
+                    teacherId.toUpperCase() === String(preselectedTeacherId).toUpperCase()
+                ) {
+                    option.selected = true;
                 }
+
+                teacherSelect.appendChild(option);
+                matchedCount++;
             });
 
-            teacherSelect.innerHTML = `<option value="">-- Select Teacher --</option>` + filteredOpts;
+            // Important: if the timetable row contains a saved teacher but
+            // the faculty API did not return that teacher, do not erase the
+            // mapping. Keep the saved teacher visible and selected.
+            if (preselectedTeacherId) {
+                const foundInDropdown = Array.from(teacherSelect.options).some(
+                    opt => String(opt.value).toUpperCase() === String(preselectedTeacherId).toUpperCase()
+                );
+
+                if (!foundInDropdown) {
+                    addSavedTeacherOption(
+                        teacherSelect,
+                        preselectedTeacherId,
+                        preselectedTeacherName,
+                        preselectedTeacherBranch
+                    );
+                } else {
+                    teacherSelect.value = preselectedTeacherId;
+                }
+            }
+
+            if (matchedCount === 0 && !preselectedTeacherId) {
+                teacherSelect.innerHTML = `<option value="">-- No faculty in this department --</option>`;
+            }
         }
 
         async function submitBatchMentorshipAssignment() {
@@ -873,10 +1415,13 @@
 
         async function loadHodChatLedger() {
             const feed = document.getElementById('hodLiveChatFeed');
+            const badge = document.getElementById('inboxCardBadge');
             if (!feed) return;
             try {
                 const res = await fetch(`${API_BASE}/api/messages/inbox?userId=${userUsn}&role=hod&institutionId=${institutionId}`);
                 const msgs = await res.json();
+
+                if (badge) badge.innerText = `${msgs.length} New`;
 
                 if (!msgs || msgs.length === 0) {
                     feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px;">No messages sent or received yet.</div>`;
@@ -887,7 +1432,7 @@
                 msgs.forEach(m => {
                     feed.innerHTML += `
                         <div style="background: #f8fafc; border: 1px solid var(--border-clean); padding: 10px 14px; border-radius: 8px; font-size: 13px;">
-                            <strong>${m.sender_name} (${m.sender_role.toUpperCase()}) ➔ ${m.recipient_id}</strong>: ${m.message_text}
+                            <strong>${m.sender_name} (${(m.sender_role || '').toUpperCase()}) ➔ ${m.recipient_id}</strong>: ${m.message_text}
                             <div style="font-size: 10px; color: var(--text-muted); margin-top: 2px;">${new Date(m.created_at).toLocaleString()}</div>
                         </div>
                     `;
@@ -945,7 +1490,7 @@
         }
 
         async function manualRefreshSwaps() { await loadHodSwapRequests(); showPopupNotification("🔄 Refreshed!"); }
-        async function manualRefreshMessages() { await loadHodNotifications(); showPopupNotification("🔔 Updated!"); }
+        async function manualRefreshMessages() { await loadHodChatLedger(); showPopupNotification("🔔 Updated!"); }
 
         async function respondToSwap(requestId, status) {
             try {
@@ -1029,19 +1574,53 @@
 
         async function reloadTimetableGrid() {
             const batchYear = document.getElementById('batchYear').value;
-            document.getElementById('gridTitleLabel').innerText = `${userBranch} Department | Batch ${batchYear} | Semester ${activeSemNumber} Timetable Matrix`;
-            
+            document.getElementById('gridTitleLabel').innerText =
+                `${userBranch} Department | Batch ${batchYear} | Semester ${activeSemNumber} Timetable Matrix`;
+
             const tbody = document.getElementById('timetableGridBody');
             tbody.innerHTML = `<tr><td colspan="10">Loading Timetable Grid...</td></tr>`;
 
             let existingMap = {};
+
             try {
-                const res = await fetch(`${API_BASE}/api/hod/weekly-timetable?branch=${userBranch}&academicYear=${batchYear}&semesterNumber=${activeSemNumber}&institutionId=${institutionId}`);
-                const data = await res.json();
-                data.forEach(item => { existingMap[`${item.day_of_week}_${item.period_id}`] = item; });
-            } catch (err) { console.error("Grid fetch error:", err); }
+                const url =
+                    `${API_BASE}/api/hod/weekly-timetable` +
+                    `?branch=${encodeURIComponent(userBranch)}` +
+                    `&academicYear=${encodeURIComponent(batchYear)}` +
+                    `&semesterNumber=${encodeURIComponent(activeSemNumber)}` +
+                    `&institutionId=${encodeURIComponent(institutionId)}`;
+
+                const res = await fetch(url);
+                if (!res.ok) throw new Error(`Timetable API returned ${res.status}`);
+
+                const raw = await res.json();
+
+                // Accept both a plain array and common wrapped API responses.
+                const data = Array.isArray(raw)
+                    ? raw
+                    : (raw.timetable || raw.weeklyTimetable || raw.data || raw.rows || []);
+
+                if (!Array.isArray(data)) {
+                    throw new Error('Timetable API did not return an array.');
+                }
+
+                data.forEach(item => {
+                    const day = getSlotDay(item);
+                    const periodId = getSlotPeriodId(item);
+
+                    if (day && periodId) {
+                        existingMap[`${day}_${periodId}`] = item;
+                    }
+                });
+
+                console.log('HOD timetable rows loaded:', data.length, data);
+            } catch (err) {
+                console.error("Grid fetch error:", err);
+                showPopupNotification("⚠️ Timetable could not be loaded. Check the backend API.", "error");
+            }
 
             tbody.innerHTML = "";
+
             daysOfWeek.forEach((day, dayIdx) => {
                 const tr = document.createElement('tr');
                 let html = `<td style="font-weight: 800; background: #f8fafc; color: var(--primary-blue);">${day}</td>`;
@@ -1049,65 +1628,128 @@
                 periods.forEach((p, pIdx) => {
                     const key = `${day}_${p.id}`;
                     const slotData = existingMap[key] || {};
-                    const subCode = slotData.subject_code || '';
-                    const roomNum = slotData.room_number || '';
-                    const assignedTeacherId = slotData.assigned_teacher_id || '';
+
+                    const subCode = String(
+                        slotData.subject_code ??
+                        slotData.subjectCode ??
+                        slotData.subject ??
+                        ''
+                    ).trim();
+
+                    const roomNum = String(
+                        slotData.room_number ??
+                        slotData.roomNumber ??
+                        slotData.room ??
+                        ''
+                    ).trim();
+
+                    const savedTeacherId = getSlotTeacherId(slotData);
+                    const savedTeacherName = getSlotTeacherName(slotData);
+
+                    // Prefer the explicitly saved department/branch. If the
+                    // old row has no department field, derive it from the
+                    // saved faculty record when possible.
+                    let savedDept = getSlotDepartment(slotData);
+                    const teacherFromList = findTeacherById(savedTeacherId);
+
+                    if (!savedDept && teacherFromList) {
+                        savedDept = getTeacherDepartment(teacherFromList);
+                    }
 
                     html += `
                         <td>
                             <div class="slot-cell">
-                                <!-- 1. Department Filter Dropdown -->
-                                <select class="slot-select" id="dept_${day}_${p.id}" onchange="filterTeachersForSlot('${day}', ${p.id})">
-                                    <option value="">-- Select Dept --</option>
-                                    <option value="${userBranch}">${userBranch} Dept</option>
-                                    <option value="MATHS">Mathematics</option>
-                                    <option value="PHYSICS">Physics</option>
-                                    <option value="CHEM">Chemistry</option>
-                                    <option value="BIOLOGY">Biology</option>
-                                    <option value="CDN">Aptitude / CDN</option>
+
+                                <!-- 1. Department / Branch -->
+                                <select
+                                    class="slot-select"
+                                    id="dept_${day}_${p.id}"
+                                    onchange="filterTeachersForSlot('${day}', ${p.id})">
+                                    ${buildDepartmentOptions(savedDept)}
                                 </select>
 
-                                <!-- 2. Filtered Teacher Dropdown -->
-                                <select class="slot-select" id="teacher_${day}_${p.id}" style="margin-top: 2px;">
-                                    <option value="">-- Select Teacher --</option>
+                                <!-- 2. Faculty -->
+                                <select
+                                    class="slot-select"
+                                    id="teacher_${day}_${p.id}"
+                                    style="margin-top: 2px;">
+                                    <option value="">-- Select Faculty --</option>
                                 </select>
 
+                                <!-- 3. Subject + Room -->
                                 <div class="split-sub-room-box" style="margin-top: 4px;">
-                                    <input type="text" class="slot-input" id="sub_${day}_${p.id}" value="${subCode}" placeholder="Subject Code">
+                                    <input
+                                        type="text"
+                                        class="slot-input"
+                                        id="sub_${day}_${p.id}"
+                                        value="${escapeHtml(subCode)}"
+                                        placeholder="Subject Code">
+
                                     <div class="split-divider"></div>
-                                    <input type="text" class="slot-input-room" id="room_${day}_${p.id}" value="${roomNum}" placeholder="Room No">
+
+                                    <input
+                                        type="text"
+                                        class="slot-input-room"
+                                        id="room_${day}_${p.id}"
+                                        value="${escapeHtml(roomNum)}"
+                                        placeholder="Room No">
                                 </div>
                             </div>
                         </td>
                     `;
-                    if (pIdx === 1 && dayIdx === 0) html += `<td rowspan="6" class="break-cell">TEA BREAK</td>`;
-                    if (pIdx === 3 && dayIdx === 0) html += `<td rowspan="6" class="break-cell">LUNCH BREAK</td>`;
+
+                    if (pIdx === 1 && dayIdx === 0) {
+                        html += `<td rowspan="6" class="break-cell">TEA BREAK</td>`;
+                    }
+
+                    if (pIdx === 3 && dayIdx === 0) {
+                        html += `<td rowspan="6" class="break-cell">LUNCH BREAK</td>`;
+                    }
                 });
+
                 tr.innerHTML = html;
                 tbody.appendChild(tr);
 
-                // Populate slot dropdowns with pre-selected state if data exists
+                // Restore every saved department + faculty selection AFTER
+                // the row has been inserted into the DOM.
                 periods.forEach(p => {
                     const slotData = existingMap[`${day}_${p.id}`] || {};
-                    const assignedTeacherId = slotData.assigned_teacher_id || '';
-                    
-                    if (assignedTeacherId) {
-                        const foundTeacher = teachersList.find(t => t.usn.toUpperCase() === assignedTeacherId.toUpperCase());
-                        if (foundTeacher) {
-                            const tb = (foundTeacher.branch || '').toUpperCase();
-                            let deptVal = userBranch.toUpperCase();
-                            if (tb.includes('MATH')) deptVal = 'MATHS';
-                            else if (tb.includes('PHYS')) deptVal = 'PHYSICS';
-                            else if (tb.includes('CHEM')) deptVal = 'CHEM';
-                            else if (tb.includes('BIOL')) deptVal = 'BIOLOGY';
-                            else if (tb.includes('CDN') || tb.includes('HAT')) deptVal = 'CDN';
 
-                            const deptEl = document.getElementById(`dept_${day}_${p.id}`);
-                            if (deptEl) {
-                                deptEl.value = deptVal;
-                                filterTeachersForSlot(day, p.id, assignedTeacherId);
-                            }
+                    const savedTeacherId = getSlotTeacherId(slotData);
+                    const savedTeacherName = getSlotTeacherName(slotData);
+                    let savedTeacherBranch = getSlotDepartment(slotData);
+
+                    const teacherFromList = findTeacherById(savedTeacherId);
+
+                    if (!savedTeacherBranch && teacherFromList) {
+                        savedTeacherBranch = getTeacherDepartment(teacherFromList);
+                    }
+
+                    let savedDept = getSlotDepartment(slotData);
+                    if (!savedDept && teacherFromList) {
+                        savedDept = getTeacherDepartment(teacherFromList);
+                    }
+
+                    const deptSelect = document.getElementById(`dept_${day}_${p.id}`);
+
+                    // Always populate the department dropdown from the actual
+                    // faculty list plus the saved value.
+                    if (deptSelect) {
+                        deptSelect.innerHTML = buildDepartmentOptions(savedDept);
+                        if (savedDept) {
+                            deptSelect.value = canonicalDepartment(savedDept);
                         }
+                    }
+
+                    if (savedTeacherId || savedTeacherName) {
+                        filterTeachersForSlot(
+                            day,
+                            p.id,
+                            savedTeacherId,
+                            savedDept,
+                            savedTeacherName || getTeacherName(teacherFromList),
+                            savedTeacherBranch || getTeacherDepartment(teacherFromList)
+                        );
                     }
                 });
             });
@@ -1115,17 +1757,35 @@
 
         async function saveFullTimetable() {
             const batchYear = document.getElementById('batchYear').value;
-            let payload = [];
+            const payload = [];
+
             daysOfWeek.forEach(day => {
                 periods.forEach(p => {
-                    const subCode = document.getElementById(`sub_${day}_${p.id}`).value.trim();
-                    const roomNum = document.getElementById(`room_${day}_${p.id}`).value.trim();
+                    const subEl = document.getElementById(`sub_${day}_${p.id}`);
+                    const roomEl = document.getElementById(`room_${day}_${p.id}`);
                     const teacherSelect = document.getElementById(`teacher_${day}_${p.id}`);
-                    const teacherId = teacherSelect.value;
-                    const teacherName = teacherSelect.options[teacherSelect.selectedIndex]?.getAttribute('data-name') || '';
+                    const deptSelect = document.getElementById(`dept_${day}_${p.id}`);
 
-                    if (subCode !== '' || teacherId !== '' || roomNum !== '') {
-                        payload.push({ day, periodId: p.id, timeSlot: p.time, subjectCode: subCode, subjectName: subCode, roomNumber: roomNum, teacherId, teacherName });
+                    const subCode = subEl ? subEl.value.trim() : '';
+                    const roomNum = roomEl ? roomEl.value.trim() : '';
+                    const teacherId = teacherSelect ? teacherSelect.value.trim() : '';
+                    const teacherName = teacherSelect?.options[teacherSelect.selectedIndex]
+                        ?.getAttribute('data-name') || '';
+                    const department = deptSelect ? deptSelect.value.trim() : '';
+
+                    if (subCode !== '' || teacherId !== '' || roomNum !== '' || department !== '') {
+                        payload.push({
+                            day,
+                            periodId: p.id,
+                            timeSlot: p.time,
+                            subjectCode: subCode,
+                            subjectName: subCode,
+                            roomNumber: roomNum,
+                            teacherId,
+                            teacherName,
+                            department,
+                            branch: department
+                        });
                     }
                 });
             });
@@ -1134,13 +1794,36 @@
                 const res = await fetch(`${API_BASE}/api/hod/save-weekly-timetable`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ branch: userBranch, academicYear: batchYear, semesterNumber: parseInt(activeSemNumber), timetableData: payload, institutionId })
+                    body: JSON.stringify({
+                        branch: userBranch,
+                        academicYear: batchYear,
+                        semesterNumber: parseInt(activeSemNumber, 10),
+                        timetableData: payload,
+                        institutionId
+                    })
                 });
+
+                const data = await res.json().catch(() => ({}));
+
                 if (res.ok) {
                     showPopupNotification(`✅ Semester ${activeSemNumber} Timetable saved & dispatched!`);
+
+                    // Reload from DB immediately. This verifies that the
+                    // department/faculty mapping returned by the backend is
+                    // actually persisted and displayed.
+                    await reloadTimetableGrid();
                     await loadHodNotifications();
-                } else { showPopupNotification("❌ Error saving.", 'error'); }
-            } catch (err) { showPopupNotification("❌ Network Error.", 'error'); }
+                } else {
+                    console.error("Timetable save failed:", data);
+                    showPopupNotification(
+                        `❌ Error saving timetable: ${data.message || data.error || 'Unknown server error'}`,
+                        'error'
+                    );
+                }
+            } catch (err) {
+                console.error("Timetable save network error:", err);
+                showPopupNotification("❌ Network Error while saving timetable.", 'error');
+            }
         }
 
         // 🎯 FIXED PDF EXPORT: Clear formatting, expanded dimensions, and unclipped canvas scaling

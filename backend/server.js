@@ -21,7 +21,7 @@ app.use(helmet({
 // 2. Global Rate Limiter (Prevents brute-force / DDoS attacks)
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 300, // Limit each IP to 300 requests per window
+    max: 1000, // Limit each IP to 1000 requests per window to accommodate classroom bursts
     standardHeaders: true,
     legacyHeaders: false,
     validate: {
@@ -703,33 +703,139 @@ app.get("/api/auth/teacher-session-roster", async (req, res) => {
     }
 });
 
-/* ==========================================================================
-   TEACHER ATTENDANCE REGISTER
-   ========================================================================== */
+/* ==========================================================================\n   TEACHER ATTENDANCE REGISTER\n   ========================================================================== */
 app.get("/api/teacher/attendance-register", async (req, res) => {
     const tenant = tenantOf(req.query.institutionId);
     const subject = upper(req.query.subjectCode);
     const sem = semOf(req.query.semesterNumber, 5);
-    const teacher = upper(req.query.teacherId);
+    const requestedTeacher = upper(
+        req.query.teacherId ||
+        req.query.teacher ||
+        req.query.facultyId ||
+        req.query.assignedTeacherId
+    );
+    const requestedTeacherName = clean(
+        req.query.teacherName ||
+        req.query.facultyName ||
+        req.query.assignedTeacherName
+    );
     let branch = clean(req.query.branch);
+    let teacherId = requestedTeacher;
+
+    if (!subject) {
+        return res.status(400).json({
+            success: false,
+            error: "Missing subjectCode."
+        });
+    }
 
     try {
-        if (!branch) {
-            const slot = await pool.query(`
-                SELECT TRIM(branch) AS branch
-                FROM weekly_timetables
-                WHERE (
-                    UPPER(TRIM(subject_code)) = $1
-                    OR UPPER(TRIM(subject_name)) ILIKE '%' || $1 || '%'
-                )
-                AND semester_number = $2
-                AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
-                    UPPER(TRIM($3))
-                ORDER BY id
-                LIMIT 1
-            `, [subject, sem, tenant]);
+        /*
+         * IMPORTANT:
+         * class_sessions does not currently store teacher_id. Therefore the
+         * weekly timetable is the ownership source for the selected faculty.
+         *
+         * The old code queried class_sessions only by subject. That caused
+         * sessions opened by another faculty for the same/partially matching
+         * subject to appear here. The frontend then correctly displayed AB
+         * for every student on those dates.
+         *
+         * Rules used here:
+         *  1. Match the selected faculty through weekly_timetables.assigned_teacher_id.
+         *  2. Match the selected branch + semester + subject.
+         *  3. Use the real class_sessions.created_at date.
+         *  4. A session is shown only if at least one users_attendance row exists.
+         *  5. Do NOT use the old broad %ML% fallback.
+         *  6. Do NOT force the session date to the timetable weekday, so
+         *     rescheduled/swapped/extra classes are still retained.
+         */
 
-            branch = slot.rows[0]?.branch || "AIML";
+        // Resolve branch from the selected teacher + subject when the frontend
+        // did not send a branch.
+        if (!branch) {
+            let branchResult;
+
+            if (teacherId) {
+                branchResult = await pool.query(`
+                    SELECT DISTINCT TRIM(branch) AS branch
+                    FROM weekly_timetables
+                    WHERE semester_number = $1
+                      AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                          UPPER(TRIM($2))
+                      AND UPPER(TRIM(assigned_teacher_id)) = $3
+                      AND (
+                          UPPER(TRIM(subject_code)) = $4
+                          OR UPPER(TRIM(subject_name)) = $4
+                      )
+                    ORDER BY TRIM(branch)
+                    LIMIT 1
+                `, [sem, tenant, teacherId, subject]);
+            } else {
+                branchResult = await pool.query(`
+                    SELECT DISTINCT TRIM(branch) AS branch
+                    FROM weekly_timetables
+                    WHERE semester_number = $1
+                      AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                          UPPER(TRIM($2))
+                      AND (
+                          UPPER(TRIM(subject_code)) = $3
+                          OR UPPER(TRIM(subject_name)) = $3
+                      )
+                    ORDER BY TRIM(branch)
+                    LIMIT 1
+                `, [sem, tenant, subject]);
+            }
+
+            branch = branchResult.rows[0]?.branch || "AIML";
+        }
+
+        // If teacherId is missing, infer it only when this branch + semester +
+        // subject maps to exactly one faculty. Never guess when ambiguous.
+        if (!teacherId) {
+            const mapping = await pool.query(`
+                SELECT DISTINCT UPPER(TRIM(assigned_teacher_id)) AS teacher_id
+                FROM weekly_timetables
+                WHERE UPPER(TRIM(branch)) = UPPER(TRIM($1))
+                  AND semester_number = $2
+                  AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                      UPPER(TRIM($3))
+                  AND (
+                      UPPER(TRIM(subject_code)) = $4
+                      OR UPPER(TRIM(subject_name)) = $4
+                  )
+                  AND NULLIF(TRIM(assigned_teacher_id), '') IS NOT NULL
+            `, [branch, sem, tenant, subject]);
+
+            const distinctTeachers = [...new Set(
+                mapping.rows.map(r => upper(r.teacher_id)).filter(Boolean)
+            )];
+
+            if (distinctTeachers.length === 1) {
+                teacherId = distinctTeachers[0];
+            } else if (requestedTeacherName) {
+                const byName = await pool.query(`
+                    SELECT DISTINCT UPPER(TRIM(assigned_teacher_id)) AS teacher_id
+                    FROM weekly_timetables
+                    WHERE UPPER(TRIM(branch)) = UPPER(TRIM($1))
+                      AND semester_number = $2
+                      AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                          UPPER(TRIM($3))
+                      AND (
+                          UPPER(TRIM(subject_code)) = $4
+                          OR UPPER(TRIM(subject_name)) = $4
+                      )
+                      AND UPPER(TRIM(assigned_teacher_name)) = UPPER(TRIM($5))
+                      AND NULLIF(TRIM(assigned_teacher_id), '') IS NOT NULL
+                `, [branch, sem, tenant, subject, requestedTeacherName]);
+
+                const nameTeachers = [...new Set(
+                    byName.rows.map(r => upper(r.teacher_id)).filter(Boolean)
+                )];
+
+                if (nameTeachers.length === 1) {
+                    teacherId = nameTeachers[0];
+                }
+            }
         }
 
         const studentsResult = await pool.query(`
@@ -746,31 +852,64 @@ app.get("/api/teacher/attendance-register", async (req, res) => {
             ORDER BY TRIM(usn)
         `, [branch, sem, tenant]);
 
-        const sessionsResult = await pool.query(`
-            SELECT DISTINCT
-                cs.session_code,
-                TO_CHAR(cs.created_at, 'YYYY-MM-DD') AS session_date
-            FROM class_sessions cs
-            JOIN weekly_timetables wt
-              ON UPPER(TRIM(wt.subject_code)) =
-                 UPPER(TRIM(cs.subject_code))
-            WHERE UPPER(TRIM(cs.subject_code)) = $1
-              AND UPPER(TRIM(wt.branch)) = UPPER(TRIM($2))
-              AND wt.semester_number = $3
-              AND UPPER(TRIM(wt.assigned_teacher_id)) = $4
-              AND UPPER(COALESCE(TRIM(cs.institution_id), 'DR_AIT')) =
-                  UPPER(TRIM($5))
-            ORDER BY session_date ASC, cs.session_code ASC
-        `, [subject, branch, sem, teacher, tenant]);
+        let sessionsResult = { rows: [] };
 
-        const sessionCodes = sessionsResult.rows.map(x => x.session_code);
+        if (teacherId) {
+            sessionsResult = await pool.query(`
+                SELECT DISTINCT
+                    cs.session_code,
+                    TO_CHAR(cs.created_at, 'YYYY-MM-DD') AS session_date
+                FROM class_sessions cs
+                JOIN weekly_timetables wt
+                  ON UPPER(TRIM(wt.branch)) = UPPER(TRIM($2))
+                 AND wt.semester_number = $3
+                 AND UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
+                     UPPER(TRIM($4))
+                 AND UPPER(TRIM(wt.assigned_teacher_id)) = $1
+                 AND (
+                     UPPER(TRIM(wt.subject_code)) = UPPER(TRIM($5))
+                     OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM($5))
+                     OR UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_code))
+                     OR UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_name))
+                     OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(cs.subject_code))
+                     OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(cs.subject_name))
+                 )
+                WHERE UPPER(COALESCE(TRIM(cs.institution_id), 'DR_AIT')) =
+                      UPPER(TRIM($4))
+                  AND (
+                      UPPER(TRIM(cs.subject_code)) = UPPER(TRIM($5))
+                      OR UPPER(TRIM(cs.subject_name)) = UPPER(TRIM($5))
+                      OR UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_code))
+                      OR UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_name))
+                      OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(cs.subject_code))
+                      OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(cs.subject_name))
+                  )
+                  AND EXISTS (
+                      SELECT 1
+                      FROM users_attendance ua
+                      WHERE TRIM(ua.session_code) = TRIM(cs.session_code)
+                        AND UPPER(COALESCE(TRIM(ua.institution_id), 'DR_AIT')) =
+                            UPPER(TRIM($4))
+                  )
+                ORDER BY session_date ASC, cs.session_code ASC
+            `, [teacherId, branch, sem, tenant, subject]);
+        }
+
+        const sessionCodes = sessionsResult.rows
+            .map(x => clean(x.session_code))
+            .filter(Boolean);
+
         const sessionDateMap = {};
-        sessionsResult.rows.forEach(x => {
-            if (x.session_code) sessionDateMap[x.session_code] = x.session_date;
-        });
+        for (const row of sessionsResult.rows) {
+            if (row.session_code) {
+                sessionDateMap[clean(row.session_code)] = row.session_date;
+            }
+        }
 
         const dates = [...new Set(
-            sessionsResult.rows.map(x => x.session_date)
+            sessionsResult.rows
+                .map(x => x.session_date)
+                .filter(Boolean)
         )];
 
         let attendanceRows = [];
@@ -779,9 +918,9 @@ app.get("/api/teacher/attendance-register", async (req, res) => {
             const attendanceResult = await pool.query(`
                 SELECT DISTINCT
                     UPPER(TRIM(student_id)) AS student_id,
-                    session_code
+                    TRIM(session_code) AS session_code
                 FROM users_attendance
-                WHERE session_code = ANY($1::text[])
+                WHERE TRIM(session_code) = ANY($1::text[])
                   AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
                       UPPER(TRIM($2))
             `, [sessionCodes, tenant]);
@@ -792,22 +931,28 @@ app.get("/api/teacher/attendance-register", async (req, res) => {
         const attendanceMap = {};
 
         for (const row of attendanceRows) {
-            if (row.student_id && row.session_code) {
-                const studentId = upper(row.student_id);
-                const sCode = clean(row.session_code);
-                const sDate = sessionDateMap[sCode];
+            if (!row.student_id || !row.session_code) continue;
 
-                attendanceMap[`${studentId}_${sCode}`] = true;
-                if (sDate) {
-                    attendanceMap[`${studentId}_${sDate}`] = true;
-                }
+            const studentId = upper(row.student_id);
+            const sCode = clean(row.session_code);
+            const sDate = sessionDateMap[sCode];
+
+            attendanceMap[`${studentId}_${sCode}`] = true;
+
+            if (sDate) {
+                attendanceMap[`${studentId}_${sDate}`] = true;
             }
         }
 
-        res.json({
+        console.log(
+            `ATTENDANCE REGISTER | Teacher=${teacherId || 'UNRESOLVED'} | Branch=${branch} | Sem=${sem} | Subject=${subject} | Sessions=${sessionCodes.length} | Dates=${dates.length}`
+        );
+
+        return res.json({
             success: true,
             branch,
             semester: sem,
+            teacherId: teacherId || null,
             students: studentsResult.rows,
             dates,
             sessionCodes,
@@ -815,7 +960,10 @@ app.get("/api/teacher/attendance-register", async (req, res) => {
         });
     } catch (err) {
         console.error("Attendance register error:", err);
-        res.status(500).json({ success: false, error: err.message });
+        return res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 });
 
@@ -1043,7 +1191,7 @@ app.post("/api/admin/bulk-upload-marks", async (req, res) => {
             }
 
             if (!Number.isInteger(uploadedSem) || uploadedSem < 1 || uploadedSem > 8) {
-                throw new Error(`Invalid semester for ${usn}:${item.sem}`);
+                throw new Error(`Invalid semester for ${usn}: ${item.sem}`);
             }
 
             const student = await pool.query(`
@@ -1326,22 +1474,53 @@ app.get("/api/hod/department-data", async (req, res) => {
 });
 
 app.get("/api/hod/teachers", async (req, res) => {
-    const branch = upper(req.query.branch || req.query.hodBranch, "AIML");
+    // IMPORTANT:
+    // The HOD timetable loads this endpoint WITHOUT a branch parameter because
+    // the Department dropdown is used to filter faculty on the client.
+    // The old code defaulted to AIML when branch was omitted, which meant
+    // Mathematics/Physics/Chemistry/CDN/etc. faculty were never returned.
+    //
+    // New behaviour:
+    //   1. No branch supplied  -> return ALL faculty for this institution.
+    //   2. Branch supplied      -> return only faculty from that branch.
+    //   3. teacher/faculty/staff roles are accepted so faculty records are not
+    //      silently excluded when the database uses a different staff role.
+    const requestedBranch = clean(req.query.branch || req.query.hodBranch);
     const tenant = tenantOf(req.query.institutionId);
 
     try {
+        const params = [tenant];
+        let branchFilter = "";
+
+        if (requestedBranch) {
+            params.push(upper(requestedBranch));
+            branchFilter = `
+              AND UPPER(TRIM(branch)) = $2
+            `;
+        }
+
         const result = await pool.query(`
-            SELECT usn, name, email, branch, subject_name
+            SELECT
+                TRIM(usn) AS usn,
+                TRIM(name) AS name,
+                email,
+                TRIM(branch) AS branch,
+                subject_name,
+                LOWER(TRIM(role)) AS role
             FROM users
-            WHERE LOWER(TRIM(role)) = 'teacher'
-              AND UPPER(TRIM(branch)) = $1
+            WHERE LOWER(TRIM(role)) IN ('teacher', 'faculty', 'staff')
               AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
-                  UPPER(TRIM($2))
-            ORDER BY name
-        `, [branch, tenant]);
+                  UPPER(TRIM($1))
+              AND NULLIF(TRIM(usn), '') IS NOT NULL
+              ${branchFilter}
+            ORDER BY
+                UPPER(COALESCE(TRIM(branch), '')) ASC,
+                UPPER(COALESCE(TRIM(name), '')) ASC
+        `, params);
 
         res.json(result.rows);
     } catch (err) {
+        console.error("HOD teachers/faculty fetch error:", err);
         res.status(500).json({ success: false, error: err.message });
     }
 });
@@ -1486,7 +1665,7 @@ app.post("/api/hod/save-weekly-timetable", async (req, res) => {
                     VALUES ($1,$2,$3,$4,$5,$6)
                 `, [
                     teacherId,
-                    `TIMETABLE ASSIGNMENT: ${subjectName || subjectCode} (${branch} Sem${sem})`,
+                    `TIMETABLE ASSIGNMENT: ${subjectName || subjectCode} (${branch} Sem ${sem})`,
                     subjectName || subjectCode,
                     item.day,
                     clean(item.timeSlot),
@@ -1892,7 +2071,7 @@ app.delete("/api/teacher/fdp-records", async (req, res) => {
 
     try {
         await pool.query(`
-            DELETE FROM faculty_publications
+            DELETE FROM faculty_fdp_attended
             WHERE id = $1
               AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
                   UPPER(TRIM($2))
