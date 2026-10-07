@@ -213,7 +213,7 @@
                         <span style="font-size: 26px;">👥</span>
                         <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Faculty Directory & Service Records</h3>
                     </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Manage verified faculty service records, professional credentials (PAN, Aadhar, qualifications), and one-click academic profile links for NAAC/NBA audits.</p>
+                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Manage verified faculty service records, professional credentials (PAN, qualifications), and one-click academic profile links for NAAC/NBA audits.</p>
                 </div>
 
             </div>
@@ -259,16 +259,17 @@
                         <thead>
                             <tr style="background: #f1f5f9;">
                                 <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 5%;">Sl. No.</th>
-                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Authors</th>
-                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 25%;">Title</th>
-                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 18%;">Conference / Journal / Book Chapter</th>
-                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 14%;">Scopus / WoS / SCI Indexed</th>
-                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 10%;">Year of Publication</th>
-                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 10%;">Q1 / Q2 / Q3 / Q4</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 16%;">Authors</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 23%;">Title</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 16%;">Conference / Journal / Book Chapter</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); width: 10%;">Indexed</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 8%;">Year</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 8%;">Quartile</th>
+                                <th style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; width: 14%;">DOI / Link</th>
                             </tr>
                         </thead>
                         <tbody id="hodPubsTableBody">
-                            <tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">Loading department faculty publications...</td></tr>
+                            <tr><td colspan="8" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">Loading department faculty publications...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -278,7 +279,7 @@
         <!-- 🏛️ 2. FDP Records Pane -->
         <div id="hodPane_fdp" class="hod-workspace-pane" style="display: none; width: 100%;">
             <div class="back-nav-bar">
-                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️️ Back to Executive Menu</button>
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
                 <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">🏛️ FDP Records Full-Page Workspace</span>
             </div>
             <div class="bento-card" style="border-left: 5px solid var(--primary-blue); border-radius: 0 0 20px 20px;">
@@ -371,12 +372,12 @@
                         <span style="font-size: 22px;">🎓</span>
                         <div>
                             <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Proctor & Mentorship Allocation Tool</h3>
-                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Appoint students to a faculty mentor by USN range.</p>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Select the real student batch, branch and semester, then appoint individual students to a faculty mentor.</p>
                         </div>
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid var(--border-clean);">
                     <div>
                         <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">1. SELECT FACULTY MENTOR</label>
                         <select id="mentorSelectDropdown" style="width: 100%;">
@@ -384,26 +385,86 @@
                         </select>
                     </div>
                     <div>
-                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">2. USN PREFIX</label>
-                        <input type="text" id="usnPrefixInput" value="1DA24AI" placeholder="e.g. 1DA24AI" style="width: 100%; text-transform: uppercase;">
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">2. STUDENT ADMISSION YEAR / BATCH</label>
+                        <select id="mentorshipYearSelect" style="width: 100%;">
+                            <option value="">-- Select Admission Year --</option>
+                            <option value="2023">2023 Batch</option>
+                            <option value="2024">2024 Batch</option>
+                            <option value="2025">2025 Batch</option>
+                            <option value="2026">2026 Batch</option>
+                        </select>
                     </div>
                     <div>
-                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">3. START NO.</label>
-                        <input type="number" id="usnStartInput" placeholder="1" style="width: 100%;">
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">3. STUDENT BRANCH</label>
+                        <select id="mentorshipBranchSelect" style="width: 100%;">
+                            <option value="">-- Select Branch --</option>
+                            <option value="AIML">AIML</option>
+                            <option value="CSE">CSE</option>
+                            <option value="CSBS">CSBS</option>
+                            <option value="ISE">ISE</option>
+                            <option value="ECE">ECE</option>
+                            <option value="EEE">EEE</option>
+                            <option value="MECH">MECH</option>
+                            <option value="CIVIL">CIVIL</option>
+                            <option value="AIDS">AI & DS</option>
+                            <option value="AERO">AERONAUTICAL</option>
+                        </select>
                     </div>
                     <div>
-                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">4. END NO.</label>
-                        <input type="number" id="usnEndInput" placeholder="20" style="width: 100%;">
+                        <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">4. SEMESTER</label>
+                        <select id="mentorshipSemesterSelect" style="width: 100%;">
+                            <option value="">-- Select Semester --</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
                     </div>
                 </div>
 
                 <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <span style="font-size: 12px; color: var(--text-muted); font-style: italic;">
-                        Example: Prefix '1DA24AI', Start '1', End '20' will appoint 1DA24AI001 to 1DA24AI020 to selected mentor.
+                    <span id="mentorshipStudentStatus" style="font-size: 12px; color: var(--text-muted); font-style: italic;">
+                        Select admission year, branch and semester, then load the real students from the database.
                     </span>
-                    <button onclick="submitBatchMentorshipAssignment()" style="background: var(--accent-purple); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">
-                        🚀 Appoint Mentees to Faculty
+                    <button onclick="loadMentorshipStudents()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">
+                        🔎 Load Students
                     </button>
+                </div>
+
+                <div id="mentorshipStudentsPanel" style="display: none; margin-top: 14px; border: 1px solid var(--border-clean); border-radius: 12px; overflow: hidden; background: white;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 14px; background: #f8fafc; border-bottom: 1px solid var(--border-clean); flex-wrap: wrap;">
+                        <strong style="font-size: 13px; color: var(--text-dark);">Students Available for Mentorship</strong>
+                        <label style="font-size: 12px; font-weight: 800; color: var(--primary-blue); cursor: pointer;">
+                            <input type="checkbox" id="mentorshipSelectAll" onchange="toggleAllMentorshipStudents(this.checked)" style="margin-right: 6px;"> Select All
+                        </label>
+                    </div>
+                    <div style="overflow-x: auto; max-height: 420px;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 720px;">
+                            <thead>
+                                <tr style="background: #f1f5f9;">
+                                    <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); width: 55px;">Select</th>
+                                    <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: left;">USN</th>
+                                    <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: left;">Student Name</th>
+                                    <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: left;">Branch</th>
+                                    <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: center;">Semester</th>
+                                    <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: center;">Section</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mentorshipStudentsTableBody">
+                                <tr><td colspan="6" style="padding: 18px; text-align: center; color: var(--text-muted);">No students loaded.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; border-top: 1px solid var(--border-clean); background: #ffffff;">
+                        <span id="mentorshipSelectedCount" style="font-size: 12px; font-weight: 800; color: var(--text-muted);">0 students selected</span>
+                        <button onclick="submitSelectedMentorshipAssignment()" style="background: var(--accent-purple); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer;">
+                            🚀 Appoint Selected Students to Faculty
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -540,7 +601,7 @@
         <!-- 📅 8. Master Timetable Pane -->
         <div id="hodPane_timetable" class="hod-workspace-pane" style="display: none; width: 100%;">
             <div class="back-nav-bar">
-                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️️ Back to Executive Menu</button>
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
                 <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">📅 Master Timetable Full-Page Workspace</span>
             </div>
             <div class="bento-card" style="border-radius: 0 0 20px 20px;">
@@ -576,7 +637,7 @@
                 </div>
             </div>
 
-            <!-- 🗓️️ DR. AIT WEEKLY TIMETABLE GRID -->
+            <!-- 🗓️ DR. AIT WEEKLY TIMETABLE GRID -->
             <div class="bento-card" id="timetableMatrixCard" style="margin-top: 20px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                     <h3 id="gridTitleLabel" style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">
@@ -847,7 +908,7 @@
                 const data = await res.json();
 
                 if (!data.success || !data.publications || data.publications.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">No faculty research publications recorded for ${userBranch} in ${currentSelectedAcademicYear}.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" style="padding: 20px; text-align: center; color: var(--text-muted); font-style: italic;">No faculty research publications recorded for ${userBranch} in ${currentSelectedAcademicYear}.</td></tr>`;
                     departmentPublications = [];
                     return;
                 }
@@ -855,6 +916,9 @@
                 departmentPublications = data.publications;
                 tbody.innerHTML = "";
                 departmentPublications.forEach((pub, index) => {
+                    const linkHtml = pub.paper_url ? `<a href="${pub.paper_url}" target="_blank" style="color:var(--primary-blue); font-weight:700; text-decoration:underline;">🔗 View Paper</a>` : '-';
+                    const doiText = pub.doi ? `<br><small style="color:var(--text-muted);">${pub.doi}</small>` : '';
+
                     tbody.innerHTML += `
                         <tr>
                             <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; font-weight: 700;">${index + 1}</td>
@@ -864,11 +928,12 @@
                             <td style="padding: 10px; border: 1px solid var(--border-clean);">${pub.h_index_metrics || pub.indexing_type || 'Scopus Indexed'}</td>
                             <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center; font-weight: 700;">${pub.publication_year || pub.publication_date || '2026'}</td>
                             <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center;"><span style="background:#e0e7ff; color:#3730a3; padding: 3px 8px; border-radius: 6px; font-weight: 800;">${pub.quartile || 'Q3'}</span></td>
+                            <td style="padding: 10px; border: 1px solid var(--border-clean); text-align: center;">${linkHtml}${doiText}</td>
                         </tr>
                     `;
                 });
             } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--accent-red);">Failed to load department publications.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" style="padding: 20px; text-align: center; color: var(--accent-red);">Failed to load department publications.</td></tr>`;
             }
         }
 
@@ -906,19 +971,23 @@
             }
         }
 
+        // 🆕 UPDATED EXPORT REPORT TO INCLUDE DOI & PAPER URL
         function exportDepartmentPublicationsReport() {
             if (!departmentPublications || departmentPublications.length === 0) {
-                alert("⚠️️ No publication records available to export.");
+                alert("⚠️ No publication records available to export.");
                 return;
             }
 
-            let csvContent = "data:text/csv;charset=utf-8,Sl No,Authors,Title,Journal/Conference,Scopus/WoS/SCI,Year of Publication,Quartile\n";
+            let csvContent = "data:text/csv;charset=utf-8,Sl No,Authors,Title,Journal/Conference,Scopus/WoS/SCI,Year of Publication,Quartile,DOI,Paper URL\n";
             departmentPublications.forEach((pub, index) => {
                 const safeTitle = `"${(pub.title || '').replace(/"/g, '""')}"`;
                 const safeVenue = `"${(pub.journal_or_conference || '').replace(/"/g, '""')}"`;
                 const safeAuthors = `"${(pub.authors || pub.teacher_name || '').replace(/"/g, '""')}"`;
                 const safeIndexing = `"${(pub.h_index_metrics || pub.indexing_type || '').replace(/"/g, '""')}"`;
-                csvContent += `${index + 1},${safeAuthors},${safeTitle},${safeVenue},${safeIndexing},${pub.publication_year || pub.publication_date || ''},${pub.quartile || 'N/A'}\n`;
+                const safeDoi = `"${(pub.doi || '').replace(/"/g, '""')}"`;
+                const safeUrl = `"${(pub.paper_url || '').replace(/"/g, '""')}"`;
+                
+                csvContent += `${index + 1},${safeAuthors},${safeTitle},${safeVenue},${safeIndexing},${pub.publication_year || pub.publication_date || ''},${pub.quartile || 'N/A'},${safeDoi},${safeUrl}\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
@@ -928,7 +997,7 @@
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            showPopupNotification("✅ Official department publication report downloaded!");
+            showPopupNotification("✅ Official department publication report downloaded with DOI & URLs!");
         }
 
         async function fetchTeachers() {
@@ -942,8 +1011,6 @@
                     : (raw.teachers || raw.faculty || raw.data || raw.rows || []);
 
                 if (!Array.isArray(teachersList)) teachersList = [];
-
-                console.log("Loaded institution faculty list:", teachersList.length, teachersList);
 
                 const mentorSelect = document.getElementById('mentorSelectDropdown');
                 if (mentorSelect) {
@@ -959,51 +1026,16 @@
             }
         }
 
-        // ------------------------------------------------------------------
-        // TIMETABLE FACULTY/DEPARTMENT HELPERS
-        // These helpers deliberately accept several backend field names.
-        // That keeps the HOD timetable compatible with existing timetable
-        // rows even if the API returns teacher_id/assigned_teacher_id,
-        // teacher_name/faculty_name, branch/department, etc.
-        // ------------------------------------------------------------------
         function getTeacherId(t) {
-            return String(
-                t?.usn ??
-                t?.teacher_id ??
-                t?.teacherId ??
-                t?.faculty_id ??
-                t?.facultyId ??
-                t?.employee_id ??
-                t?.employeeId ??
-                t?.id ??
-                ''
-            ).trim();
+            return String(t?.usn ?? t?.teacher_id ?? t?.teacherId ?? t?.faculty_id ?? t?.facultyId ?? t?.employee_id ?? t?.employeeId ?? t?.id ?? '').trim();
         }
 
         function getTeacherName(t) {
-            return String(
-                t?.name ??
-                t?.teacher_name ??
-                t?.teacherName ??
-                t?.faculty_name ??
-                t?.facultyName ??
-                t?.full_name ??
-                t?.fullName ??
-                ''
-            ).trim();
+            return String(t?.name ?? t?.teacher_name ?? t?.teacherName ?? t?.faculty_name ?? t?.facultyName ?? t?.full_name ?? t?.fullName ?? '').trim();
         }
 
         function getTeacherDepartment(t) {
-            return String(
-                t?.branch ??
-                t?.department ??
-                t?.dept ??
-                t?.department_name ??
-                t?.departmentName ??
-                t?.faculty_branch ??
-                t?.facultyBranch ??
-                ''
-            ).trim();
+            return String(t?.branch ?? t?.department ?? t?.dept ?? t?.department_name ?? t?.departmentName ?? t?.faculty_branch ?? t?.facultyBranch ?? '').trim();
         }
 
         function canonicalDepartment(value) {
@@ -1016,52 +1048,19 @@
             if (v.includes('BIOL')) return 'BIOLOGY';
             if (v.includes('CDN') || v.includes('HAT') || v.includes('APTITUDE')) return 'CDN';
 
-            // Remove common UI suffixes such as "Dept", "Department", "Branch".
-            return v
-                .replace(/DEPARTMENT/g, '')
-                .replace(/DEPT/g, '')
-                .replace(/BRANCH/g, '')
-                .replace(/[\[\]\(\)]/g, '')
-                .trim();
+            return v.replace(/DEPARTMENT/g, '').replace(/DEPT/g, '').replace(/BRANCH/g, '').replace(/[\[\]\(\)]/g, '').trim();
         }
 
         function getSlotTeacherId(slot) {
-            return String(
-                slot?.assigned_teacher_id ??
-                slot?.teacher_id ??
-                slot?.teacherId ??
-                slot?.faculty_id ??
-                slot?.facultyId ??
-                slot?.assignedTeacherId ??
-                ''
-            ).trim();
+            return String(slot?.assigned_teacher_id ?? slot?.teacher_id ?? slot?.teacherId ?? slot?.faculty_id ?? slot?.facultyId ?? slot?.assignedTeacherId ?? '').trim();
         }
 
         function getSlotTeacherName(slot) {
-            return String(
-                slot?.teacher_name ??
-                slot?.teacherName ??
-                slot?.faculty_name ??
-                slot?.facultyName ??
-                slot?.assigned_teacher_name ??
-                slot?.assignedTeacherName ??
-                ''
-            ).trim();
+            return String(slot?.teacher_name ?? slot?.teacherName ?? slot?.faculty_name ?? slot?.facultyName ?? slot?.assigned_teacher_name ?? slot?.assignedTeacherName ?? '').trim();
         }
 
         function getSlotDepartment(slot) {
-            return String(
-                slot?.department ??
-                slot?.department_name ??
-                slot?.departmentName ??
-                slot?.dept ??
-                slot?.branch ??
-                slot?.teacher_branch ??
-                slot?.teacherBranch ??
-                slot?.faculty_branch ??
-                slot?.facultyBranch ??
-                ''
-            ).trim();
+            return String(slot?.department ?? slot?.department_name ?? slot?.departmentName ?? slot?.dept ?? slot?.branch ?? slot?.teacher_branch ?? slot?.teacherBranch ?? slot?.faculty_branch ?? slot?.facultyBranch ?? '').trim();
         }
 
         function getSlotDay(slot) {
@@ -1073,12 +1072,7 @@
         }
 
         function escapeHtml(value) {
-            return String(value ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#039;');
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
         function getDepartmentLabel(dept) {
@@ -1104,18 +1098,13 @@
                 }
             };
 
-            // Always keep the current HOD branch available.
             addDept(userBranch, `${userBranch} Dept`);
 
-            // Add every department/branch actually returned by the faculty API.
             teachersList.forEach(t => {
                 const raw = getTeacherDepartment(t);
                 addDept(raw, getDepartmentLabel(raw));
             });
 
-            // A saved timetable row may contain a department not present in
-            // the current faculty response. Keep it visible instead of losing
-            // the saved mapping.
             addDept(selectedDept, getDepartmentLabel(selectedDept));
 
             let html = `<option value="">-- Select Dept --</option>`;
@@ -1129,36 +1118,21 @@
         function teacherMatchesDepartment(teacher, selectedDept) {
             const wanted = canonicalDepartment(selectedDept);
             const actual = canonicalDepartment(getTeacherDepartment(teacher));
-
             if (!wanted || !actual) return false;
-            if (wanted === actual) return true;
-
-            // Support common cases where the database stores the branch as
-            // "AIML Dept", "AIML Department", etc.
-            return actual.includes(wanted) || wanted.includes(actual);
+            return wanted === actual || actual.includes(wanted) || wanted.includes(actual);
         }
 
         function findTeacherById(teacherId) {
             const wanted = String(teacherId || '').trim().toUpperCase();
             if (!wanted) return null;
-
-            return teachersList.find(t =>
-                getTeacherId(t).toUpperCase() === wanted
-            ) || null;
+            return teachersList.find(t => getTeacherId(t).toUpperCase() === wanted) || null;
         }
 
         function addSavedTeacherOption(teacherSelect, teacherId, teacherName, teacherBranch) {
             if (!teacherSelect || !teacherId) return;
-
-            const exists = Array.from(teacherSelect.options).some(
-                opt => String(opt.value).toUpperCase() === String(teacherId).toUpperCase()
-            );
-
+            const exists = Array.from(teacherSelect.options).some(opt => String(opt.value).toUpperCase() === String(teacherId).toUpperCase());
             if (!exists) {
-                const label = teacherName
-                    ? `${teacherName} (${teacherId})${teacherBranch ? ` - [${teacherBranch}]` : ''}`
-                    : `${teacherId}${teacherBranch ? ` - [${teacherBranch}]` : ''}`;
-
+                const label = teacherName ? `${teacherName} (${teacherId})${teacherBranch ? ` - [${teacherBranch}]` : ''}` : `${teacherId}${teacherBranch ? ` - [${teacherBranch}]` : ''}`;
                 const opt = document.createElement('option');
                 opt.value = teacherId;
                 opt.textContent = label;
@@ -1166,17 +1140,14 @@
                 opt.setAttribute('data-branch', teacherBranch || '');
                 teacherSelect.appendChild(opt);
             }
-
             teacherSelect.value = teacherId;
         }
 
         function fillMentorDropdownOptions(selectElement, selectedTeacherId) {
             let coreOpts = "", mathOpts = "", phyOpts = "", chemOpts = "", bioOpts = "", cdnOpts = "", otherOpts = "";
-            
             teachersList.forEach(t => {
                 const b = (t.branch || '').toUpperCase();
                 const opt = `<option value="${t.usn}" data-name="${t.name}" ${t.usn === selectedTeacherId ? 'selected' : ''}>${t.name} (${t.usn}) - [${t.branch}]</option>`;
-                
                 if (b.includes('MATH') || b.includes('MATHEMATICS')) mathOpts += opt;
                 else if (b.includes('PHYS')) phyOpts += opt;
                 else if (b.includes('CHEM')) chemOpts += opt;
@@ -1203,40 +1174,27 @@
 
             if (preselectedDept) {
                 const canonicalSavedDept = canonicalDepartment(preselectedDept);
-                const hasDeptOption = Array.from(deptSelect.options).some(
-                    opt => canonicalDepartment(opt.value) === canonicalSavedDept
-                );
-
+                const hasDeptOption = Array.from(deptSelect.options).some(opt => canonicalDepartment(opt.value) === canonicalSavedDept);
                 if (!hasDeptOption && canonicalSavedDept) {
                     const opt = document.createElement('option');
                     opt.value = canonicalSavedDept;
                     opt.textContent = getDepartmentLabel(canonicalSavedDept);
                     deptSelect.appendChild(opt);
                 }
-
                 deptSelect.value = canonicalSavedDept;
             }
 
             const chosenDept = canonicalDepartment(deptSelect.value);
-
             teacherSelect.innerHTML = `<option value="">-- Select Faculty --</option>`;
 
             if (!chosenDept) {
-                // If a saved faculty exists but its department is unavailable,
-                // still show the saved faculty instead of silently blanking it.
                 if (preselectedTeacherId) {
-                    addSavedTeacherOption(
-                        teacherSelect,
-                        preselectedTeacherId,
-                        preselectedTeacherName,
-                        preselectedTeacherBranch
-                    );
+                    addSavedTeacherOption(teacherSelect, preselectedTeacherId, preselectedTeacherName, preselectedTeacherBranch);
                 }
                 return;
             }
 
             let matchedCount = 0;
-
             teachersList.forEach(t => {
                 const teacherId = getTeacherId(t);
                 const teacherName = getTeacherName(t);
@@ -1248,10 +1206,7 @@
                 option.setAttribute('data-name', teacherName);
                 option.setAttribute('data-branch', getTeacherDepartment(t));
 
-                if (
-                    preselectedTeacherId &&
-                    teacherId.toUpperCase() === String(preselectedTeacherId).toUpperCase()
-                ) {
+                if (preselectedTeacherId && teacherId.toUpperCase() === String(preselectedTeacherId).toUpperCase()) {
                     option.selected = true;
                 }
 
@@ -1259,21 +1214,10 @@
                 matchedCount++;
             });
 
-            // Important: if the timetable row contains a saved teacher but
-            // the faculty API did not return that teacher, do not erase the
-            // mapping. Keep the saved teacher visible and selected.
             if (preselectedTeacherId) {
-                const foundInDropdown = Array.from(teacherSelect.options).some(
-                    opt => String(opt.value).toUpperCase() === String(preselectedTeacherId).toUpperCase()
-                );
-
+                const foundInDropdown = Array.from(teacherSelect.options).some(opt => String(opt.value).toUpperCase() === String(preselectedTeacherId).toUpperCase());
                 if (!foundInDropdown) {
-                    addSavedTeacherOption(
-                        teacherSelect,
-                        preselectedTeacherId,
-                        preselectedTeacherName,
-                        preselectedTeacherBranch
-                    );
+                    addSavedTeacherOption(teacherSelect, preselectedTeacherId, preselectedTeacherName, preselectedTeacherBranch);
                 } else {
                     teacherSelect.value = preselectedTeacherId;
                 }
@@ -1284,41 +1228,152 @@
             }
         }
 
-        async function submitBatchMentorshipAssignment() {
-            const mentorId = document.getElementById('mentorSelectDropdown').value;
-            const prefix = document.getElementById('usnPrefixInput').value.trim().toUpperCase();
-            const startNum = parseInt(document.getElementById('usnStartInput').value);
-            const endNum = parseInt(document.getElementById('usnEndInput').value);
+        let mentorshipStudentsCache = [];
 
-            if (!mentorId) { alert("⚠️ Please select a Faculty Mentor."); return; }
-            if (!prefix || isNaN(startNum) || isNaN(endNum) || startNum > endNum) {
-                alert("⚠️ Please enter a valid USN Prefix and Start/End range.");
+        function extractAdmissionYearFromUsn(usn) {
+            const value = String(usn || '').trim().toUpperCase();
+            const match = value.match(/^[A-Z0-9]*?(\d{2})(?=[A-Z]{2,})/);
+            return match ? `20${match[1]}` : '';
+        }
+
+        function updateMentorshipSelectedCount() {
+            const checked = document.querySelectorAll('#mentorshipStudentsTableBody input[data-mentee-usn]:checked');
+            const countEl = document.getElementById('mentorshipSelectedCount');
+            if (countEl) countEl.textContent = `${checked.length} student${checked.length === 1 ? '' : 's'} selected`;
+            const selectAll = document.getElementById('mentorshipSelectAll');
+            const all = document.querySelectorAll('#mentorshipStudentsTableBody input[data-mentee-usn]');
+            if (selectAll) selectAll.checked = all.length > 0 && checked.length === all.length;
+        }
+
+        function toggleAllMentorshipStudents(checked) {
+            document.querySelectorAll('#mentorshipStudentsTableBody input[data-mentee-usn]').forEach(box => {
+                box.checked = checked;
+            });
+            updateMentorshipSelectedCount();
+        }
+
+        function renderMentorshipStudents(students) {
+            const tbody = document.getElementById('mentorshipStudentsTableBody');
+            const panel = document.getElementById('mentorshipStudentsPanel');
+            const status = document.getElementById('mentorshipStudentStatus');
+            const selectAll = document.getElementById('mentorshipSelectAll');
+            if (!tbody || !panel) return;
+
+            mentorshipStudentsCache = Array.isArray(students) ? students : [];
+            panel.style.display = 'block';
+            if (selectAll) selectAll.checked = false;
+
+            if (!mentorshipStudentsCache.length) {
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--accent-red);">No students found for the selected admission year, branch and semester.</td></tr>`;
+                if (status) status.textContent = 'No matching students found.';
+                updateMentorshipSelectedCount();
                 return;
             }
 
-            let generatedUsns = [];
-            for (let i = startNum; i <= endNum; i++) {
-                const numStr = i.toString().padStart(3, '0');
-                generatedUsns.push(`${prefix}${numStr}`);
+            tbody.innerHTML = mentorshipStudentsCache.map((st, index) => {
+                const usn = String(st.usn || '').trim().toUpperCase();
+                const name = String(st.name || 'Unnamed Student').trim();
+                const branch = String(st.branch || '').trim() || '—';
+                const sem = st.semester_number ?? st.semester ?? '—';
+                const section = String(st.section || '').trim() || '—';
+                return `
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px; text-align: center;"><input type="checkbox" data-mentee-usn="${escapeHtml(usn)}" onchange="updateMentorshipSelectedCount()" aria-label="Select ${escapeHtml(usn)}"></td>
+                        <td style="padding: 8px; font-weight: 800;"><code>${escapeHtml(usn)}</code></td>
+                        <td style="padding: 8px; font-weight: 700;">${escapeHtml(name)}</td>
+                        <td style="padding: 8px;">${escapeHtml(branch)}</td>
+                        <td style="padding: 8px; text-align: center;">${escapeHtml(sem)}</td>
+                        <td style="padding: 8px; text-align: center;">${escapeHtml(section)}</td>
+                    </tr>`;
+            }).join('');
+
+            if (status) status.textContent = `${mentorshipStudentsCache.length} real student record${mentorshipStudentsCache.length === 1 ? '' : 's'} loaded. Select the students to appoint.`;
+            updateMentorshipSelectedCount();
+        }
+
+        async function loadMentorshipStudents() {
+            const year = document.getElementById('mentorshipYearSelect')?.value || '';
+            const branch = document.getElementById('mentorshipBranchSelect')?.value || '';
+            const semester = document.getElementById('mentorshipSemesterSelect')?.value || '';
+            const status = document.getElementById('mentorshipStudentStatus');
+            const tbody = document.getElementById('mentorshipStudentsTableBody');
+            const panel = document.getElementById('mentorshipStudentsPanel');
+
+            if (!year || !branch || !semester) {
+                showPopupNotification('⚠️ Select admission year, branch and semester first.', 'error');
+                return;
+            }
+
+            if (status) status.textContent = `🔍 Loading ${year} batch ${branch} Semester ${semester} students from the database...`;
+            if (panel) panel.style.display = 'block';
+            if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--text-muted);">Loading real student records...</td></tr>`;
+
+            try {
+                const url = `${API_BASE}/api/teacher/batch-marks-roster?branch=${encodeURIComponent(branch)}&semester=${encodeURIComponent(semester)}&subjectCode=MENTORSHIP&institutionId=${encodeURIComponent(institutionId)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (!res.ok || !data.success || !Array.isArray(data.students)) {
+                    throw new Error(data.error || data.message || 'Unable to load students.');
+                }
+
+                const selectedYear = String(year).slice(-2);
+                const filtered = data.students.filter(st => {
+                    const usn = String(st.usn || '').trim().toUpperCase();
+                    const detectedYear = extractAdmissionYearFromUsn(usn);
+                    return detectedYear === year || (!detectedYear && usn.includes(selectedYear));
+                }).map(st => ({
+                    usn: st.usn,
+                    name: st.name,
+                    branch: st.branch || branch,
+                    semester_number: st.semester_number || semester,
+                    section: st.section || ''
+                }));
+
+                renderMentorshipStudents(filtered);
+            } catch (err) {
+                console.error('Mentorship student load error:', err);
+                mentorshipStudentsCache = [];
+                if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--accent-red);">❌ ${escapeHtml(err.message || 'Failed to load students.')}</td></tr>`;
+                if (status) status.textContent = 'Student loading failed. Check the backend/API and try again.';
+                showPopupNotification('❌ Failed to load student records.', 'error');
+            }
+        }
+
+        async function submitSelectedMentorshipAssignment() {
+            const mentorId = document.getElementById('mentorSelectDropdown')?.value || '';
+            const checked = Array.from(document.querySelectorAll('#mentorshipStudentsTableBody input[data-mentee-usn]:checked'));
+            const studentUsns = checked.map(box => box.getAttribute('data-mentee-usn')).filter(Boolean);
+
+            if (!mentorId) {
+                showPopupNotification('⚠️ Please select a Faculty Mentor.', 'error');
+                return;
+            }
+            if (!studentUsns.length) {
+                showPopupNotification('⚠️ Please select at least one student.', 'error');
+                return;
             }
 
             try {
                 const res = await fetch(`${API_BASE}/api/hod/assign-mentees`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mentorId, studentUsns: generatedUsns, institutionId })
+                    body: JSON.stringify({ mentorId, studentUsns, institutionId })
                 });
 
                 const data = await res.json();
-                if (res.ok) {
-                    showPopupNotification(`✅ ${data.message}`);
-                    document.getElementById('usnStartInput').value = "";
-                    document.getElementById('usnEndInput').value = "";
-                } else {
-                    showPopupNotification(`❌ Error: ${data.message}`, 'error');
+                if (!res.ok || data.success === false) {
+                    throw new Error(data.message || data.error || 'Mentorship assignment failed.');
                 }
+
+                showPopupNotification(`✅ ${data.message || `Successfully mapped ${studentUsns.length} mentees.`}`);
+                document.querySelectorAll('#mentorshipStudentsTableBody input[data-mentee-usn]').forEach(box => { box.checked = false; });
+                const selectAll = document.getElementById('mentorshipSelectAll');
+                if (selectAll) selectAll.checked = false;
+                updateMentorshipSelectedCount();
             } catch (err) {
-                showPopupNotification("❌ Network Error.", 'error');
+                console.error('Mentorship assignment error:', err);
+                showPopupNotification(`❌ ${err.message || 'Network error while assigning mentees.'}`, 'error');
             }
         }
 
@@ -1372,12 +1427,7 @@
                 const res = await fetch(`${API_BASE}/api/auth/hod/override-attendance`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        studentUsn,
-                        sessionCode,
-                        subjectName,
-                        institutionId
-                    })
+                    body: JSON.stringify({ studentUsn, sessionCode, subjectName, institutionId })
                 });
 
                 const data = await res.json();
@@ -1594,8 +1644,6 @@
                 if (!res.ok) throw new Error(`Timetable API returned ${res.status}`);
 
                 const raw = await res.json();
-
-                // Accept both a plain array and common wrapped API responses.
                 const data = Array.isArray(raw)
                     ? raw
                     : (raw.timetable || raw.weeklyTimetable || raw.data || raw.rows || []);
@@ -1612,8 +1660,6 @@
                         existingMap[`${day}_${periodId}`] = item;
                     }
                 });
-
-                console.log('HOD timetable rows loaded:', data.length, data);
             } catch (err) {
                 console.error("Grid fetch error:", err);
                 showPopupNotification("⚠️ Timetable could not be loaded. Check the backend API.", "error");
@@ -1629,26 +1675,12 @@
                     const key = `${day}_${p.id}`;
                     const slotData = existingMap[key] || {};
 
-                    const subCode = String(
-                        slotData.subject_code ??
-                        slotData.subjectCode ??
-                        slotData.subject ??
-                        ''
-                    ).trim();
-
-                    const roomNum = String(
-                        slotData.room_number ??
-                        slotData.roomNumber ??
-                        slotData.room ??
-                        ''
-                    ).trim();
+                    const subCode = String(slotData.subject_code ?? slotData.subjectCode ?? slotData.subject ?? '').trim();
+                    const roomNum = String(slotData.room_number ?? slotData.roomNumber ?? slotData.room ?? '').trim();
 
                     const savedTeacherId = getSlotTeacherId(slotData);
                     const savedTeacherName = getSlotTeacherName(slotData);
 
-                    // Prefer the explicitly saved department/branch. If the
-                    // old row has no department field, derive it from the
-                    // saved faculty record when possible.
                     let savedDept = getSlotDepartment(slotData);
                     const teacherFromList = findTeacherById(savedTeacherId);
 
@@ -1710,8 +1742,6 @@
                 tr.innerHTML = html;
                 tbody.appendChild(tr);
 
-                // Restore every saved department + faculty selection AFTER
-                // the row has been inserted into the DOM.
                 periods.forEach(p => {
                     const slotData = existingMap[`${day}_${p.id}`] || {};
 
@@ -1732,8 +1762,6 @@
 
                     const deptSelect = document.getElementById(`dept_${day}_${p.id}`);
 
-                    // Always populate the department dropdown from the actual
-                    // faculty list plus the saved value.
                     if (deptSelect) {
                         deptSelect.innerHTML = buildDepartmentOptions(savedDept);
                         if (savedDept) {
@@ -1769,8 +1797,7 @@
                     const subCode = subEl ? subEl.value.trim() : '';
                     const roomNum = roomEl ? roomEl.value.trim() : '';
                     const teacherId = teacherSelect ? teacherSelect.value.trim() : '';
-                    const teacherName = teacherSelect?.options[teacherSelect.selectedIndex]
-                        ?.getAttribute('data-name') || '';
+                    const teacherName = teacherSelect?.options[teacherSelect.selectedIndex]?.getAttribute('data-name') || '';
                     const department = deptSelect ? deptSelect.value.trim() : '';
 
                     if (subCode !== '' || teacherId !== '' || roomNum !== '' || department !== '') {
@@ -1807,26 +1834,16 @@
 
                 if (res.ok) {
                     showPopupNotification(`✅ Semester ${activeSemNumber} Timetable saved & dispatched!`);
-
-                    // Reload from DB immediately. This verifies that the
-                    // department/faculty mapping returned by the backend is
-                    // actually persisted and displayed.
                     await reloadTimetableGrid();
                     await loadHodNotifications();
                 } else {
-                    console.error("Timetable save failed:", data);
-                    showPopupNotification(
-                        `❌ Error saving timetable: ${data.message || data.error || 'Unknown server error'}`,
-                        'error'
-                    );
+                    showPopupNotification(`❌ Error saving timetable: ${data.message || data.error || 'Unknown server error'}`, 'error');
                 }
             } catch (err) {
-                console.error("Timetable save network error:", err);
                 showPopupNotification("❌ Network Error while saving timetable.", 'error');
             }
         }
 
-        // 🎯 FIXED PDF EXPORT: Clear formatting, expanded dimensions, and unclipped canvas scaling
         async function generatePrincipalPdf() {
             showPopupNotification("📄 Compiling High-Resolution Timetable PDF...");
             

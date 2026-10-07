@@ -116,6 +116,21 @@
         
         .mentee-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 16px; }
         .mentee-card { background: white; border: 1px solid var(--bento-border); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: var(--shadow-premium); }
+        .mentee-card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+        .mentee-student-name { font-size: 16px; font-weight: 800; color: var(--text-dark); line-height: 1.25; }
+        .mentee-usn { display: inline-block; margin-top: 5px; padding: 4px 8px; border-radius: 7px; background: #eff6ff; color: var(--primary-blue); font-size: 11px; font-weight: 800; }
+        .mentee-status-badge { flex-shrink: 0; background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 5px 9px; border-radius: 999px; font-size: 10px; font-weight: 800; }
+        .mentee-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .mentee-detail-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 10px; min-width: 0; }
+        .mentee-detail-label { display: block; font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
+        .mentee-detail-value { display: block; font-size: 12px; font-weight: 700; color: #334155; overflow-wrap: anywhere; }
+        .mentee-contact-row { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 2px; }
+        .mentee-contact-link { display: inline-flex; align-items: center; gap: 5px; padding: 7px 9px; border-radius: 9px; background: #ffffff; border: 1px solid var(--bento-border); color: var(--primary-blue); text-decoration: none; font-size: 11px; font-weight: 700; }
+        .mentee-contact-link:hover { background: #eff6ff; }
+        .mentee-empty-state { text-align: center; color: var(--text-muted); padding: 28px 20px; grid-column: 1 / -1; border: 1px dashed var(--bento-border); border-radius: 14px; background: #f8fafc; }
+        @media (max-width: 520px) {
+            .mentee-details-grid { grid-template-columns: 1fr; }
+        }
 
         /* ==========================================================================
             🖨️ PERFECTED PRINT STYLING FIX (Eliminates Blank Leading Pages)
@@ -343,6 +358,18 @@
                 </div>
             </div>
 
+            <!-- 🆕 ADDED DOI & PAPER URL INPUT FIELDS -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DOI (Digital Object Identifier)</label>
+                    <input type="text" id="pubDoi" placeholder="e.g., 10.1016/j.jclepro..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bento-border);">
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">PAPER URL</label>
+                    <input type="text" id="pubUrl" placeholder="https://doi.org/..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bento-border);">
+                </div>
+            </div>
+
             <div style="display: flex; gap: 10px; margin-top: 20px;">
                 <button class="btn" style="background:#cbd5e1; color:#0f172a; flex:1;" onclick="closeAddPublicationModal()">Cancel</button>
                 <button class="btn btn-blue" style="flex:1;" onclick="submitTeacherPublication()">Save Publication 💾</button>
@@ -354,7 +381,7 @@
     <div id="fdpModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:100000; align-items:center; justify-content:center;">
         <div style="background:white; padding:30px; border-radius:16px; width:90%; max-width:600px; max-height:90vh; overflow-y:auto; box-shadow:0 15px 35px rgba(0,0,0,0.2);">
             <h3 style="margin-top:0; color:var(--text-dark);">🏛 Add FDP Attendance Record</h3>
-            
+             
             <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">TITLE OF FDP</label>
             <input type="text" id="fdpTitleInput" placeholder="e.g., Advanced AI & Machine Learning" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--bento-border); margin-bottom: 12px;">
 
@@ -479,69 +506,81 @@
                             <span style="font-size: 22px;">👤</span>
                             <div>
                                 <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">My Professional & Service Records (NAAC / NBA Audit)</h3>
-                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Manage your official service credentials, government IDs, qualifications, and optional research profile links.</p>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">View your official service credentials, qualifications, and academic profile links.</p>
                             </div>
                         </div>
-                        <button onclick="saveTeacherProfessionalProfile()" class="btn btn-blue" style="padding: 10px 20px; font-size: 12px;">Save Profile Credentials 💾</button>
+                        <button id="btnEditTeacherProfile" onclick="openTeacherProfileEdit()" class="btn btn-blue" style="padding: 10px 20px; font-size: 12px;">✏️ Edit Profile</button>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--bento-border);">
-                        <div>
-                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">PAN NUMBER</label>
-                            <input type="text" id="profPan" placeholder="e.g., ABCDE1234F" style="width: 100%; text-transform: uppercase;">
-                        </div>
-                        <div>
-                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">AADHAR NUMBER</label>
-                            <input type="text" id="profAadhar" placeholder="e.g., 1234 5678 9012" style="width: 100%;">
-                        </div>
-                        <div>
-                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF BIRTH</label>
-                            <input type="date" id="profDob" style="width: 100%;">
-                        </div>
-                        <div>
-                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">JOINING DATE</label>
-                            <input type="date" id="profJoiningDate" style="width: 100%;">
-                        </div>
-                        <div>
-                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CURRENT DESIGNATION</label>
-                            <select id="profDesignation" style="width: 100%;">
-                                <option value="Professor">Professor</option>
-                                <option value="Associate Professor">Associate Professor</option>
-                                <option value="Assistant Professor" selected>Assistant Professor</option>
-                                <option value="Guest Faculty">Guest Faculty</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF LAST PROMOTION</label>
-                            <input type="date" id="profPromotionDate" style="width: 100%;">
-                        </div>
-                        <div>
-                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">HIGHEST QUALIFICATION</label>
-                            <input type="text" id="profQualification" placeholder="e.g., Ph.D. in AI, M.Tech" style="width: 100%;">
-                        </div>
-                    </div>
+                    <style>
+                        .teacher-profile-view-item { background: #fff; border: 1px solid var(--bento-border); border-radius: 12px; padding: 12px 14px; min-height: 68px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+                        .teacher-profile-view-item label { font-size: 10px; font-weight: 900; color: var(--text-muted); letter-spacing: .4px; }
+                    </style>
 
-                    <div style="margin-top: 20px; border-top: 1px dashed var(--bento-border); padding-top: 16px;">
-                        <h4 style="font-size: 13px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">🔗 Optional Academic Profile Links (Provide any one or more)</h4>
-                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Link your official repositories for automated verification during institutional reviews.</p>
-                        
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+                    <div id="teacherProfileViewMode" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid var(--bento-border);"></div>
+
+                    <div id="teacherProfileEditMode" style="display: none;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--bento-border);">
                             <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">Google Scholar Profile URL</label>
-                                <input type="text" id="profGoogleScholar" placeholder="https://scholar.google.com/..." style="width: 100%;">
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">PAN NUMBER</label>
+                                <input type="text" id="profPan" placeholder="e.g., ABCDE1234F" style="width: 100%; text-transform: uppercase;">
                             </div>
                             <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">ORCID iD Link</label>
-                                <input type="text" id="profOrcid" placeholder="https://orcid.org/0000-..." style="width: 100%;">
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">AADHAR NUMBER</label>
+                                <input type="text" id="profAadhar" placeholder="e.g., 1234 5678 9012" style="width: 100%;">
                             </div>
                             <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">VIDWAN Profile URL</label>
-                                <input type="text" id="profVidwan" placeholder="https://vidwan.inflibnet.ac.in/..." style="width: 100%;">
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF BIRTH</label>
+                                <input type="date" id="profDob" style="width: 100%;">
                             </div>
                             <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">IRINS Profile URL</label>
-                                <input type="text" id="profIrins" placeholder="https://drait.irins.org/..." style="width: 100%;">
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">JOINING DATE</label>
+                                <input type="date" id="profJoiningDate" style="width: 100%;">
                             </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CURRENT DESIGNATION</label>
+                                <select id="profDesignation" style="width: 100%;">
+                                    <option value="Professor">Professor</option>
+                                    <option value="Associate Professor">Associate Professor</option>
+                                    <option value="Assistant Professor" selected>Assistant Professor</option>
+                                    <option value="Guest Faculty">Guest Faculty</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF LAST PROMOTION</label>
+                                <input type="date" id="profPromotionDate" style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">HIGHEST QUALIFICATION</label>
+                                <input type="text" id="profQualification" placeholder="e.g., Ph.D. in AI, M.Tech" style="width: 100%;">
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px; border-top: 1px dashed var(--bento-border); padding-top: 16px;">
+                            <h4 style="font-size: 13px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">🔗 Optional Academic Profile Links</h4>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Link your official repositories for automated verification during institutional reviews.</p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">Google Scholar Profile URL</label>
+                                    <input type="text" id="profGoogleScholar" placeholder="https://scholar.google.com/..." style="width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">ORCID iD Link</label>
+                                    <input type="text" id="profOrcid" placeholder="https://orcid.org/0000-..." style="width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">VIDWAN Profile URL</label>
+                                    <input type="text" id="profVidwan" placeholder="https://vidwan.inflibnet.ac.in/..." style="width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">IRINS Profile URL</label>
+                                    <input type="text" id="profIrins" placeholder="https://drait.irins.org/..." style="width: 100%;">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+                            <button onclick="cancelTeacherProfileEdit()" class="btn btn-dark" style="padding: 10px 18px; font-size: 12px;">Cancel</button>
+                            <button onclick="saveTeacherProfessionalProfile()" class="btn btn-blue" style="padding: 10px 20px; font-size: 12px;">Save Profile Credentials 💾</button>
                         </div>
                     </div>
                 </div>
@@ -556,7 +595,7 @@
                                 <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Submit your research papers, journals, conferences, and citation impact metrics.</p>
                             </div>
                         </div>
-                        
+                         
                         <!-- 🎯 SELECT YEAR DROPDOWN FOR TEACHER PUBLICATIONS -->
                         <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                             <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--bento-border);">
@@ -576,17 +615,18 @@
                             <thead>
                                 <tr>
                                     <th style="width: 8%; text-align: center;">Sl. No.</th>
-                                    <th style="width: 20%;">Authors</th>
-                                    <th style="width: 27%;">Title</th>
-                                    <th style="width: 18%;">Conference / Journal / Book Chapter</th>
-                                    <th style="width: 12%;">Scopus / WoS / SCI Indexed</th>
-                                    <th style="width: 10%; text-align: center;">Year of Publication</th>
-                                    <th style="width: 10%; text-align: center;">Q1 / Q2 / Q3 / Q4</th>
+                                    <th style="width: 18%;">Authors</th>
+                                    <th style="width: 24%;">Title</th>
+                                    <th style="width: 16%;">Venue</th>
+                                    <th style="width: 10%;">Indexed</th>
+                                    <th style="width: 8%; text-align: center;">Year</th>
+                                    <th style="width: 8%; text-align: center;">Quartile</th>
+                                    <th style="width: 10%; text-align: center;">DOI / Link</th>
                                     <th style="width: 5%; text-align: center;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="teacherPubsTableBody">
-                                <tr><td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">Loading your publications...</td></tr>
+                                <tr><td colspan="9" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">Loading your publications...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1216,7 +1256,7 @@
         let teacherBranch = localStorage.getItem('userBranch') || 'AIML';
 
         let currentGeneratedSessionToken = ""; 
-        let secondsRemainingInSession = 300; // ⏱️️ 5 minutes qr prescense session
+        let secondsRemainingInSession = 300; // ⏱ 5 minutes qr prescense session
         let sessionTimerCountdownReference = null;
         let backgroundPollerReference = null;
         let scatterChartInstance = null;
@@ -1284,6 +1324,90 @@
         // =========================================================================
         // 👤 TEACHER PROFESSIONAL PROFILE & CREDENTIALS HANDLERS (Phase 1)
         // =========================================================================
+        function getTeacherProfileFieldValue(id, fallback = '') {
+            const el = document.getElementById(id);
+            return el ? (el.value || fallback) : fallback;
+        }
+
+        function escapeTeacherProfileHtml(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function formatTeacherProfileDate(value) {
+            if (!value) return 'Not provided';
+            const parts = String(value).split('-');
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return escapeTeacherProfileHtml(value);
+        }
+
+        function maskTeacherAadhar(value) {
+            const clean = String(value || '').replace(/\s+/g, '');
+            if (!clean) return 'Not provided';
+            if (clean.length <= 4) return escapeTeacherProfileHtml(clean);
+            return `********${escapeTeacherProfileHtml(clean.slice(-4))}`;
+        }
+
+        function teacherProfileValueHtml(value, options = {}) {
+            const text = value ? escapeTeacherProfileHtml(value) : 'Not provided';
+            const className = options.className || '';
+            if (options.link && value) {
+                const href = escapeTeacherProfileHtml(value);
+                return `<a href="${href}" target="_blank" rel="noopener noreferrer" style="color: var(--primary-blue); font-weight: 700; word-break: break-all;">${text}</a>`;
+            }
+            return `<span class="${className}" style="font-size: 13px; font-weight: 700; color: var(--text-dark); word-break: break-word;">${text}</span>`;
+        }
+
+        function updateTeacherProfileView() {
+            const view = document.getElementById('teacherProfileViewMode');
+            if (!view) return;
+            const pan = getTeacherProfileFieldValue('profPan');
+            const aadhar = getTeacherProfileFieldValue('profAadhar');
+            const dob = getTeacherProfileFieldValue('profDob');
+            const joiningDate = getTeacherProfileFieldValue('profJoiningDate');
+            const designation = getTeacherProfileFieldValue('profDesignation', 'Assistant Professor');
+            const promotionDate = getTeacherProfileFieldValue('profPromotionDate');
+            const qualification = getTeacherProfileFieldValue('profQualification');
+            const scholar = getTeacherProfileFieldValue('profGoogleScholar');
+            const orcid = getTeacherProfileFieldValue('profOrcid');
+            const vidwan = getTeacherProfileFieldValue('profVidwan');
+            const irins = getTeacherProfileFieldValue('profIrins');
+            view.innerHTML = `
+                <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 2px 0 8px;">
+                    <span style="font-size: 20px;">📋</span>
+                    <div><div style="font-size: 13px; font-weight: 900; color: var(--text-dark);">Professional Profile</div><div style="font-size: 11px; color: var(--text-muted);">Saved credentials and academic identity information</div></div>
+                </div>
+                <div class="teacher-profile-view-item"><label>PAN NUMBER</label>${teacherProfileValueHtml(pan)}</div>
+                <div class="teacher-profile-view-item"><label>AADHAAR NUMBER</label><span style="font-size: 13px; font-weight: 700; color: var(--text-dark);">${maskTeacherAadhar(aadhar)}</span></div>
+                <div class="teacher-profile-view-item"><label>DATE OF BIRTH</label><span style="font-size: 13px; font-weight: 700; color: var(--text-dark);">${formatTeacherProfileDate(dob)}</span></div>
+                <div class="teacher-profile-view-item"><label>JOINING DATE</label><span style="font-size: 13px; font-weight: 700; color: var(--text-dark);">${formatTeacherProfileDate(joiningDate)}</span></div>
+                <div class="teacher-profile-view-item"><label>CURRENT DESIGNATION</label>${teacherProfileValueHtml(designation || 'Assistant Professor')}</div>
+                <div class="teacher-profile-view-item"><label>DATE OF LAST PROMOTION</label><span style="font-size: 13px; font-weight: 700; color: var(--text-dark);">${formatTeacherProfileDate(promotionDate)}</span></div>
+                <div class="teacher-profile-view-item"><label>HIGHEST QUALIFICATION</label>${teacherProfileValueHtml(qualification)}</div>
+                <div class="teacher-profile-view-item"><label>GOOGLE SCHOLAR</label>${teacherProfileValueHtml(scholar, {link:true})}</div>
+                <div class="teacher-profile-view-item"><label>ORCID</label>${teacherProfileValueHtml(orcid, {link:true})}</div>
+                <div class="teacher-profile-view-item"><label>VIDWAN</label>${teacherProfileValueHtml(vidwan, {link:true})}</div>
+                <div class="teacher-profile-view-item"><label>IRINS</label>${teacherProfileValueHtml(irins, {link:true})}</div>`;
+        }
+
+        function openTeacherProfileEdit() {
+            const view = document.getElementById('teacherProfileViewMode');
+            const edit = document.getElementById('teacherProfileEditMode');
+            const btn = document.getElementById('btnEditTeacherProfile');
+            if (view) view.style.display = 'none';
+            if (edit) edit.style.display = 'block';
+            if (btn) btn.style.display = 'none';
+        }
+
+        function cancelTeacherProfileEdit() {
+            const view = document.getElementById('teacherProfileViewMode');
+            const edit = document.getElementById('teacherProfileEditMode');
+            const btn = document.getElementById('btnEditTeacherProfile');
+            updateTeacherProfileView();
+            if (edit) edit.style.display = 'none';
+            if (view) view.style.display = 'grid';
+            if (btn) btn.style.display = 'inline-flex';
+        }
+
         async function loadTeacherProfessionalProfile() {
             try {
                 const res = await fetch(`${API_BASE}/api/teacher/profile?teacherId=${encodeURIComponent(userUsn)}&institutionId=${encodeURIComponent(institutionId)}`);
@@ -1302,8 +1426,11 @@
                     if (document.getElementById('profVidwan')) document.getElementById('profVidwan').value = p.vidwan_id || '';
                     if (document.getElementById('profIrins')) document.getElementById('profIrins').value = p.irins_url || '';
                 }
+                cancelTeacherProfileEdit();
             } catch (err) {
                 console.error("Error loading teacher profile credentials:", err);
+                updateTeacherProfileView();
+                cancelTeacherProfileEdit();
             }
         }
 
@@ -1342,6 +1469,8 @@
                 });
                 const data = await res.json();
                 if (res.ok && data.success) {
+                    updateTeacherProfileView();
+                    cancelTeacherProfileEdit();
                     firePremiumToastAlert("✅ Professional credentials & profile links saved successfully!");
                 } else {
                     firePremiumToastAlert(`❌ ${data.error || 'Failed to save profile credentials.'}`, "var(--accent-red)");
@@ -1510,12 +1639,15 @@
                 const data = await res.json();
 
                 if (!data.success || !data.publications || data.publications.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">No research publications recorded for ${currentSelectedAcademicYear}. Click "+ Add Publication" to begin.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">No research publications recorded for ${currentSelectedAcademicYear}. Click "+ Add Publication" to begin.</td></tr>`;
                     return;
                 }
 
                 tbody.innerHTML = "";
                 data.publications.forEach((pub, index) => {
+                    const linkHtml = pub.paper_url ? `<a href="${pub.paper_url}" target="_blank" style="color:var(--primary-blue); font-weight:700; text-decoration:underline;">🔗 View</a>` : '-';
+                    const doiText = pub.doi ? `<br><small style="color:var(--text-muted);">${pub.doi}</small>` : '';
+
                     tbody.innerHTML += `
                         <tr>
                             <td style="text-align: center; font-weight: bold;">${index + 1}</td>
@@ -1525,12 +1657,13 @@
                             <td>${pub.h_index_metrics || 'Indexed'}</td>
                             <td style="text-align: center;">${pub.publication_date || currentSelectedAcademicYear}</td>
                             <td style="text-align: center;"><span style="font-weight: 800; color: var(--primary-blue); background: #e0e7ff; padding: 3px 8px; border-radius: 6px;">${pub.quartile || 'Q3'}</span></td>
+                            <td style="text-align: center;">${linkHtml}${doiText}</td>
                             <td style="text-align: center;"><button onclick="deleteTeacherPublication(${pub.id})" class="btn" style="background:#fee2e2; color:#991b1b; padding:4px 8px; font-size:11px;">Delete</button></td>
                         </tr>
                     `;
                 });
             } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--accent-red); padding: 20px;">Failed to load publications ledger.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--accent-red); padding: 20px;">Failed to load publications ledger.</td></tr>`;
             }
         }
 
@@ -1575,6 +1708,8 @@
             const journalOrConference = document.getElementById('pubVenue').value.trim();
             const quartile = document.getElementById('pubQuartile').value;
             const hIndexMetrics = document.getElementById('pubHIndex').value.trim();
+            const doi = document.getElementById('pubDoi')?.value.trim() || '';
+            const paperUrl = document.getElementById('pubUrl')?.value.trim() || '';
 
             if (!title || !journalOrConference) {
                 alert("⚠️ Please provide at least the Paper Title and Journal/Conference Venue.");
@@ -1597,7 +1732,9 @@
                         publicationDate: publicationDate,
                         journalOrConference: journalOrConference,
                         quartile: quartile,
-                        hIndexMetrics: hIndexMetrics
+                        hIndexMetrics: hIndexMetrics,
+                        doi: doi,
+                        paperUrl: paperUrl
                     })
                 });
 
@@ -1609,6 +1746,8 @@
                     document.getElementById('pubAuthors').value = "";
                     document.getElementById('pubVenue').value = "";
                     document.getElementById('pubHIndex').value = "";
+                    if(document.getElementById('pubDoi')) document.getElementById('pubDoi').value = "";
+                    if(document.getElementById('pubUrl')) document.getElementById('pubUrl').value = "";
                     loadTeacherPublications();
                 } else {
                     alert(`❌ Error: ${data.error || 'Failed to save publication.'}`);
@@ -1830,7 +1969,7 @@
             } else {
                 if (document.getElementById('studentSectionLayout')) document.getElementById('studentSectionLayout').style.display = 'block';
                 if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | USN: ${userUsn}`;
-                
+                 
                 checkAttendanceShortagesAutomatically();
                 initializeStudentPerformanceLayout();
             }
@@ -1893,7 +2032,7 @@
                     const res = await fetch(`${API_BASE}/api/auth/student-subject-metrics?studentId=${childUsn}&semester=${sem}&institutionId=${institutionId}`);
                     const result = await res.json();
                     const subjects = Array.isArray(result.ai_predictions) ? result.ai_predictions : [];
-                    
+                     
                     tbody.innerHTML = "";
                     if (subjects.length === 0) {
                         tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No records available for Semester ${sem}.</td></tr>`;
@@ -1943,14 +2082,14 @@
                 if (badge) badge.innerText = `${slots.length} Slots Mapped`;
                 dropdown.innerHTML = `<option value="">-- Choose Assigned Class Slot --</option>`;
                 if (regDropdown) regDropdown.innerHTML = `<option value="">-- Select Subject --</option>`;
-                
+                 
                 const uniqueSubjects = new Set();
                 const currentTeacherDept = (teacherBranch || 'AIML').trim().toUpperCase();
                 const foundationalBranches = ['MATHS', 'PHYSICS', 'CHEM', 'BIOLOGY', 'MATHEMATICS', 'CHEMISTRY'];
 
                 slots.forEach(slot => {
                     const slotBranch = (slot.branch || 'AIML').trim().toUpperCase();
-                    
+                     
                     // 🛡️ STRICT ISOLATION: Only include slots assigned to this teacher's department branch
                     if (slotBranch !== currentTeacherDept && !foundationalBranches.includes(currentTeacherDept)) {
                         return; // Drops cross-department leaks like CSBS subjects entirely!
@@ -1960,9 +2099,9 @@
                     const semNum = slot.semester_number || slot.semester || 5;
                     const dayTime = slot.day_of_week ? `${slot.day_of_week} ${slot.time_slot || ''}` : (slot.time_slot || 'Regular Slot');
                     const optionText = `Sem ${semNum} [${slot.branch}] - ${rawSubCode} (${dayTime})`;
-                    
+                     
                     dropdown.innerHTML += `<option value="${slot.id || rawSubCode}" data-subject="${rawSubCode}" data-semester="${semNum}" data-branch="${slot.branch}" data-text="${optionText}">${optionText}</option>`;
-                    
+                     
                     const splitSubs = rawSubCode.split(',');
                     splitSubs.forEach(sub => {
                         const cleanSub = sub.trim();
@@ -1993,12 +2132,12 @@
         function onTeacherClassSlotSelected() {
             const dropdown = document.getElementById('teacherAssignedClassDropdown');
             const selectedOpt = dropdown.options[dropdown.selectedIndex];
-            
+             
             const rawSubCode = (selectedOpt.getAttribute('data-subject') || '').trim();
             userSubject = rawSubCode.split(',')[0].trim();
             userSemester = selectedOpt.getAttribute('data-semester') || 5;
             window.activeTeacherBranch = selectedOpt.getAttribute('data-branch') || teacherBranch;
-            
+             
             localStorage.setItem('userSubject', userSubject);
             localStorage.setItem('userSemester', userSemester);
             localStorage.setItem('userBranch', window.activeTeacherBranch);
@@ -2093,7 +2232,7 @@
                 slots.forEach(slot => {
                     const slotSem = String(slot.semester_number || slot.semester);
                     const slotBranch = (slot.branch || '').toUpperCase();
-                    
+                     
                     if (slotSem === String(sem) && (slotBranch === branch.toUpperCase() || ['MATHS', 'PHYSICS', 'CHEM', 'BIOLOGY'].includes(branch.toUpperCase()))) {
                         const subCode = (slot.subject_code || slot.subject_name || '').trim();
                         if (subCode && !addedSubs.has(subCode)) {
@@ -2232,7 +2371,7 @@
 
                 students.forEach(st => {
                     let rowHTML = `<tr><td style="position:sticky; left:0; background:#ffffff; font-weight:700;"><code>${st.usn}</code></td><td style="position:sticky; left:130px; background:#ffffff; font-weight:700;">${st.name}</td>`;
-                    
+                     
                     if (!dates || dates.length === 0) {
                         rowHTML += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
                     } else {
@@ -2679,21 +2818,147 @@
             } catch (err) { console.error(err); }
         }
 
+        function escapeMenteeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function displayMenteeValue(value, fallback = 'Not available') {
+            const clean = String(value ?? '').trim();
+            return clean ? escapeMenteeHtml(clean) : fallback;
+        }
+
         async function loadMenteeList() {
             const container = document.getElementById('menteesCardsContainer');
             if (!container) return;
+
+            const mentorId = String(userUsn || '').trim();
+            const tenantId = String(institutionId || 'DR_AIT').trim() || 'DR_AIT';
+
+            if (!mentorId) {
+                container.innerHTML = `
+                    <div class="mentee-empty-state">
+                        <div style="font-size: 26px; margin-bottom: 8px;">⚠️</div>
+                        <strong>Faculty identity not found.</strong>
+                        <div style="font-size: 12px; margin-top: 5px;">Please log in again so the portal can identify your mentorship assignments.</div>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="mentee-empty-state">
+                    <div style="font-size: 24px; margin-bottom: 8px;">🔄</div>
+                    <strong>Syncing appointed mentees...</strong>
+                    <div style="font-size: 12px; margin-top: 5px;">Loading verified student profiles from the academic database.</div>
+                </div>`;
+
             try {
-                const res = await fetch(`${API_BASE}/api/teacher/mentees?mentorId=${encodeURIComponent(userUsn)}&institutionId=${institutionId}`);
-                const mentees = await res.json();
-                if (!mentees || mentees.length === 0) {
-                    container.innerHTML = `<div style="text-align:center; grid-column:1/-1;">No mentees mapped.</div>`;
+                const endpoint = `${API_BASE}/api/teacher/mentees?mentorId=${encodeURIComponent(mentorId)}&institutionId=${encodeURIComponent(tenantId)}`;
+                const res = await fetch(endpoint, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store'
+                });
+
+                let payload = null;
+                try {
+                    payload = await res.json();
+                } catch (_) {
+                    payload = null;
+                }
+
+                if (!res.ok) {
+                    const serverMessage = payload && (payload.error || payload.message);
+                    throw new Error(serverMessage || `Mentee request failed with HTTP ${res.status}`);
+                }
+
+                const mentees = Array.isArray(payload) ? payload : [];
+
+                if (mentees.length === 0) {
+                    container.innerHTML = `
+                        <div class="mentee-empty-state">
+                            <div style="font-size: 28px; margin-bottom: 8px;">👥</div>
+                            <strong>No verified mentees mapped to this faculty account.</strong>
+                            <div style="font-size: 12px; margin-top: 6px;">
+                                Ask the HOD to appoint students to Faculty ID
+                                <code style="font-weight:800;">${escapeMenteeHtml(mentorId)}</code>
+                                and then press Sync Mentees.
+                            </div>
+                        </div>`;
                     return;
                 }
-                container.innerHTML = "";
-                mentees.forEach(m => {
-                    container.innerHTML += `<div class="mentee-card"><h4>${m.name}</h4><code>USN: ${m.usn}</code></div>`;
+
+                container.innerHTML = '';
+
+                mentees.forEach((m, index) => {
+                    const name = displayMenteeValue(m.name, 'Unnamed Student');
+                    const usn = displayMenteeValue(m.usn, 'USN not available');
+                    const branch = displayMenteeValue(m.branch);
+                    const semester = m.semester_number !== null && m.semester_number !== undefined && String(m.semester_number).trim() !== ''
+                        ? escapeMenteeHtml(`Semester ${m.semester_number}`)
+                        : 'Not available';
+                    const section = displayMenteeValue(m.section);
+                    const email = String(m.email ?? '').trim();
+                    const phone = String(m.phone_number ?? '').trim();
+                    const childUsn = displayMenteeValue(m.child_usn);
+                    const institution = displayMenteeValue(m.institution_id, tenantId);
+
+                    const card = document.createElement('div');
+                    card.className = 'mentee-card';
+                    card.innerHTML = `
+                        <div class="mentee-card-header">
+                            <div style="min-width:0;">
+                                <div class="mentee-student-name">${name}</div>
+                                <span class="mentee-usn">USN: ${usn}</span>
+                            </div>
+                            <span class="mentee-status-badge">MENTEE ${index + 1}</span>
+                        </div>
+
+                        <div class="mentee-details-grid">
+                            <div class="mentee-detail-item">
+                                <span class="mentee-detail-label">Branch</span>
+                                <span class="mentee-detail-value">${branch}</span>
+                            </div>
+                            <div class="mentee-detail-item">
+                                <span class="mentee-detail-label">Semester</span>
+                                <span class="mentee-detail-value">${semester}</span>
+                            </div>
+                            <div class="mentee-detail-item">
+                                <span class="mentee-detail-label">Section</span>
+                                <span class="mentee-detail-value">${section}</span>
+                            </div>
+                            <div class="mentee-detail-item">
+                                <span class="mentee-detail-label">Institution</span>
+                                <span class="mentee-detail-value">${institution}</span>
+                            </div>
+                            <div class="mentee-detail-item">
+                                <span class="mentee-detail-label">Parent / Child USN</span>
+                                <span class="mentee-detail-value">${childUsn}</span>
+                            </div>
+                        </div>
+
+                        <div class="mentee-contact-row">
+                            ${email ? `<a class="mentee-contact-link" href="mailto:${encodeURIComponent(email)}">✉️ ${escapeMenteeHtml(email)}</a>` : ''}
+                            ${phone ? `<a class="mentee-contact-link" href="tel:${encodeURIComponent(phone)}">📞 ${escapeMenteeHtml(phone)}</a>` : ''}
+                            ${!email && !phone ? `<span style="font-size:11px;color:var(--text-muted);">No contact details available</span>` : ''}
+                        </div>
+                    `;
+                    container.appendChild(card);
                 });
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error('Mentorship sync error:', e);
+                container.innerHTML = `
+                    <div class="mentee-empty-state" style="color:#991b1b;border-color:#fecaca;background:#fff5f5;">
+                        <div style="font-size: 28px; margin-bottom: 8px;">❌</div>
+                        <strong>Unable to load mentees.</strong>
+                        <div style="font-size: 12px; margin-top: 6px;">${escapeMenteeHtml(e.message || 'Network error while loading mentorship records.')}</div>
+                        <button onclick="loadMenteeList()" class="btn btn-blue" style="margin-top:12px;padding:8px 14px;font-size:11px;">🔄 Retry Sync</button>
+                    </div>`;
+            }
         }
 
         // ⏱️ TIMESTAMP-LOCKED SESSION LAUNCHER (Immune to background tab throttling)
@@ -2733,7 +2998,7 @@
 
                     let mins = Math.floor(secondsRemainingInSession / 60);
                     let secs = secondsRemainingInSession % 60;
-                    
+                     
                     if (mins < 0) mins = 0;
                     if (secs < 0) secs = 0;
 
@@ -2755,7 +3020,7 @@
             clearInterval(sessionTimerCountdownReference);
             clearInterval(backgroundPollerReference);
             if (document.getElementById('qrContainer')) document.getElementById('qrContainer').innerHTML = `🚫 LOCKED`;
-            
+             
             fetchTeacherSessionRoster();
 
             try {
@@ -2879,9 +3144,9 @@
                 const cleanSub = (userSubject || '').trim();
                 const res = await fetch(`${API_BASE}/api/auth/distinct-sessions?subject=${encodeURIComponent(cleanSub)}&institutionId=${encodeURIComponent(institutionId)}`);
                 const sessions = await res.json();
-                
+                 
                 dropdown.innerHTML = "<option value=''>-- Select Past Class Date --</option>";
-                
+                 
                 if (Array.isArray(sessions)) {
                     const seenDates = new Set();
                     sessions.forEach(s => {
@@ -2904,7 +3169,7 @@
             const token = document.getElementById('historySessionDropdown')?.value;
             const presentBody = document.getElementById('historyPresentTableBody');
             const absentBody = document.getElementById('historyAbsentTableBody');
-            
+             
             if(!token) {
                 if(presentBody) presentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Select a past session to load data.</td></tr>`;
                 if(absentBody) absentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Select a past session to load data.</td></tr>`;
@@ -2912,11 +3177,11 @@
                 document.getElementById('historyAbsentCount').innerText = "0";
                 return;
             }
-            
+             
             try {
                 const res = await fetch(`${API_BASE}/api/auth/teacher-session-roster?sessionCode=${token}&institutionId=${institutionId}`);
                 const data = await res.json();
-                
+                 
                 if (!res.ok || !data.success) {
                     firePremiumToastAlert("❌ Failed to load past session roster.", "var(--accent-red)");
                     return;
