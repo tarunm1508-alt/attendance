@@ -451,7 +451,7 @@
                                     <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: left;">Student Name</th>
                                     <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: left;">Branch</th>
                                     <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: center;">Semester</th>
-                                    <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: center;">Section</th>
+                                    <th style="padding: 9px; border-bottom: 1px solid var(--border-clean); text-align: center;">Section (DB)</th>
                                 </tr>
                             </thead>
                             <tbody id="mentorshipStudentsTableBody">
@@ -1236,6 +1236,33 @@
             return match ? `20${match[1]}` : '';
         }
 
+        function extractUsnSerialNumber(usn) {
+            const value = String(usn || '').trim().toUpperCase();
+            const match = value.match(/(\d{3})$/);
+            return match ? Number(match[1]) : null;
+        }
+
+        function isStudentInSelectedMentorshipBatch(usn, selectedYear) {
+            const detectedYear = extractAdmissionYearFromUsn(usn);
+            const serialNumber = extractUsnSerialNumber(usn);
+            const yearNumber = Number(selectedYear);
+
+            if (!detectedYear || !Number.isFinite(yearNumber)) return false;
+
+            // Regular-entry students use the selected admission year in their USN.
+            if (detectedYear === String(selectedYear)) return true;
+
+            // Lateral-entry diploma students enter in the following calendar year,
+            // start from 3rd semester, and use USN serials beginning at 400.
+            // Example: 2024 regular cohort + 2025 lateral students -> 1DA25AI400+.
+            const detectedYearNumber = Number(detectedYear);
+            if (detectedYearNumber === yearNumber + 1 && serialNumber !== null && serialNumber >= 400) {
+                return true;
+            }
+
+            return false;
+        }
+
         function updateMentorshipSelectedCount() {
             const checked = document.querySelectorAll('#mentorshipStudentsTableBody input[data-mentee-usn]:checked');
             const countEl = document.getElementById('mentorshipSelectedCount');
@@ -1252,6 +1279,13 @@
             updateMentorshipSelectedCount();
         }
 
+        function getDatabaseSectionValue(student) {
+            // IMPORTANT: Section is read ONLY from the student's database record.
+            // This page must never invent A/B or copy a section from the filter.
+            if (!student || student.section === null || student.section === undefined) return '';
+            return String(student.section).trim();
+        }
+
         function renderMentorshipStudents(students) {
             const tbody = document.getElementById('mentorshipStudentsTableBody');
             const panel = document.getElementById('mentorshipStudentsPanel');
@@ -1264,18 +1298,22 @@
             if (selectAll) selectAll.checked = false;
 
             if (!mentorshipStudentsCache.length) {
-                tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--accent-red);">No students found for the selected admission year, branch and semester.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--accent-red);">No students found for the selected batch, branch and semester. Regular and eligible lateral-entry students are included.</td></tr>`;
                 if (status) status.textContent = 'No matching students found.';
                 updateMentorshipSelectedCount();
                 return;
             }
 
-            tbody.innerHTML = mentorshipStudentsCache.map((st, index) => {
+            tbody.innerHTML = mentorshipStudentsCache.map(st => {
                 const usn = String(st.usn || '').trim().toUpperCase();
-                const name = String(st.name || 'Unnamed Student').trim();
-                const branch = String(st.branch || '').trim() || '—';
-                const sem = st.semester_number ?? st.semester ?? '—';
-                const section = String(st.section || '').trim() || '—';
+                const name = String(st.name || '').trim() || 'Unnamed Student';
+                // Branch, semester and section below are database values only.
+                const dbBranch = st.branch === null || st.branch === undefined ? '' : String(st.branch).trim();
+                const dbSemester = st.semester_number === null || st.semester_number === undefined ? '' : String(st.semester_number).trim();
+                const dbSection = getDatabaseSectionValue(st);
+                const branch = dbBranch || '—';
+                const sem = dbSemester || '—';
+                const section = dbSection || '—';
                 return `
                     <tr style="border-bottom: 1px solid #e2e8f0;">
                         <td style="padding: 8px; text-align: center;"><input type="checkbox" data-mentee-usn="${escapeHtml(usn)}" onchange="updateMentorshipSelectedCount()" aria-label="Select ${escapeHtml(usn)}"></td>
@@ -1283,11 +1321,11 @@
                         <td style="padding: 8px; font-weight: 700;">${escapeHtml(name)}</td>
                         <td style="padding: 8px;">${escapeHtml(branch)}</td>
                         <td style="padding: 8px; text-align: center;">${escapeHtml(sem)}</td>
-                        <td style="padding: 8px; text-align: center;">${escapeHtml(section)}</td>
+                        <td style="padding: 8px; text-align: center; font-weight: 800;">${escapeHtml(section)}</td>
                     </tr>`;
             }).join('');
 
-            if (status) status.textContent = `${mentorshipStudentsCache.length} real student record${mentorshipStudentsCache.length === 1 ? '' : 's'} loaded. Select the students to appoint.`;
+            if (status) status.textContent = `${mentorshipStudentsCache.length} real student record${mentorshipStudentsCache.length === 1 ? '' : 's'} loaded. Section is read directly from the database.`;
             updateMentorshipSelectedCount();
         }
 
@@ -1304,30 +1342,33 @@
                 return;
             }
 
-            if (status) status.textContent = `🔍 Loading ${year} batch ${branch} Semester ${semester} students from the database...`;
+            if (status) status.textContent = `🔍 Loading ${year} batch ${branch} Semester ${semester} students from the database (including eligible lateral-entry students)...`;
             if (panel) panel.style.display = 'block';
             if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="padding: 20px; text-align: center; color: var(--text-muted);">Loading real student records...</td></tr>`;
 
             try {
+                // The backend roster reads users.branch, users.semester_number and users.section.
+                // No section is sent from this page, so the UI cannot manufacture a section.
                 const url = `${API_BASE}/api/teacher/batch-marks-roster?branch=${encodeURIComponent(branch)}&semester=${encodeURIComponent(semester)}&subjectCode=MENTORSHIP&institutionId=${encodeURIComponent(institutionId)}`;
-                const res = await fetch(url);
+                const res = await fetch(url, { cache: 'no-store' });
                 const data = await res.json();
 
                 if (!res.ok || !data.success || !Array.isArray(data.students)) {
                     throw new Error(data.error || data.message || 'Unable to load students.');
                 }
 
-                const selectedYear = String(year).slice(-2);
                 const filtered = data.students.filter(st => {
                     const usn = String(st.usn || '').trim().toUpperCase();
-                    const detectedYear = extractAdmissionYearFromUsn(usn);
-                    return detectedYear === year || (!detectedYear && usn.includes(selectedYear));
+                    // Do not use a simple USN-year comparison here. Lateral-entry
+                    // diploma students are part of the selected cohort but their USN
+                    // carries the following year and starts at serial 400.
+                    return isStudentInSelectedMentorshipBatch(usn, year);
                 }).map(st => ({
                     usn: st.usn,
                     name: st.name,
-                    branch: st.branch || branch,
-                    semester_number: st.semester_number || semester,
-                    section: st.section || ''
+                    branch: st.branch,
+                    semester_number: st.semester_number,
+                    section: st.section
                 }));
 
                 renderMentorshipStudents(filtered);
@@ -1342,11 +1383,18 @@
 
         async function submitSelectedMentorshipAssignment() {
             const mentorId = document.getElementById('mentorSelectDropdown')?.value || '';
+            const year = document.getElementById('mentorshipYearSelect')?.value || '';
+            const branch = document.getElementById('mentorshipBranchSelect')?.value || '';
+            const semester = document.getElementById('mentorshipSemesterSelect')?.value || '';
             const checked = Array.from(document.querySelectorAll('#mentorshipStudentsTableBody input[data-mentee-usn]:checked'));
             const studentUsns = checked.map(box => box.getAttribute('data-mentee-usn')).filter(Boolean);
 
             if (!mentorId) {
                 showPopupNotification('⚠️ Please select a Faculty Mentor.', 'error');
+                return;
+            }
+            if (!year || !branch || !semester) {
+                showPopupNotification('⚠️ Please select admission year, branch and semester.', 'error');
                 return;
             }
             if (!studentUsns.length) {
@@ -1358,7 +1406,13 @@
                 const res = await fetch(`${API_BASE}/api/hod/assign-mentees`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mentorId, studentUsns, institutionId })
+                    body: JSON.stringify({
+                        mentorId,
+                        studentUsns,
+                        institutionId,
+                        branch,
+                        semester: Number(semester)
+                    })
                 });
 
                 const data = await res.json();
@@ -1366,7 +1420,11 @@
                     throw new Error(data.message || data.error || 'Mentorship assignment failed.');
                 }
 
-                showPopupNotification(`✅ ${data.message || `Successfully mapped ${studentUsns.length} mentees.`}`);
+                const assigned = Array.isArray(data.assignedUsns) ? data.assignedUsns.length : studentUsns.length;
+                const invalid = Array.isArray(data.invalidUsns) ? data.invalidUsns.length : 0;
+                const detail = invalid ? ` ${invalid} invalid/non-matching student record${invalid === 1 ? '' : 's'} were rejected by the server.` : '';
+                showPopupNotification(`✅ ${data.message || `Successfully mapped ${assigned} mentee${assigned === 1 ? '' : 's'}.`}${detail}`);
+
                 document.querySelectorAll('#mentorshipStudentsTableBody input[data-mentee-usn]').forEach(box => { box.checked = false; });
                 const selectAll = document.getElementById('mentorshipSelectAll');
                 if (selectAll) selectAll.checked = false;

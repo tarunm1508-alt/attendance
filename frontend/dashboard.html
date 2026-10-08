@@ -515,7 +515,9 @@
                     <style>
                         .teacher-profile-view-item { background: #fff; border: 1px solid var(--bento-border); border-radius: 12px; padding: 12px 14px; min-height: 68px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
                         .teacher-profile-view-item label { font-size: 10px; font-weight: 900; color: var(--text-muted); letter-spacing: .4px; }
-                    </style>
+                    .slow-learners-responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+        @media (max-width: 520px) { .slow-learners-responsive-grid { grid-template-columns: 1fr; } }
+        </style>
 
                     <div id="teacherProfileViewMode" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid var(--bento-border);"></div>
 
@@ -741,12 +743,27 @@
                     </div>
                 </div>
 
+                <!-- 📚 SLOW LEARNERS QUICK ACCESS CARD -->
+                <div id="slowLearnersQuickCard" style="background: linear-gradient(135deg, #fff7ed, #ffffff); border: 2px solid #fed7aa; border-radius: 18px; padding: 20px 22px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(194,65,12,0.08);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:14px; min-width:0;">
+                            <div style="width:48px; height:48px; border-radius:14px; background:#ffedd5; display:flex; align-items:center; justify-content:center; font-size:25px; flex-shrink:0;">📚</div>
+                            <div>
+                                <h3 style="font-size:16px; font-weight:900; color:#9a3412; margin:0 0 4px;">Slow Learners</h3>
+                                <p style="font-size:12px; color:#7c2d12; margin:0; line-height:1.45;">Current-semester CIE slow learners for your assigned subject. Students with CIE ≤ 15 will be shown here after server.js is connected.</p>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="switchTeacherView('slowLearners')" style="background:#c2410c; color:#fff; border-color:#c2410c; padding:10px 18px; white-space:nowrap;">📚 Open Slow Learners</button>
+                    </div>
+                </div>
+
                 <!-- 🎛️ TEACHER TAB SWITCHER -->
                 <div id="teacherViewsBar" class="view-toggle-bar">
                     <button class="toggle-tab-btn active" id="btn_viewLive" onclick="switchTeacherView('live')">📋 Active Class Stream</button>
                     <button class="toggle-tab-btn" id="btn_viewHistory" onclick="switchTeacherView('history')">🕒 Past Sessions Log</button>
                     <button class="toggle-tab-btn" id="btn_viewMarks" onclick="switchTeacherView('marks')">📝 Subject Marks Roster</button>
                     <button class="toggle-tab-btn" id="btn_viewMentorship" onclick="switchTeacherView('mentorship')">🎓 Faculty Mentorship</button>
+                    <button class="toggle-tab-btn" id="btn_viewSlowLearners" onclick="switchTeacherView('slowLearners')" style="font-weight:900; color:#c2410c;">📚 Slow Learners</button>
                     <button class="toggle-tab-btn" id="btn_viewRegister" onclick="switchTeacherView('register')">📊 Attendance Register PDF</button>
                 </div>
 
@@ -961,6 +978,73 @@
                 </div>
 
                 <!-- TAB 5: ATTENDANCE REGISTER MATRIX & PDF EXPORT -->
+                <!-- 📚 TAB 5: SLOW LEARNERS WORKSPACE (UI BLOCK ONLY) -->
+                <!-- Backend/API logic will be connected later in server.js. -->
+                <div id="wrapper_slowLearners" style="display: none; text-align: left;">
+                    <div style="background: #ffffff; border: 1px solid var(--bento-border); border-radius: 18px; padding: 22px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 22px;">📚</span>
+                                    <h3 style="font-size: 17px; font-weight: 800; color: var(--primary-blue); margin: 0;">Slow Learners</h3>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Current-semester CIE support list for your assigned subject modules.</p>
+                            </div>
+                            <span style="background: #eff6ff; color: var(--primary-blue); border: 1px solid #bfdbfe; padding: 6px 10px; border-radius: 999px; font-size: 10px; font-weight: 800;">CURRENT SEMESTER ONLY</span>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                            <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 14px; padding: 16px;">
+                                <div style="font-size: 10px; font-weight: 800; color: #9a3412; text-transform: uppercase; letter-spacing: .04em;">CIE Threshold</div>
+                                <div style="font-size: 24px; font-weight: 900; color: #c2410c; margin-top: 4px;">≤ 15</div>
+                                <div style="font-size: 11px; color: #7c2d12; margin-top: 3px;">Current semester CIE only.</div>
+                            </div>
+                            <div style="background: #f8fafc; border: 1px solid var(--bento-border); border-radius: 14px; padding: 16px;">
+                                <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em;">Students Flagged</div>
+                                <div id="slowLearnerCount" style="font-size: 24px; font-weight: 900; color: var(--text-dark); margin-top: 4px;">0</div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Will be populated from server.js later.</div>
+                            </div>
+                        </div>
+
+                        <div class="table-container" style="margin-bottom: 0;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 28%;">Student Name</th>
+                                        <th style="width: 20%;">USN / ID</th>
+                                        <th style="width: 20%;">Subject</th>
+                                        <th style="width: 16%; text-align: center;">Current CIE</th>
+                                        <th style="width: 16%; text-align: center;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="slowLearnersTableBody">
+                                    <tr>
+                                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 28px;">Slow learner records will appear here after the server-side CIE logic is connected.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="mentorSlowLearnerPanel" style="background: #ffffff; border: 1px solid var(--bento-border); border-radius: 18px; padding: 22px; margin-bottom: 20px;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                            <span style="font-size: 20px;">🎓</span>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Mentor Slow Learners</h3>
+                        </div>
+                        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">Mentor-specific CIE and previous-semester failure lists will be connected later in server.js.</p>
+                        <div class="slow-learners-responsive-grid">
+                            <div style="background: #f8fafc; border: 1px dashed var(--bento-border); border-radius: 14px; padding: 18px;">
+                                <h4 style="font-size: 12px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">CURRENT CIE SLOW LEARNERS</h4>
+                                <div id="mentorCieSlowLearnersState" style="font-size: 12px; color: var(--text-muted);">Backend connection pending.</div>
+                            </div>
+                            <div style="background: #f8fafc; border: 1px dashed var(--bento-border); border-radius: 14px; padding: 18px;">
+                                <h4 style="font-size: 12px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">PREVIOUS SEMESTER SLOW LEARNERS</h4>
+                                <div id="mentorSemesterSlowLearnersState" style="font-size: 12px; color: var(--text-muted);">Backend connection pending.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div id="wrapper_registerView" style="display: none; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                         <div>
@@ -2177,6 +2261,7 @@
             if (document.getElementById('wrapper_historyLog')) document.getElementById('wrapper_historyLog').style.display = 'none';
             if (document.getElementById('wrapper_marksLedger')) document.getElementById('wrapper_marksLedger').style.display = 'none';
             if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'none';
+            if (document.getElementById('wrapper_slowLearners')) document.getElementById('wrapper_slowLearners').style.display = 'none';
             if (document.getElementById('wrapper_registerView')) document.getElementById('wrapper_registerView').style.display = 'none';
 
             if (targetView === 'live') {
@@ -2195,6 +2280,9 @@
                 document.getElementById('btn_viewMentorship')?.classList.add('active');
                 if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'block';
                 loadMenteeList();
+            } else if (targetView === 'slowLearners') {
+                document.getElementById('btn_viewSlowLearners')?.classList.add('active');
+                if (document.getElementById('wrapper_slowLearners')) document.getElementById('wrapper_slowLearners').style.display = 'block';
             } else if (targetView === 'register') {
                 document.getElementById('btn_viewRegister')?.classList.add('active');
                 if (document.getElementById('wrapper_registerView')) document.getElementById('wrapper_registerView').style.display = 'block';

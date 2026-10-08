@@ -151,29 +151,66 @@ app.get("/api/auth/student-subject-metrics", async (req, res) => {
             ORDER BY subject_code ASC
         `, [usn, targetSem, tenant]);
 
-        /* Attendance values are supplementary only. */
+        /* Attendance values are supplementary only. They are strictly scoped to
+           this student's branch + semester through the timetable mapping. */
         const conductedResult = await pool.query(`
             SELECT
-                UPPER(TRIM(subject_code)) AS subject_code,
-                UPPER(TRIM(subject_name)) AS subject_name,
-                COUNT(DISTINCT session_code) AS conducted
-            FROM class_sessions
-            WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                UPPER(TRIM(cs.subject_code)) AS subject_code,
+                UPPER(TRIM(cs.subject_name)) AS subject_name,
+                COUNT(DISTINCT cs.session_code) AS conducted
+            FROM class_sessions cs
+            WHERE UPPER(COALESCE(TRIM(cs.institution_id), 'DR_AIT')) =
                   UPPER(TRIM($1))
-            GROUP BY UPPER(TRIM(subject_code)),
-                     UPPER(TRIM(subject_name))
-        `, [tenant]);
+              AND EXISTS (
+                    SELECT 1
+                    FROM weekly_timetables wt
+                    WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
+                          UPPER(TRIM($1))
+                      AND wt.semester_number = $2
+                      AND UPPER(TRIM(wt.branch)) = UPPER(TRIM($3))
+                      AND (
+                            (NULLIF(TRIM(cs.subject_code), '') IS NOT NULL
+                             AND UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_code)))
+                            OR
+                            (NULLIF(TRIM(cs.subject_name), '') IS NOT NULL
+                             AND UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(cs.subject_name)))
+                          )
+              )
+            GROUP BY UPPER(TRIM(cs.subject_code)),
+                     UPPER(TRIM(cs.subject_name))
+        `, [tenant, targetSem, student.branch]);
 
         const attendedResult = await pool.query(`
             SELECT
-                UPPER(TRIM(subject_name)) AS subject_name,
-                COUNT(DISTINCT session_code) AS attended
-            FROM users_attendance
-            WHERE UPPER(TRIM(student_id)) = $1
-              AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                UPPER(TRIM(cs.subject_code)) AS subject_code,
+                UPPER(TRIM(cs.subject_name)) AS subject_name,
+                COUNT(DISTINCT a.session_code) AS attended
+            FROM users_attendance a
+            JOIN class_sessions cs
+              ON UPPER(TRIM(a.session_code)) = UPPER(TRIM(cs.session_code))
+             AND UPPER(COALESCE(TRIM(cs.institution_id), 'DR_AIT')) =
+                 UPPER(TRIM($2))
+            WHERE UPPER(TRIM(a.student_id)) = $1
+              AND UPPER(COALESCE(TRIM(a.institution_id), 'DR_AIT')) =
                   UPPER(TRIM($2))
-            GROUP BY UPPER(TRIM(subject_name))
-        `, [usn, tenant]);
+              AND EXISTS (
+                    SELECT 1
+                    FROM weekly_timetables wt
+                    WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
+                          UPPER(TRIM($2))
+                      AND wt.semester_number = $3
+                      AND UPPER(TRIM(wt.branch)) = UPPER(TRIM($4))
+                      AND (
+                            (NULLIF(TRIM(cs.subject_code), '') IS NOT NULL
+                             AND UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_code)))
+                            OR
+                            (NULLIF(TRIM(cs.subject_name), '') IS NOT NULL
+                             AND UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(cs.subject_name)))
+                          )
+              )
+            GROUP BY UPPER(TRIM(cs.subject_code)),
+                     UPPER(TRIM(cs.subject_name))
+        `, [usn, tenant, targetSem, student.branch]);
 
         const dynamicPredictions = marksResult.rows.map(row => {
             const code = upper(row.subject_code);
@@ -187,7 +224,9 @@ app.get("/api/auth/student-subject-metrics", async (req, res) => {
             );
 
             const attended = attendedResult.rows.find(x =>
+                upper(x.subject_code) === code ||
                 upper(x.subject_name) === name ||
+                upper(x.subject_code) === name ||
                 upper(x.subject_name) === code
             );
 
@@ -328,18 +367,9 @@ app.get("/api/auth/student-attendance-ledger", async (req, res) => {
             ORDER BY session_date ASC, cs.session_code ASC
         `, [tenant, sem, branch]);
 
-        if (!sessionsResult.rows.length) {
-            sessionsResult = await pool.query(`
-                SELECT DISTINCT
-                    session_code,
-                    UPPER(TRIM(subject_code)) AS subject_code,
-                    COALESCE(NULLIF(TRIM(subject_name), ''), 'General') AS subject_name,
-                    TO_CHAR(created_at, 'YYYY-MM-DD') AS session_date
-                FROM class_sessions
-                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($1))
-                ORDER BY session_date ASC
-            `, [tenant]);
-        }
+        // Do not fall back to every institution-wide session.
+        // An empty branch/semester mapping must stay empty instead of showing
+        // another branch's classes as absences.
 
         const attendanceResult = await pool.query(`
             SELECT DISTINCT
@@ -393,15 +423,29 @@ app.post("/api/teacher/calculate-shortage", async (req, res) => {
 
     try {
         const conducted = await pool.query(`
-            SELECT COUNT(DISTINCT session_code) AS total
-            FROM class_sessions
-            WHERE (
-                UPPER(TRIM(subject_code)) = $1 OR
-                UPPER(TRIM(subject_name)) ILIKE '%' || $1 || '%'
-            )
-            AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
-                UPPER(TRIM($2))
-        `, [subject, tenant]);
+            SELECT COUNT(DISTINCT cs.session_code) AS total
+            FROM class_sessions cs
+            WHERE UPPER(COALESCE(TRIM(cs.institution_id), 'DR_AIT')) =
+                  UPPER(TRIM($1))
+              AND (
+                    UPPER(TRIM(cs.subject_code)) = UPPER(TRIM($2))
+                    OR UPPER(TRIM(cs.subject_name)) ILIKE '%' || UPPER(TRIM($2)) || '%'
+                  )
+              AND EXISTS (
+                    SELECT 1
+                    FROM weekly_timetables wt
+                    WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
+                          UPPER(TRIM($1))
+                      AND wt.semester_number = $3
+                      AND UPPER(TRIM(wt.branch)) = UPPER(TRIM($4))
+                      AND (
+                            UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_code))
+                            OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(cs.subject_name))
+                            OR UPPER(TRIM(wt.subject_code)) = UPPER(TRIM($2))
+                            OR UPPER(TRIM(wt.subject_name)) ILIKE '%' || UPPER(TRIM($2)) || '%'
+                          )
+              )
+        `, [tenant, subject, sem, branch]);
 
         const total = parseInt(conducted.rows[0]?.total) || 0;
         if (!total) return res.json({ success: true, shortageStudents: [] });
@@ -425,15 +469,31 @@ app.post("/api/teacher/calculate-shortage", async (req, res) => {
                 SELECT COUNT(DISTINCT a.session_code) AS total
                 FROM users_attendance a
                 JOIN class_sessions s
-                  ON a.session_code = s.session_code
+                  ON UPPER(TRIM(a.session_code)) = UPPER(TRIM(s.session_code))
+                 AND UPPER(COALESCE(TRIM(s.institution_id), 'DR_AIT')) =
+                     UPPER(TRIM($3))
                 WHERE UPPER(TRIM(a.student_id)) = $1
                   AND (
-                    UPPER(TRIM(s.subject_code)) = $2 OR
-                    UPPER(TRIM(s.subject_name)) ILIKE '%' || $2 || '%'
+                    UPPER(TRIM(s.subject_code)) = UPPER(TRIM($2)) OR
+                    UPPER(TRIM(s.subject_name)) ILIKE '%' || UPPER(TRIM($2)) || '%'
                   )
                   AND UPPER(COALESCE(TRIM(a.institution_id), 'DR_AIT')) =
                       UPPER(TRIM($3))
-            `, [upper(st.usn), subject, tenant]);
+                  AND EXISTS (
+                        SELECT 1
+                        FROM weekly_timetables wt
+                        WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
+                              UPPER(TRIM($3))
+                          AND wt.semester_number = $4
+                          AND UPPER(TRIM(wt.branch)) = UPPER(TRIM($5))
+                          AND (
+                                UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(s.subject_code))
+                                OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(s.subject_name))
+                                OR UPPER(TRIM(wt.subject_code)) = UPPER(TRIM($2))
+                                OR UPPER(TRIM(wt.subject_name)) ILIKE '%' || UPPER(TRIM($2)) || '%'
+                              )
+                  )
+            `, [upper(st.usn), subject, tenant, sem, branch]);
 
             const count = parseInt(attended.rows[0]?.total) || 0;
             const percentage = Math.round((count / total) * 100);
@@ -706,27 +766,55 @@ app.get("/api/auth/teacher-session-roster", async (req, res) => {
 /* ==========================================================================\n   TEACHER ATTENDANCE REGISTER\n   ========================================================================== */
 app.get("/api/teacher/attendance-register", async (req, res) => {
     const tenant = tenantOf(req.query.institutionId);
+    const teacherId = upper(req.query.teacherId);
     const subject = upper(req.query.subjectCode);
     const sem = semOf(req.query.semesterNumber, 5);
     let branch = clean(req.query.branch);
 
     try {
-        if (!branch) {
+        if (!branch && teacherId) {
             const slot = await pool.query(`
-                SELECT TRIM(branch) AS branch
+                SELECT DISTINCT TRIM(branch) AS branch
                 FROM weekly_timetables
                 WHERE (
-                    UPPER(TRIM(subject_code)) = $1
-                    OR UPPER(TRIM(subject_name)) ILIKE '%' || $1 || '%'
+                    UPPER(TRIM(subject_code)) = UPPER(TRIM($1))
+                    OR UPPER(TRIM(subject_name)) ILIKE '%' || UPPER(TRIM($1)) || '%'
                 )
                 AND semester_number = $2
                 AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
-                  UPPER(TRIM($3))
-                ORDER BY id
-                LIMIT 1
+                    UPPER(TRIM($3))
+                AND (
+                    UPPER(TRIM(assigned_teacher_id)) = UPPER(TRIM($4))
+                    OR UPPER(TRIM(assigned_teacher_name)) ILIKE '%' || UPPER(TRIM($4)) || '%'
+                )
+                ORDER BY TRIM(branch)
+            `, [subject, sem, tenant, teacherId]);
+
+            if (slot.rows.length === 1) branch = slot.rows[0].branch || '';
+        }
+
+        if (!branch) {
+            const slot = await pool.query(`
+                SELECT DISTINCT TRIM(branch) AS branch
+                FROM weekly_timetables
+                WHERE (
+                    UPPER(TRIM(subject_code)) = UPPER(TRIM($1))
+                    OR UPPER(TRIM(subject_name)) ILIKE '%' || UPPER(TRIM($1)) || '%'
+                )
+                AND semester_number = $2
+                AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                    UPPER(TRIM($3))
+                ORDER BY TRIM(branch)
             `, [subject, sem, tenant]);
 
-            branch = slot.rows[0]?.branch || "AIML";
+            if (slot.rows.length === 1) branch = slot.rows[0].branch || '';
+        }
+
+        if (!branch) {
+            return res.status(400).json({
+                success: false,
+                error: "Branch could not be determined for this subject/teacher. Please select the correct branch."
+            });
         }
 
         const studentsResult = await pool.query(`
@@ -748,16 +836,33 @@ app.get("/api/teacher/attendance-register", async (req, res) => {
                 cs.session_code,
                 TO_CHAR(cs.created_at, 'YYYY-MM-DD') AS session_date
             FROM class_sessions cs
-            WHERE (
-                UPPER(TRIM(cs.subject_code)) ILIKE '%' || UPPER(TRIM($1)) || '%'
-                OR UPPER(TRIM(cs.subject_name)) ILIKE '%' || UPPER(TRIM($1)) || '%'
-                OR UPPER(TRIM(cs.subject_code)) ILIKE '%ML%'
-                OR UPPER(TRIM(cs.subject_name)) ILIKE '%ML%'
-            )
-              AND UPPER(COALESCE(TRIM(cs.institution_id), 'DR_AIT')) =
+            WHERE UPPER(COALESCE(TRIM(cs.institution_id), 'DR_AIT')) =
                   UPPER(TRIM($2))
+              AND (
+                    UPPER(TRIM(cs.subject_code)) = UPPER(TRIM($1))
+                    OR UPPER(TRIM(cs.subject_name)) ILIKE '%' || UPPER(TRIM($1)) || '%'
+                  )
+              AND EXISTS (
+                    SELECT 1
+                    FROM weekly_timetables wt
+                    WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
+                          UPPER(TRIM($2))
+                      AND wt.semester_number = $3
+                      AND UPPER(TRIM(wt.branch)) = UPPER(TRIM($4))
+                      AND (
+                            UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_code))
+                            OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(cs.subject_name))
+                            OR UPPER(TRIM(wt.subject_code)) = UPPER(TRIM($1))
+                            OR UPPER(TRIM(wt.subject_name)) ILIKE '%' || UPPER(TRIM($1)) || '%'
+                          )
+                      AND (
+                            $5 = ''
+                            OR UPPER(TRIM(wt.assigned_teacher_id)) = UPPER(TRIM($5))
+                            OR UPPER(TRIM(wt.assigned_teacher_name)) ILIKE '%' || UPPER(TRIM($5)) || '%'
+                          )
+              )
             ORDER BY session_date ASC, cs.session_code ASC
-        `, [subject, tenant]);
+        `, [subject, tenant, sem, branch, teacherId]);
 
         const sessionCodes = sessionsResult.rows.map(x => x.session_code);
         const sessionDateMap = {};
@@ -2173,19 +2278,493 @@ app.delete("/api/teacher/fdp-records", async (req, res) => {
     }
 });
 
+
+/* ==========================================================================
+   SLOW LEARNERS
+   Faculty:
+   - Current/fresh semester only.
+   - Only subjects assigned to the logged-in faculty.
+   - Current CIE = latest non-zero CIE evaluation (CIE3 -> CIE2 -> CIE1).
+   - Students with current CIE <= 15 are returned.
+   Mentor:
+   - Current CIE slow learners: only assigned mentees, current semester CIE <= 15.
+   - Semester slow learners: only assigned mentees with a confirmed FAIL result
+     in at least one previous semester.
+   - No separate slow_learners table is required.
+   ========================================================================== */
+
+const slowLearnerCieExpression = `
+    CASE
+        WHEN m.cie3 IS NOT NULL AND m.cie3 > 0 THEN m.cie3
+        WHEN m.cie2 IS NOT NULL AND m.cie2 > 0 THEN m.cie2
+        WHEN m.cie1 IS NOT NULL AND m.cie1 > 0 THEN m.cie1
+        ELSE NULL
+    END
+`;
+
+const failedResultCondition = `
+    (
+        UPPER(TRIM(COALESCE(m.grade, ''))) IN
+            ('F', 'FAIL', 'FAILED', 'U', 'RA', 'AB', 'NOT PASS', 'NOTPASSED')
+        OR
+        (m.total_marks IS NOT NULL AND m.total_marks < 40)
+    )
+`;
+
+/*
+ * Returns the faculty's current semester and exact subject assignments.
+ * If semesterNumber is supplied by the portal, that semester is authoritative.
+ * Otherwise the highest semester currently assigned to that faculty is used
+ * as a safe fallback.
+ */
+app.get("/api/teacher/slow-learners", async (req, res) => {
+    const tenant = tenantOf(req.query.institutionId);
+    const teacherId = upper(req.query.teacherId || req.query.userId || req.query.usn);
+    const requestedSemester =
+        req.query.semesterNumber !== undefined &&
+        req.query.semesterNumber !== null &&
+        req.query.semesterNumber !== ''
+            ? parseInt(req.query.semesterNumber)
+            : null;
+    const requestedSubject = upper(req.query.subjectCode || req.query.subject);
+
+    if (!teacherId) {
+        return res.status(400).json({
+            success: false,
+            message: "Faculty ID is required."
+        });
+    }
+
+    if (requestedSemester !== null &&
+        (!Number.isInteger(requestedSemester) || requestedSemester < 1 || requestedSemester > 8)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid semester number."
+        });
+    }
+
+    try {
+        let semester = requestedSemester;
+
+        if (semester === null) {
+            const semesterResult = await pool.query(`
+                SELECT MAX(semester_number) AS semester
+                FROM weekly_timetables
+                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                      UPPER(TRIM($1))
+                  AND (
+                        UPPER(TRIM(assigned_teacher_id)) = UPPER(TRIM($2))
+                        OR UPPER(TRIM(assigned_teacher_name)) ILIKE '%' || UPPER(TRIM($2)) || '%'
+                  )
+            `, [tenant, teacherId]);
+
+            semester = semOf(semesterResult.rows[0]?.semester, 5);
+        }
+
+        const subjectParams = [tenant, semester, teacherId];
+        let subjectFilter = '';
+
+        if (requestedSubject) {
+            subjectParams.push(requestedSubject);
+            subjectFilter = `
+              AND (
+                    UPPER(TRIM(wt.subject_code)) = UPPER(TRIM($4))
+                    OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM($4))
+              )
+            `;
+        }
+
+        const assignedSubjects = await pool.query(`
+            SELECT DISTINCT
+                UPPER(TRIM(wt.subject_code)) AS subject_code,
+                COALESCE(
+                    NULLIF(TRIM(wt.subject_name), ''),
+                    TRIM(wt.subject_code)
+                ) AS subject_name
+            FROM weekly_timetables wt
+            WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
+                  UPPER(TRIM($1))
+              AND wt.semester_number = $2
+              AND (
+                    UPPER(TRIM(wt.assigned_teacher_id)) = UPPER(TRIM($3))
+                    OR UPPER(TRIM(wt.assigned_teacher_name)) ILIKE '%' || UPPER(TRIM($3)) || '%'
+              )
+              AND NULLIF(TRIM(wt.subject_code), '') IS NOT NULL
+              ${subjectFilter}
+            ORDER BY subject_code
+        `, subjectParams);
+
+        if (!assignedSubjects.rows.length) {
+            return res.json({
+                success: true,
+                semester,
+                subjects: [],
+                slowLearners: [],
+                count: 0,
+                message: requestedSubject
+                    ? "The requested subject is not assigned to this faculty in the selected semester."
+                    : "No subjects are assigned to this faculty in the selected semester."
+            });
+        }
+
+        const slowLearners = await pool.query(`
+            WITH assigned_subjects AS (
+                SELECT DISTINCT
+                    UPPER(TRIM(wt.subject_code)) AS subject_code,
+                    COALESCE(
+                        NULLIF(TRIM(wt.subject_name), ''),
+                        TRIM(wt.subject_code)
+                    ) AS subject_name
+                FROM weekly_timetables wt
+                WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
+                      UPPER(TRIM($1))
+                  AND wt.semester_number = $2
+                  AND (
+                        UPPER(TRIM(wt.assigned_teacher_id)) = UPPER(TRIM($3))
+                        OR UPPER(TRIM(wt.assigned_teacher_name)) ILIKE '%' || UPPER(TRIM($3)) || '%'
+                  )
+                  AND NULLIF(TRIM(wt.subject_code), '') IS NOT NULL
+                  ${requestedSubject ? 'AND (UPPER(TRIM(wt.subject_code)) = UPPER(TRIM($4)) OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM($4)))' : ''}
+            ),
+            ranked_marks AS (
+                SELECT
+                    TRIM(u.usn) AS usn,
+                    COALESCE(NULLIF(TRIM(u.name), ''), 'Unnamed Student') AS name,
+                    TRIM(COALESCE(u.branch, '')) AS branch,
+                    u.semester_number,
+                    UPPER(TRIM(m.subject_code)) AS subject_code,
+                    COALESCE(
+                        NULLIF(TRIM(m.subject_name), ''),
+                        NULLIF(TRIM(m.subject), ''),
+                        TRIM(m.subject_code)
+                    ) AS subject_name,
+                    m.cie1,
+                    m.cie2,
+                    m.cie3,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY UPPER(TRIM(u.usn)), UPPER(TRIM(m.subject_code)), m.semester_number
+                        ORDER BY COALESCE(m.updated_at, m.created_at) DESC NULLS LAST, m.id DESC
+                    ) AS rn
+                FROM users u
+                JOIN student_marks m
+                  ON UPPER(TRIM(u.usn)) = UPPER(TRIM(m.usn))
+                 AND UPPER(COALESCE(TRIM(m.institution_id), 'DR_AIT')) =
+                     UPPER(TRIM($1))
+                JOIN assigned_subjects a
+                  ON UPPER(TRIM(m.subject_code)) = a.subject_code
+                  OR UPPER(TRIM(m.subject_name)) = a.subject_name
+                  OR UPPER(TRIM(m.subject)) = a.subject_code
+                  OR UPPER(TRIM(m.subject)) = a.subject_name
+                WHERE LOWER(TRIM(u.role)) IN ('student', 'students')
+                  AND UPPER(COALESCE(TRIM(u.institution_id), 'DR_AIT')) =
+                      UPPER(TRIM($1))
+                  AND u.semester_number = $2
+                  AND m.semester_number = $2
+                  AND NULLIF(TRIM(u.usn), '') IS NOT NULL
+            )
+            SELECT
+                usn,
+                name,
+                branch,
+                semester_number,
+                subject_code,
+                subject_name,
+                cie1,
+                cie2,
+                cie3,
+                ${slowLearnerCieExpression} AS current_cie
+            FROM ranked_marks
+            WHERE rn = 1
+              AND ${slowLearnerCieExpression} IS NOT NULL
+              AND ${slowLearnerCieExpression} <= 15
+            ORDER BY UPPER(name), usn, subject_code
+        `, requestedSubject ? [tenant, semester, teacherId, requestedSubject] : [tenant, semester, teacherId]);
+
+        return res.json({
+            success: true,
+            semester,
+            subjects: assignedSubjects.rows,
+            slowLearners: slowLearners.rows,
+            count: slowLearners.rows.length
+        });
+    } catch (err) {
+        console.error("Faculty slow learners error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to calculate faculty slow learners.",
+            error: err.message
+        });
+    }
+});
+
+/*
+ * Mentor endpoint returns two independent categories so the frontend does not
+ * have to mix current CIE performance with historical semester failures.
+ */
+app.get("/api/teacher/mentor-slow-learners", async (req, res) => {
+    const tenant = tenantOf(req.query.institutionId);
+    const mentorId = upper(req.query.mentorId || req.query.teacherId || req.query.userId);
+    const requestedSemester =
+        req.query.semesterNumber !== undefined &&
+        req.query.semesterNumber !== null &&
+        req.query.semesterNumber !== ''
+            ? parseInt(req.query.semesterNumber)
+            : null;
+
+    if (!mentorId) {
+        return res.status(400).json({
+            success: false,
+            message: "Mentor faculty ID is required."
+        });
+    }
+
+    if (requestedSemester !== null &&
+        (!Number.isInteger(requestedSemester) || requestedSemester < 1 || requestedSemester > 8)) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid semester number."
+        });
+    }
+
+    try {
+        /*
+         * Current CIE:
+         * Only mentees mapped through mentor_assignments are considered.
+         * Each mentee's own users.semester_number is used as the current semester
+         * unless the portal explicitly supplies semesterNumber.
+         */
+        const currentCie = await pool.query(`
+            WITH mentees AS (
+                SELECT DISTINCT
+                    TRIM(u.usn) AS usn,
+                    COALESCE(NULLIF(TRIM(u.name), ''), 'Unnamed Student') AS name,
+                    TRIM(COALESCE(u.branch, '')) AS branch,
+                    u.semester_number
+                FROM mentor_assignments ma
+                JOIN users u
+                  ON UPPER(TRIM(ma.student_id)) = UPPER(TRIM(u.usn))
+                 AND UPPER(COALESCE(TRIM(u.institution_id), 'DR_AIT')) =
+                     UPPER(TRIM($1))
+                WHERE UPPER(TRIM(ma.mentor_id)) = UPPER(TRIM($2))
+                  AND UPPER(COALESCE(TRIM(ma.institution_id), 'DR_AIT')) =
+                      UPPER(TRIM($1))
+                  AND LOWER(TRIM(u.role)) IN ('student', 'students')
+                  AND NULLIF(TRIM(u.usn), '') IS NOT NULL
+                  ${requestedSemester !== null ? 'AND u.semester_number = $3' : ''}
+            ),
+            ranked_marks AS (
+                SELECT
+                    me.usn,
+                    me.name,
+                    me.branch,
+                    me.semester_number,
+                    UPPER(TRIM(m.subject_code)) AS subject_code,
+                    COALESCE(
+                        NULLIF(TRIM(m.subject_name), ''),
+                        NULLIF(TRIM(m.subject), ''),
+                        TRIM(m.subject_code)
+                    ) AS subject_name,
+                    m.cie1,
+                    m.cie2,
+                    m.cie3,
+                    ROW_NUMBER() OVER (
+                        PARTITION BY me.usn, UPPER(TRIM(m.subject_code)), m.semester_number
+                        ORDER BY COALESCE(m.updated_at, m.created_at) DESC NULLS LAST, m.id DESC
+                    ) AS rn
+                FROM mentees me
+                JOIN student_marks m
+                  ON UPPER(TRIM(me.usn)) = UPPER(TRIM(m.usn))
+                 AND m.semester_number = me.semester_number
+                 AND UPPER(COALESCE(TRIM(m.institution_id), 'DR_AIT')) =
+                     UPPER(TRIM($1))
+            )
+            SELECT
+                usn,
+                name,
+                branch,
+                semester_number,
+                subject_code,
+                subject_name,
+                cie1,
+                cie2,
+                cie3,
+                ${slowLearnerCieExpression} AS current_cie
+            FROM ranked_marks
+            WHERE rn = 1
+              AND ${slowLearnerCieExpression} IS NOT NULL
+              AND ${slowLearnerCieExpression} <= 15
+            ORDER BY UPPER(name), usn, subject_code
+        `, requestedSemester !== null
+            ? [tenant, mentorId, requestedSemester]
+            : [tenant, mentorId]);
+
+        /*
+         * Semester slow learners:
+         * A mentee is listed when at least one previous-semester subject has a
+         * confirmed failing result. We deliberately do NOT treat SEE=0 alone
+         * as a failure because 0 is also commonly used as an empty/default mark.
+         */
+        const semesterFailures = await pool.query(`
+            WITH mentees AS (
+                SELECT DISTINCT
+                    TRIM(u.usn) AS usn,
+                    COALESCE(NULLIF(TRIM(u.name), ''), 'Unnamed Student') AS name,
+                    TRIM(COALESCE(u.branch, '')) AS branch,
+                    u.semester_number
+                FROM mentor_assignments ma
+                JOIN users u
+                  ON UPPER(TRIM(ma.student_id)) = UPPER(TRIM(u.usn))
+                 AND UPPER(COALESCE(TRIM(u.institution_id), 'DR_AIT')) =
+                     UPPER(TRIM($1))
+                WHERE UPPER(TRIM(ma.mentor_id)) = UPPER(TRIM($2))
+                  AND UPPER(COALESCE(TRIM(ma.institution_id), 'DR_AIT')) =
+                      UPPER(TRIM($1))
+                  AND LOWER(TRIM(u.role)) IN ('student', 'students')
+                  AND NULLIF(TRIM(u.usn), '') IS NOT NULL
+                  ${requestedSemester !== null ? 'AND u.semester_number = $3' : ''}
+            ),
+            failed_rows AS (
+                SELECT
+                    me.usn,
+                    me.name,
+                    me.branch,
+                    me.semester_number AS current_semester,
+                    m.semester_number AS failed_semester,
+                    UPPER(TRIM(COALESCE(m.subject_code, m.subject, m.subject_name, ''))) AS subject_code,
+                    COALESCE(
+                        NULLIF(TRIM(m.subject_name), ''),
+                        NULLIF(TRIM(m.subject), ''),
+                        TRIM(m.subject_code),
+                        'Unknown Subject'
+                    ) AS subject_name,
+                    m.grade,
+                    m.total_marks
+                FROM mentees me
+                JOIN student_marks m
+                  ON UPPER(TRIM(me.usn)) = UPPER(TRIM(m.usn))
+                 AND UPPER(COALESCE(TRIM(m.institution_id), 'DR_AIT')) =
+                     UPPER(TRIM($1))
+                WHERE m.semester_number < me.semester_number
+                  AND ${failedResultCondition}
+            )
+            SELECT
+                usn,
+                name,
+                branch,
+                current_semester,
+                COUNT(DISTINCT failed_semester) AS failed_semesters_count,
+                ARRAY_AGG(
+                    DISTINCT CONCAT(
+                        'Sem ', failed_semester, ': ', subject_name,
+                        CASE
+                            WHEN NULLIF(TRIM(COALESCE(grade, '')), '') IS NOT NULL
+                            THEN CONCAT(' (', TRIM(grade), ')')
+                            ELSE ''
+                        END
+                    )
+                ) AS failed_subjects
+            FROM failed_rows
+            GROUP BY usn, name, branch, current_semester
+            ORDER BY UPPER(name), usn
+        `, requestedSemester !== null
+            ? [tenant, mentorId, requestedSemester]
+            : [tenant, mentorId]);
+
+        return res.json({
+            success: true,
+            currentCieSlowLearners: currentCie.rows,
+            semesterSlowLearners: semesterFailures.rows,
+            cieCount: currentCie.rows.length,
+            semesterCount: semesterFailures.rows.length
+        });
+    } catch (err) {
+        console.error("Mentor slow learners error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to calculate mentor slow learners.",
+            error: err.message
+        });
+    }
+});
+
 /* ==========================================================================
    FILTERED MARKS ROSTER
   ========================================================================== */
 app.get("/api/teacher/filtered-marks-roster", async (req, res) => {
     const tenant = tenantOf(req.query.institutionId);
-    const filter = clean(req.query.subjectCode || req.query.search);
+    const teacherId = upper(req.query.teacherId);
+    const semester = req.query.semesterNumber !== undefined && req.query.semesterNumber !== ''
+        ? semOf(req.query.semesterNumber, 0)
+        : null;
+    const subjectCode = upper(req.query.subjectCode);
+    const search = clean(req.query.search);
+    const branch = upper(req.query.branch);
 
     try {
+        const params = [tenant];
+        const conditions = [
+            `LOWER(TRIM(u.role)) IN ('student','students')`,
+            `UPPER(COALESCE(TRIM(u.institution_id), 'DR_AIT')) = UPPER(TRIM($1))`,
+            `UPPER(COALESCE(TRIM(m.institution_id), 'DR_AIT')) = UPPER(TRIM($1))`,
+            `NULLIF(TRIM(u.usn), '') IS NOT NULL`
+        ];
+        let semesterParam = null;
+        let branchParam = null;
+
+        if (semester !== null) {
+            params.push(semester);
+            semesterParam = `$${params.length}`;
+            conditions.push(`m.semester_number = ${semesterParam}`);
+            conditions.push(`u.semester_number = ${semesterParam}`);
+        }
+
+        if (branch) {
+            params.push(branch);
+            branchParam = `$${params.length}`;
+            conditions.push(`UPPER(TRIM(u.branch)) = UPPER(TRIM(${branchParam}))`);
+        }
+
+        if (subjectCode) {
+            params.push(subjectCode);
+            conditions.push(`(UPPER(TRIM(COALESCE(m.subject_code, ''))) = UPPER(TRIM($${params.length})) OR UPPER(TRIM(COALESCE(m.subject, ''))) = UPPER(TRIM($${params.length})) OR UPPER(TRIM(COALESCE(m.subject_name, ''))) = UPPER(TRIM($${params.length})))`);
+        }
+
+        if (search) {
+            params.push(search);
+            conditions.push(`(UPPER(TRIM(u.usn)) ILIKE '%' || UPPER(TRIM($${params.length})) || '%' OR UPPER(TRIM(u.name)) ILIKE '%' || UPPER(TRIM($${params.length})) || '%' OR UPPER(TRIM(COALESCE(m.subject_code,m.subject,m.subject_name,''))) ILIKE '%' || UPPER(TRIM($${params.length})) || '%')`);
+        }
+
+        // When the frontend supplies teacherId, only subjects actually assigned
+        // to that teacher in the timetable are allowed. This prevents a CSBS
+        // teacher from seeing AIML/other-branch subjects in the marks portal.
+        if (teacherId) {
+            params.push(teacherId);
+            const teacherParam = `$${params.length}`;
+            conditions.push(`EXISTS (
+                SELECT 1
+                FROM weekly_timetables wt
+                WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) = UPPER(TRIM($1))
+                  ${semesterParam ? `AND wt.semester_number = ${semesterParam}` : ''}
+                  ${branchParam ? `AND UPPER(TRIM(wt.branch)) = UPPER(TRIM(${branchParam}))` : ''}
+                  AND (UPPER(TRIM(wt.assigned_teacher_id)) = UPPER(TRIM(${teacherParam}))
+                       OR UPPER(TRIM(wt.assigned_teacher_name)) ILIKE '%' || UPPER(TRIM(${teacherParam})) || '%')
+                  AND (
+                        UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(COALESCE(m.subject_code, '')))
+                        OR UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(COALESCE(m.subject, '')))
+                        OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(COALESCE(m.subject_name, '')))
+                        OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(COALESCE(m.subject, '')))
+                  )
+            )`);
+        }
+
         const result = await pool.query(`
             SELECT
-                u.name,
-                u.usn,
-                COALESCE(u.phone_number, 'N/A') AS phone_number,
+                TRIM(u.name) AS name,
+                TRIM(u.usn) AS usn,
+                TRIM(COALESCE(u.branch, '')) AS branch,
+                u.semester_number,
+                TRIM(COALESCE(u.section, '')) AS section,
+                TRIM(COALESCE(u.phone_number, '')) AS phone_number,
                 COALESCE(m.subject_code, m.subject, 'ML') AS subject_code,
                 COALESCE(m.subject_name, m.subject, m.subject_code, 'Machine Learning') AS subject_name,
                 COALESCE(m.cie1,0) AS cie1,
@@ -2195,23 +2774,14 @@ app.get("/api/teacher/filtered-marks-roster", async (req, res) => {
             FROM users u
             JOIN student_marks m
               ON UPPER(TRIM(u.usn)) = UPPER(TRIM(m.usn))
-            WHERE LOWER(TRIM(u.role)) = 'student'
-              AND UPPER(COALESCE(TRIM(u.institution_id), 'DR_AIT')) =
-                  UPPER(TRIM($1))
-              AND UPPER(COALESCE(TRIM(m.institution_id), 'DR_AIT')) =
-                  UPPER(TRIM($1))
-              AND (
-                    $2 = ''
-                    OR UPPER(TRIM(u.usn)) ILIKE '%' || UPPER($2) || '%'
-                    OR UPPER(TRIM(u.name)) ILIKE '%' || UPPER($2) || '%'
-                    OR UPPER(TRIM(COALESCE(m.subject_code,m.subject))) ILIKE '%' || UPPER($2) || '%'
-                  )
-            ORDER BY u.usn, subject_code
-        `, [tenant, filter]);
+            WHERE ${conditions.join(' AND ')}
+            ORDER BY UPPER(TRIM(u.usn)), UPPER(TRIM(COALESCE(m.subject_code,m.subject,m.subject_name,'')))
+        `, params);
 
         res.json(result.rows);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("Filtered marks roster error:", err);
+        res.status(500).json({ success: false, error: err.message });
     }
 });
 
@@ -2348,8 +2918,7 @@ app.post("/api/hod/assign-mentees", async (req, res) => {
                     INSERT INTO mentor_assignments
                         (mentor_id, student_id, institution_id)
                     VALUES ($1, $2, $3)
-                    ON CONFLICT (mentor_id, student_id, institution_id)
-                    DO NOTHING
+                    ON CONFLICT DO NOTHING
                 `, [mentor, usn, tenant]);
             }
 
