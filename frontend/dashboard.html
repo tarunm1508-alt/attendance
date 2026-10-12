@@ -1083,6 +1083,47 @@
                 ========================================================================== -->
             <div id="studentSectionLayout" style="display: none;">
 
+                <!-- 📢 STUDENT CIRCULARS + 🗓️ HOD TIMETABLE -->
+                <section id="studentAcademicUpdates" class="bento-card" style="margin-bottom:24px; text-align:left;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+                        <div>
+                            <h3 style="font-size:18px; font-weight:800; color:var(--text-dark); margin:0;">📢 Institution Circulars & Weekly Timetable</h3>
+                            <p style="font-size:12px; color:var(--text-muted); margin-top:5px;">Circulars published by the HOD and timetable mapped to your branch and semester.</p>
+                        </div>
+                        <button type="button" class="btn btn-dark" onclick="refreshStudentAcademicUpdates()">🔄 Refresh Updates</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:18px;">
+                        <div style="border:1px solid var(--bento-border); border-radius:16px; padding:16px; min-width:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:12px;">
+                                <h4 style="font-size:14px; font-weight:800; color:var(--primary-blue); margin:0;">📣 Circulars & Announcements</h4>
+                                <button type="button" class="btn btn-dark" style="padding:7px 10px; font-size:11px;" onclick="loadStudentCirculars()">Reload</button>
+                            </div>
+                            <div id="studentCircularsList" style="display:flex; flex-direction:column; gap:10px;">
+                                <p style="font-size:12px; color:var(--text-muted);">Loading circulars...</p>
+                            </div>
+                        </div>
+                        <div style="border:1px solid var(--bento-border); border-radius:16px; padding:16px; min-width:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+                                <h4 style="font-size:14px; font-weight:800; color:var(--primary-blue); margin:0;">🗓️ Weekly Timetable</h4>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <label for="studentTimetableYear" style="font-size:10px; color:var(--text-muted); font-weight:800;">BATCH</label>
+                                    <select id="studentTimetableYear" aria-label="Select academic batch" style="padding:7px; border:1px solid var(--bento-border); border-radius:8px; font-size:11px;" onchange="loadStudentTimetable()">
+                                        <option value="2024-2028" selected>2024–2028 Batch</option>
+                                        <option value="2023-2027">2023–2027 Batch</option>
+                                        <option value="2025-2029">2025–2029 Batch</option>
+                                        <option value="2026-2030">2026–2030 Batch</option>
+                                    </select>
+                                    <button type="button" class="btn btn-dark" style="padding:7px 10px; font-size:11px;" onclick="loadStudentTimetable()">Reload</button>
+                                </div>
+                            </div>
+                            <div id="studentTimetableProfile" style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">Your branch and semester will appear here.</div>
+                            <div id="studentTimetableList" style="display:flex; flex-direction:column; gap:10px;">
+                                <p style="font-size:12px; color:var(--text-muted);">Loading timetable...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- 🎯 STUDENT VIEW TOGGLE BAR -->
                 <div class="view-toggle-bar">
                     <button class="toggle-tab-btn active" id="btn_studentScanTab" onclick="switchStudentTab('scan')">⚡ Daily Attendance & Scanner</button>
@@ -2023,6 +2064,161 @@
             }
         }
 
+        // =========================================================================
+        // 📢 STUDENT CIRCULARS + HOD-MAPPED WEEKLY TIMETABLE
+        // =========================================================================
+        function escapeStudentUpdateHtml(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function formatStudentUpdateDate(value) {
+            if (!value) return 'Date not provided';
+            const d = new Date(value);
+            return Number.isNaN(d.getTime()) ? escapeStudentUpdateHtml(value) :
+                d.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+        }
+
+        async function refreshStudentAcademicUpdates() {
+            await Promise.allSettled([loadStudentCirculars(), loadStudentTimetable()]);
+        }
+
+        async function loadStudentCirculars() {
+            const list = document.getElementById('studentCircularsList');
+            if (!list) return;
+            if (!userUsn) {
+                list.innerHTML = '<p style="font-size:12px;color:#b91c1c;">Student USN is missing. Please sign in again.</p>';
+                return;
+            }
+            list.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Loading circulars...</p>';
+            try {
+                const qs = new URLSearchParams({ studentId: userUsn, institutionId });
+                const response = await fetch(`${API_BASE}/api/student/circulars?${qs.toString()}`);
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.message || `Request failed (${response.status})`);
+                }
+                const rows = Array.isArray(data) ? data : (data.circulars || data.rows || []);
+                if (!rows.length) {
+                    list.innerHTML = '<div style="padding:16px;text-align:center;border:1px dashed var(--bento-border);border-radius:12px;color:var(--text-muted);font-size:12px;">No circulars have been published for your profile yet.</div>';
+                    return;
+                }
+                list.innerHTML = rows.map(item => {
+                    const title = escapeStudentUpdateHtml(item.title || 'Institution circular');
+                    const message = escapeStudentUpdateHtml(item.message || item.body || '');
+                    const author = escapeStudentUpdateHtml(item.created_by_name || item.createdByName || 'HOD / Administration');
+                    const date = escapeStudentUpdateHtml(formatStudentUpdateDate(item.published_at || item.created_at));
+                    const rawUrl = String(item.document_url || item.documentUrl || '').trim();
+                    let link = '';
+                    if (rawUrl) {
+                        try {
+                            const parsed = new URL(rawUrl, window.location.origin);
+                            if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+                                link = `<a href="${escapeStudentUpdateHtml(parsed.href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;color:var(--primary-blue);font-size:12px;font-weight:800;">📎 Open attachment</a>`;
+                            }
+                        } catch (_) {}
+                    }
+                    return `<article style="padding:12px;border:1px solid var(--bento-border);border-radius:12px;background:#f8fafc;">
+                        <div style="font-size:13px;font-weight:800;color:var(--text-dark);">${title}</div>
+                        <div style="font-size:10px;color:var(--text-muted);margin-top:4px;">${date} · ${author}</div>
+                        <p style="font-size:12px;line-height:1.5;color:#334155;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere;">${message}</p>${link}
+                    </article>`;
+                }).join('');
+            } catch (err) {
+                console.error('Student circulars load failed:', err);
+                list.innerHTML = `<p style="font-size:12px;color:#b91c1c;">Could not load circulars: ${escapeStudentUpdateHtml(err.message || 'Connection error')}. Check that the updated backend is running.</p>`;
+            }
+        }
+
+        async function loadStudentTimetable() {
+            const list = document.getElementById('studentTimetableList');
+            const profile = document.getElementById('studentTimetableProfile');
+            if (!list) return;
+            if (!userUsn) {
+                list.innerHTML = '<p style="font-size:12px;color:#b91c1c;">Student USN is missing. Please sign in again.</p>';
+                return;
+            }
+            list.innerHTML = '<p style="font-size:12px;color:var(--text-muted);">Loading timetable...</p>';
+            try {
+                const yearEl = document.getElementById('studentTimetableYear');
+                const qs = new URLSearchParams({ studentId: userUsn, institutionId });
+                if (yearEl && yearEl.value) qs.set('academicYear', yearEl.value);
+                const response = await fetch(`${API_BASE}/api/student/timetable?${qs.toString()}`);
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.message || `Request failed (${response.status})`);
+                }
+                const student = data.student || {};
+                const branch = student.branch || 'Branch not set';
+                const semester = data.semesterNumber || student.semester_number || 'Not set';
+                const section = student.section ? ` · Section ${escapeStudentUpdateHtml(student.section)}` : '';
+                if (profile) profile.textContent = `${branch} · Semester ${semester}${section} · Batch ${yearEl?.value || data.academicYear || 'Not selected'}`;
+                const rows = Array.isArray(data) ? data : (data.timetable || data.rows || []);
+                if (!rows.length) {
+                    list.innerHTML = '<div style="padding:16px;text-align:center;border:1px dashed var(--bento-border);border-radius:12px;color:var(--text-muted);font-size:12px;">No timetable slots found for this branch, semester, and batch. Confirm that the HOD saved the weekly timetable for the selected batch.</div>';
+                    return;
+                }
+                const dayOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+                const groups = new Map();
+                rows.forEach(row => {
+                    const dayRaw = String(row.day_of_week || row.day || 'Other');
+                    const day = dayRaw.charAt(0).toUpperCase() + dayRaw.slice(1).toLowerCase();
+                    if (!groups.has(day)) groups.set(day, []);
+                    groups.get(day).push(row);
+                });
+                const orderedDays = [...groups.keys()].sort((a,b) => {
+                    const ai = dayOrder.indexOf(a), bi = dayOrder.indexOf(b);
+                    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+                });
+                // Render one timetable matrix (HOD-style): periods are rows and weekdays are columns.
+                const timetableDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                const dayAliases = {
+                    mon: 'Monday', monday: 'Monday', '1': 'Monday',
+                    tue: 'Tuesday', tues: 'Tuesday', tuesday: 'Tuesday', '2': 'Tuesday',
+                    wed: 'Wednesday', wednesday: 'Wednesday', '3': 'Wednesday',
+                    thu: 'Thursday', thur: 'Thursday', thurs: 'Thursday', thursday: 'Thursday', '4': 'Thursday',
+                    fri: 'Friday', friday: 'Friday', '5': 'Friday',
+                    sat: 'Saturday', saturday: 'Saturday', '6': 'Saturday',
+                    sun: 'Sunday', sunday: 'Sunday', '0': 'Sunday', '7': 'Sunday'
+                };
+                const normalizedRows = rows.map(row => {
+                    const rawDay = String(row.day_of_week || row.day || '').trim().toLowerCase();
+                    const day = dayAliases[rawDay] || (rawDay ? rawDay.charAt(0).toUpperCase() + rawDay.slice(1).toLowerCase() : '');
+                    return { ...row, _displayDay: day, _displayPeriod: Number(row.period_id) || 0 };
+                });
+                const periodIds = [...new Set(normalizedRows.map(row => row._displayPeriod).filter(n => n > 0))].sort((a,b) => a-b);
+                const escapeCell = value => escapeStudentUpdateHtml(value == null ? '' : String(value));
+                const cellFor = (day, periodId) => {
+                    const row = normalizedRows.find(item => item._displayDay === day && item._displayPeriod === periodId);
+                    if (!row) return `<td style="min-width:118px;padding:8px;border:1px solid var(--bento-border);vertical-align:top;color:var(--text-muted);text-align:center;">—</td>`;
+                    const code = escapeCell(row.subject_code || '');
+                    const subject = escapeCell(row.subject_name || row.subject_code || 'Class');
+                    const room = escapeCell(row.room_number || '');
+                    const teacher = escapeCell(row.assigned_teacher_name || row.assigned_teacher_id || '');
+                    const time = escapeCell(row.time_slot || '');
+                    return `<td style="min-width:118px;padding:8px;border:1px solid var(--bento-border);vertical-align:top;background:#f8fafc;">
+                        <div style="font-size:12px;font-weight:900;color:var(--primary-blue);overflow-wrap:anywhere;">${subject}</div>
+                        ${code && code !== subject ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${code}</div>` : ''}
+                        ${time ? `<div style="font-size:10px;color:var(--text-muted);margin-top:5px;">${time}</div>` : ''}
+                        ${room ? `<div style="font-size:10px;color:#047857;margin-top:3px;">Room ${room}</div>` : ''}
+                        ${teacher ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px;overflow-wrap:anywhere;">${teacher}</div>` : ''}
+                    </td>`;
+                };
+                list.innerHTML = `<div style="width:100%;overflow-x:auto;border:1px solid var(--bento-border);border-radius:12px;background:white;-webkit-overflow-scrolling:touch;">
+                    <table style="width:100%;min-width:940px;border-collapse:collapse;font-size:11px;table-layout:fixed;">
+                        <thead><tr><th style="width:76px;padding:10px 6px;background:#eff4fa;color:var(--primary-blue);border:1px solid var(--bento-border);text-align:center;">PERIOD</th>${timetableDays.map(day => `<th style="padding:10px 6px;background:#eff4fa;color:var(--primary-blue);border:1px solid var(--bento-border);text-align:center;">${day}</th>`).join('')}</tr></thead>
+                        <tbody>${periodIds.map(periodId => {
+                            const sample = normalizedRows.find(row => row._displayPeriod === periodId && row.time_slot);
+                            const time = sample ? escapeCell(sample.time_slot) : '';
+                            return `<tr><th style="padding:8px 5px;background:#f8fafc;border:1px solid var(--bento-border);text-align:center;color:var(--text-dark);">P${periodId}${time ? `<div style="font-size:9px;font-weight:500;color:var(--text-muted);margin-top:4px;">${time}</div>` : ''}</th>${timetableDays.map(day => cellFor(day, periodId)).join('')}</tr>`;
+                        }).join('')}</tbody>
+                    </table></div><p style="font-size:10px;color:var(--text-muted);margin:7px 2px 0;">Swipe horizontally to view all weekdays on mobile.</p>`;
+            } catch (err) {
+                console.error('Student timetable load failed:', err);
+                list.innerHTML = `<p style="font-size:12px;color:#b91c1c;">Could not load timetable: ${escapeStudentUpdateHtml(err.message || 'Connection error')}. Check that the updated backend is running.</p>`;
+            }
+        }
+
         async function initializeFunctionalWorkspaceRouter() {
             // 🛡️ Normalize role so both 'faculty' and 'teacher' open the teacher workspace
             let role = userRole.toLowerCase().trim();
@@ -2056,6 +2252,7 @@
                  
                 checkAttendanceShortagesAutomatically();
                 initializeStudentPerformanceLayout();
+                refreshStudentAcademicUpdates();
             }
         }
 

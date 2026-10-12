@@ -574,6 +574,62 @@
                     <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 12px;">Loading chat ledger...</div>
                 </div>
             </div>
+
+            <!-- Official circulars published to the Student Portal -->
+            <div class="bento-card" style="border-left: 5px solid #7c3aed; border-radius: 0 0 20px 20px; margin-top: 16px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:12px;">
+                    <div>
+                        <h3 style="font-size:16px; font-weight:800; color:var(--text-dark); margin:0 0 5px;">📄 Official Circulars for Students</h3>
+                        <p style="font-size:12px; color:var(--text-muted); margin:0;">Publish a circular here to make it available in the Student Portal.</p>
+                    </div>
+                    <button type="button" onclick="loadHodCirculars()" style="background:#f1f5f9; border:1px solid var(--border-clean); padding:8px 12px; border-radius:8px; font-weight:700; cursor:pointer;">↻ Refresh Circulars</button>
+                </div>
+                <form id="hodCircularForm" onsubmit="event.preventDefault(); publishHodCircular();" style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; background:#f8fafc; padding:16px; border:1px solid var(--border-clean); border-radius:12px;">
+                    <div style="grid-column:1/-1;">
+                        <label for="hodCircularTitle" style="display:block; font-size:11px; font-weight:800; margin-bottom:5px; color:var(--text-muted);">CIRCULAR TITLE *</label>
+                        <input id="hodCircularTitle" type="text" maxlength="200" required placeholder="e.g. Principal's notice — Internal Assessment" style="width:100%; box-sizing:border-box;">
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label for="hodCircularMessage" style="display:block; font-size:11px; font-weight:800; margin-bottom:5px; color:var(--text-muted);">CIRCULAR DETAILS *</label>
+                        <textarea id="hodCircularMessage" required rows="4" maxlength="10000" placeholder="Enter the complete circular or official announcement..." style="width:100%; box-sizing:border-box; resize:vertical;"></textarea>
+                    </div>
+                    <div>
+                        <label for="hodCircularScope" style="display:block; font-size:11px; font-weight:800; margin-bottom:5px; color:var(--text-muted);">AUDIENCE</label>
+                        <select id="hodCircularScope" onchange="updateHodCircularTargetFields()" style="width:100%; box-sizing:border-box;">
+                            <option value="all">All students</option>
+                            <option value="branch" selected>My branch only</option>
+                            <option value="semester">My branch + semester</option>
+                            <option value="section">My branch + semester + section</option>
+                        </select>
+                    </div>
+                    <div id="hodCircularSemesterWrap" style="display:none;">
+                        <label for="hodCircularSemester" style="display:block; font-size:11px; font-weight:800; margin-bottom:5px; color:var(--text-muted);">SEMESTER</label>
+                        <select id="hodCircularSemester" style="width:100%; box-sizing:border-box;">
+                            <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option><option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option><option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option><option value="8">Semester 8</option>
+                        </select>
+                    </div>
+                    <div id="hodCircularSectionWrap" style="display:none;">
+                        <label for="hodCircularSection" style="display:block; font-size:11px; font-weight:800; margin-bottom:5px; color:var(--text-muted);">SECTION</label>
+                        <input id="hodCircularSection" type="text" maxlength="20" placeholder="e.g. A" style="width:100%; box-sizing:border-box;">
+                    </div>
+                    <div style="grid-column:1/-1;">
+                        <label for="hodCircularDocumentUrl" style="display:block; font-size:11px; font-weight:800; margin-bottom:5px; color:var(--text-muted);">DOCUMENT LINK (OPTIONAL)</label>
+                        <input id="hodCircularDocumentUrl" type="url" placeholder="https://... (link to PDF/document)" style="width:100%; box-sizing:border-box;">
+                        <small style="display:block; color:var(--text-muted); margin-top:4px;">This field accepts a link; it does not upload a local file.</small>
+                    </div>
+                    <div style="grid-column:1/-1; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button id="hodCircularPublishButton" type="submit" style="background:#6d28d9; color:white; border:0; padding:11px 18px; border-radius:9px; font-weight:800; cursor:pointer;">Publish Circular</button>
+                        <button type="button" onclick="document.getElementById('hodCircularForm').reset(); updateHodCircularTargetFields();" style="background:white; border:1px solid var(--border-clean); padding:11px 18px; border-radius:9px; font-weight:700; cursor:pointer;">Clear Form</button>
+                    </div>
+                </form>
+                <div id="hodCircularStatus" role="status" aria-live="polite" style="font-size:12px; margin:10px 0; color:var(--text-muted);"></div>
+                <div id="hodCircularList" style="display:flex; flex-direction:column; gap:10px;">
+                    <div style="text-align:center; color:var(--text-muted); padding:12px;">Loading circulars...</div>
+                </div>
+            </div>
         </div>
 
         <!-- 🔄 7. Swap Approvals Pane -->
@@ -817,6 +873,8 @@
             await loadHodSwapRequests();
             await reloadTimetableGrid();
             await loadHodChatLedger();
+            updateHodCircularTargetFields();
+            await loadHodCirculars();
             await loadDepartmentPublications();
             await loadDepartmentFdpRecords();
             await loadDepartmentFacultyDirectory();
@@ -1899,6 +1957,123 @@
                 }
             } catch (err) {
                 showPopupNotification("❌ Network Error while saving timetable.", 'error');
+            }
+        }
+
+        function updateHodCircularTargetFields() {
+            const scopeEl = document.getElementById('hodCircularScope');
+            if (!scopeEl) return;
+            const scope = scopeEl.value;
+            const semesterWrap = document.getElementById('hodCircularSemesterWrap');
+            const sectionWrap = document.getElementById('hodCircularSectionWrap');
+            if (semesterWrap) semesterWrap.style.display = ['semester', 'section'].includes(scope) ? 'block' : 'none';
+            if (sectionWrap) sectionWrap.style.display = scope === 'section' ? 'block' : 'none';
+        }
+
+        function escapeHodCircularHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
+        }
+
+        async function publishHodCircular() {
+            const title = document.getElementById('hodCircularTitle')?.value.trim() || '';
+            const message = document.getElementById('hodCircularMessage')?.value.trim() || '';
+            const audienceScope = document.getElementById('hodCircularScope')?.value || 'branch';
+            const documentUrl = document.getElementById('hodCircularDocumentUrl')?.value.trim() || '';
+            const semesterNumber = Number(document.getElementById('hodCircularSemester')?.value || 0);
+            const section = document.getElementById('hodCircularSection')?.value.trim() || '';
+            const status = document.getElementById('hodCircularStatus');
+            const button = document.getElementById('hodCircularPublishButton');
+
+            if (!title || !message) {
+                if (status) status.textContent = 'Enter both a circular title and circular details.';
+                showPopupNotification('Please enter the circular title and details.', 'error');
+                return;
+            }
+            if (['semester', 'section'].includes(audienceScope) && !(semesterNumber >= 1 && semesterNumber <= 8)) {
+                if (status) status.textContent = 'Choose a valid semester.';
+                return;
+            }
+            if (audienceScope === 'section' && !section) {
+                if (status) status.textContent = 'Enter the section for this circular.';
+                return;
+            }
+            if (documentUrl && !/^https?:\/\//i.test(documentUrl)) {
+                if (status) status.textContent = 'Document link must start with https:// or http://.';
+                return;
+            }
+
+            if (button) { button.disabled = true; button.textContent = 'Publishing...'; }
+            if (status) status.textContent = 'Publishing circular...';
+            try {
+                const response = await fetch(`${API_BASE}/api/hod/circulars`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        message,
+                        documentUrl,
+                        audienceScope,
+                        branch: userBranch,
+                        semesterNumber: ['semester', 'section'].includes(audienceScope) ? semesterNumber : null,
+                        section: audienceScope === 'section' ? section : null,
+                        createdBy: userUsn,
+                        createdByName: userName,
+                        institutionId
+                    })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.error || data.message || `Server returned ${response.status}`);
+                }
+                document.getElementById('hodCircularForm')?.reset();
+                updateHodCircularTargetFields();
+                if (status) status.textContent = 'Circular published. It should now be available to the selected students in the Student Portal.';
+                showPopupNotification('Circular published successfully.');
+                await loadHodCirculars();
+            } catch (err) {
+                console.error('Publish HOD circular error:', err);
+                if (status) status.textContent = `Could not publish circular: ${err.message || 'Request failed'}`;
+                showPopupNotification('Could not publish circular. Check the backend endpoint and server logs.', 'error');
+            } finally {
+                if (button) { button.disabled = false; button.textContent = 'Publish Circular'; }
+            }
+        }
+
+        async function loadHodCirculars() {
+            const list = document.getElementById('hodCircularList');
+            if (!list) return;
+            list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:12px;">Loading circulars...</div>';
+            try {
+                const url = `${API_BASE}/api/hod/circulars?institutionId=${encodeURIComponent(institutionId)}&branch=${encodeURIComponent(userBranch)}`;
+                const response = await fetch(url);
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || data.message || `Server returned ${response.status}`);
+                const circulars = Array.isArray(data) ? data : (data.circulars || data.rows || data.data || []);
+                if (!Array.isArray(circulars) || circulars.length === 0) {
+                    list.innerHTML = '<div style="text-align:center; color:var(--text-muted); padding:14px; background:#f8fafc; border-radius:10px;">No circulars published yet.</div>';
+                    return;
+                }
+                list.innerHTML = circulars.map(item => {
+                    const title = escapeHodCircularHtml(item.title || 'Official Circular');
+                    const message = escapeHodCircularHtml(item.message || item.body || item.description || '').replace(/\r?\n/g, '<br>');
+                    const scope = escapeHodCircularHtml(item.audience_scope || item.audienceScope || 'all');
+                    const createdAt = item.created_at || item.createdAt || item.published_at;
+                    const date = createdAt ? escapeHodCircularHtml(new Date(createdAt).toLocaleString('en-IN')) : '';
+                    const rawUrl = item.document_url || item.documentUrl || item.attachment_url || '';
+                    let link = '';
+                    try {
+                        const parsed = new URL(rawUrl, window.location.href);
+                        if (['http:', 'https:'].includes(parsed.protocol) && rawUrl) {
+                            link = `<a href="${escapeHodCircularHtml(parsed.href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block; margin-top:8px; color:var(--primary-blue); font-weight:700;">Open attached document ↗</a>`;
+                        }
+                    } catch (_) {}
+                    return `<article style="border:1px solid var(--border-clean); border-radius:12px; padding:14px; background:white;"><div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px;"><strong style="color:var(--text-dark);">${title}</strong><span style="font-size:11px; color:var(--text-muted);">${date}</span></div><div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">Audience: ${scope}</div><div style="font-size:13px; line-height:1.55; color:var(--text-dark); overflow-wrap:anywhere;">${message}</div>${link}</article>`;
+                }).join('');
+            } catch (err) {
+                console.error('Load HOD circulars error:', err);
+                list.innerHTML = `<div style="color:#b91c1c; padding:12px; background:#fef2f2; border-radius:10px;">Could not load circulars: ${escapeHodCircularHtml(err.message || 'Request failed')}</div>`;
             }
         }
 

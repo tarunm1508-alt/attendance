@@ -1080,7 +1080,7 @@ app.post("/api/teacher/update-marks", async (req, res) => {
                     OR UPPER(TRIM(COALESCE(subject, ''))) = $2
                   )
               AND semester_number = $3
-              AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+              AND UPPER(COALESCE(NULLIF(TRIM(institution_id), ''), 'DR_AIT')) =
                   UPPER(TRIM($4))
             LIMIT 1
         `, [usn, subjectCode, sem, tenant]);
@@ -1780,7 +1780,7 @@ app.get("/api/hod/weekly-timetable", async (req, res) => {
             SELECT *
             FROM weekly_timetables
             WHERE UPPER(TRIM(branch)) = UPPER(TRIM($1))
-              AND academic_year = $2
+              AND TRIM(COALESCE(academic_year, '')) = TRIM($2)
               AND semester_number = $3
               AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
                   UPPER(TRIM($4))
@@ -1876,6 +1876,337 @@ app.post("/api/hod/save-weekly-timetable", async (req, res) => {
     } catch (err) {
         console.error("Save weekly timetable error:", err);
         res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/* ==========================================================================
+   HOD CIRCULARS + STUDENT TIMETABLE
+   HOD can publish a principal-shared circular to all students or a target
+   branch/semester/section. Students fetch only circulars matching their profile.
+   ========================================================================== */
+let circularsTableReady = null;
+async function ensureInstitutionCircularsTable() {
+    if (!circularsTableReady) {
+        circularsTableReady = pool.query(`
+            CREATE TABLE IF NOT EXISTS institution_circulars (
+                id BIGSERIAL PRIMARY KEY,
+                title TEXT NOT NULL,
+                message TEXT NOT NULL,
+                document_url TEXT,
+                audience_scope TEXT NOT NULL DEFAULT 'all',
+                branch TEXT,
+                semester_number INTEGER,
+                section TEXT,
+                created_by TEXT,
+                created_by_name TEXT,
+                institution_id TEXT NOT NULL DEFAULT 'DR_AIT',
+                published_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        `).then(() => pool.query(`
+            CREATE INDEX IF NOT EXISTS idx_institution_circulars_tenant_date
+            ON institution_circulars (institution_id, published_at DESC)
+        `)).catch(err => {
+            circularsTableReady = null;
+            throw err;
+        });
+    }
+    await circularsTableReady;
+}
+
+/* HOD: publish a circular shared by the Principal.
+   JSON body: title, message, documentUrl (optional), audienceScope
+   ('all'|'branch'|'semester'|'section'), branch, semesterNumber, section,
+   createdBy, createdByName, institutionId. */
+app.post("/api/hod/circulars", async (req, res) => {
+    const b = req.body || {};
+    const tenant = tenantOf(b.institutionId);
+    const title = clean(b.title);
+    const message = clean(b.message || b.body || b.description);
+    const documentUrl = clean(b.documentUrl || b.document_url || b.attachmentUrl);
+    const scope = clean(b.audienceScope || b.audience_scope, "all").toLowerCase();
+    const branch = upper(b.branch) || null;
+    const semesterNumber = b.semesterNumber ? parseInt(b.semesterNumber, 10) : null;
+    const section = upper(b.section) || null;
+    const createdBy = upper(b.createdBy || b.hodId) || null;
+    const createdByName = clean(b.createdByName || b.hodName) || null;
+    const validScopes = ["all", "branch", "semester", "section"];
+
+    if (!title || !message) {
+        return res.status(400).json({
+            success: false,
+            message: "Circular title and message are required."
+        });
+    }
+    if (!validScopes.includes(scope)) {
+        return res.status(400).json({
+            success: false,
+            message: "audienceScope must be all, branch, semester, or section."
+        });
+    }
+    if (documentUrl && !/^https?:\/\/\S+$/i.test(documentUrl)) {
+        return res.status(400).json({
+            success: false,
+            message: "Document URL must begin with http:// or https://."
+        });
+    }
+    if (scope !== "all" && !branch) {
+        return res.status(400).json({
+            success: false,
+            message: "Select a branch for branch/semester/section circulars."
+        });
+    }
+    if ((scope === "semester" || scope === "section") &&
+        (!Number.isInteger(semesterNumber) || semesterNumber < 1 || semesterNumber > 8)) {
+        return res.status(400).json({
+            success: false,
+            message: "A valid semester number (1-8) is required for this audience."
+        });
+    }
+    if (scope === "section" && !section) {
+        return res.status(400).json({
+            success: false,
+            message: "Section is required for a section-specific circular."
+        });
+    }
+
+    try {
+        await ensureInstitutionCircularsTable();
+        const result = await pool.query(`
+            INSERT INTO institution_circulars
+                (title, message, document_url, audience_scope, branch,
+                 semester_number, section, created_by, created_by_name,
+                 institution_id)
+            VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+            RETURNING id, title, message, document_url, audience_scope,
+                      branch, semester_number, section, created_by,
+                      created_by_name, institution_id, published_at, created_at
+        `, [
+            title, message, documentUrl || null, scope, branch,
+            semesterNumber, section, createdBy, createdByName, tenant
+        ]);
+
+        return res.status(201).json({
+            success: true,
+            message: "Circular published successfully.",
+            circular: result.rows[0]
+        });
+    } catch (err) {
+        console.error("HOD circular publish error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to publish circular.",
+            error: err.message
+        });
+    }
+});
+
+/* HOD: list circulars published for this institution.
+   Optional branch query shows global circulars plus that branch's circulars. */
+app.get("/api/hod/circulars", async (req, res) => {
+    const tenant = tenantOf(req.query.institutionId);
+    const branch = upper(req.query.branch);
+    try {
+        await ensureInstitutionCircularsTable();
+        const result = await pool.query(`
+            SELECT id, title, message, document_url, audience_scope,
+                   branch, semester_number, section, created_by,
+                   created_by_name, institution_id, published_at, created_at
+            FROM institution_circulars
+            WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                  UPPER(TRIM($1))
+              AND ($2 = '' OR audience_scope = 'all'
+                   OR UPPER(COALESCE(TRIM(branch), '')) = $2)
+            ORDER BY published_at DESC, id DESC
+        `, [tenant, branch]);
+        return res.json({ success: true, circulars: result.rows });
+    } catch (err) {
+        console.error("HOD circular list error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to fetch circulars.",
+            error: err.message
+        });
+    }
+});
+
+/* Student: list only published circulars applicable to the student's profile.
+   Query: studentId (USN), institutionId. */
+app.get("/api/student/circulars", async (req, res) => {
+    const studentId = upper(req.query.studentId || req.query.usn);
+    const tenant = tenantOf(req.query.institutionId);
+    if (!studentId) {
+        return res.status(400).json({
+            success: false,
+            message: "Student USN is required."
+        });
+    }
+
+    try {
+        await ensureInstitutionCircularsTable();
+        const studentResult = await pool.query(`
+            SELECT TRIM(usn) AS usn, TRIM(name) AS name,
+                   TRIM(COALESCE(branch, '')) AS branch,
+                   semester_number,
+                   TRIM(COALESCE(section, '')) AS section
+            FROM users
+            WHERE UPPER(TRIM(usn)) = $1
+              AND LOWER(TRIM(role)) IN ('student', 'students')
+              AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                  UPPER(TRIM($2))
+            LIMIT 1
+        `, [studentId, tenant]);
+
+        if (!studentResult.rows.length) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found for this institution."
+            });
+        }
+
+        const student = studentResult.rows[0];
+        const circulars = await pool.query(`
+            SELECT id, title, message, document_url, audience_scope,
+                   branch, semester_number, section, created_by_name,
+                   published_at, created_at
+            FROM institution_circulars
+            WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                  UPPER(TRIM($1))
+              AND (
+                    audience_scope = 'all'
+                    OR (
+                        audience_scope = 'branch'
+                        AND UPPER(COALESCE(TRIM(branch), '')) =
+                            UPPER(TRIM($2))
+                    )
+                    OR (
+                        audience_scope = 'semester'
+                        AND UPPER(COALESCE(TRIM(branch), '')) =
+                            UPPER(TRIM($2))
+                        AND semester_number = $3
+                    )
+                    OR (
+                        audience_scope = 'section'
+                        AND UPPER(COALESCE(TRIM(branch), '')) =
+                            UPPER(TRIM($2))
+                        AND semester_number = $3
+                        AND UPPER(COALESCE(TRIM(section), '')) =
+                            UPPER(TRIM($4))
+                    )
+              )
+              AND published_at <= CURRENT_TIMESTAMP
+            ORDER BY published_at DESC, id DESC
+        `, [tenant, student.branch, student.semester_number, student.section]);
+
+        return res.json({
+            success: true,
+            student,
+            circulars: circulars.rows
+        });
+    } catch (err) {
+        console.error("Student circular fetch error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to fetch student circulars.",
+            error: err.message
+        });
+    }
+});
+
+/* Student: return the latest HOD-mapped timetable for the student's branch
+   and semester. The saved weekly_timetables rows are shared with the HOD portal. */
+app.get("/api/student/timetable", async (req, res) => {
+    const studentId = upper(req.query.studentId || req.query.usn);
+    const tenant = tenantOf(req.query.institutionId);
+    if (!studentId) {
+        return res.status(400).json({
+            success: false,
+            message: "Student USN is required."
+        });
+    }
+
+    try {
+        const studentResult = await pool.query(`
+            SELECT TRIM(usn) AS usn, TRIM(name) AS name,
+                   TRIM(COALESCE(branch, '')) AS branch,
+                   semester_number,
+                   TRIM(COALESCE(section, '')) AS section
+            FROM users
+            WHERE UPPER(TRIM(usn)) = $1
+              AND LOWER(TRIM(role)) IN ('student', 'students')
+              AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                  UPPER(TRIM($2))
+            LIMIT 1
+        `, [studentId, tenant]);
+
+        if (!studentResult.rows.length) {
+            return res.status(404).json({
+                success: false,
+                message: "Student not found for this institution."
+            });
+        }
+
+        const student = studentResult.rows[0];
+        const sem = req.query.semesterNumber
+            ? semOf(req.query.semesterNumber, student.semester_number)
+            : semOf(student.semester_number, 5);
+        const year = clean(req.query.academicYear);
+
+        if (!student.branch) {
+            return res.json({
+                success: true,
+                student,
+                semesterNumber: sem,
+                timetable: []
+            });
+        }
+
+        const params = [tenant, student.branch, sem];
+        let yearFilter = "";
+        if (year) {
+            params.push(year);
+            yearFilter = `AND TRIM(COALESCE(academic_year, '')) = TRIM($${params.length})`;
+        }
+
+        const timetable = await pool.query(`
+            SELECT id, branch, academic_year, semester_number,
+                   day_of_week, period_id, time_slot, subject_code,
+                   subject_name, room_number, assigned_teacher_id,
+                   assigned_teacher_name, institution_id
+            FROM weekly_timetables
+            WHERE UPPER(COALESCE(NULLIF(TRIM(institution_id), ''), 'DR_AIT')) =
+                  UPPER(TRIM($1))
+              AND UPPER(TRIM(COALESCE(branch, ''))) = UPPER(TRIM($2))
+              AND semester_number = $3
+              ${yearFilter}
+            ORDER BY
+                CASE LOWER(TRIM(day_of_week))
+                    WHEN 'monday' THEN 1
+                    WHEN 'tuesday' THEN 2
+                    WHEN 'wednesday' THEN 3
+                    WHEN 'thursday' THEN 4
+                    WHEN 'friday' THEN 5
+                    WHEN 'saturday' THEN 6
+                    WHEN 'sunday' THEN 7
+                    ELSE 8
+                END,
+                period_id ASC
+        `, params);
+
+        return res.json({
+            success: true,
+            student,
+            semesterNumber: sem,
+            academicYear: year || null,
+            timetable: timetable.rows
+        });
+    } catch (err) {
+        console.error("Student timetable fetch error:", err);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to fetch student timetable.",
+            error: err.message
+        });
     }
 });
 
