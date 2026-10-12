@@ -44,6 +44,8 @@
         .parent-modules-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
         .parent-module-tile { appearance: none; width: 100%; min-height: 190px; border: 1px solid #dbeafe; border-radius: 22px; background: linear-gradient(145deg, #ffffff, #f8fbff); padding: 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; cursor: pointer; color: var(--text-dark); box-shadow: 0 5px 14px rgba(15,23,42,.06); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
         .parent-module-tile:hover, .parent-module-tile:focus-visible { transform: translateY(-3px); box-shadow: 0 12px 22px rgba(30,64,175,.12); border-color: #93c5fd; outline: none; }
+        .parent-module-tile.active { border-color: var(--primary-blue); background: linear-gradient(145deg, #eff6ff, #dbeafe); box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.22), 0 10px 24px rgba(30,64,175,.15); transform: translateY(-2px); }
+        .active-module-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid var(--border-clean); border-radius: 14px; padding: 12px 18px; font-size: 14px; font-weight: 700; color: var(--primary-blue); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
         .module-icon { width: 94px; height: 94px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: inset 0 1px 0 rgba(255,255,255,.8); }
         .module-label { font-size: 16px; font-weight: 850; line-height: 1.25; text-align: center; }
         .module-announcements .module-icon { background: #e0f2fe; }
@@ -116,7 +118,7 @@
             <div class="parent-modules-grid">
                 <button type="button" class="parent-module-tile module-announcements" onclick="openParentModule('announcements')"><span class="module-icon" aria-hidden="true">📣</span><span class="module-label">Announcements</span></button>
                 <button type="button" class="parent-module-tile module-achievements" onclick="openParentModule('achievements')"><span class="module-icon" aria-hidden="true">🏅</span><span class="module-label">Achievements</span></button>
-                <button type="button" class="parent-module-tile module-results" onclick="openParentModule('results')"><span class="module-icon" aria-hidden="true">📋</span><span class="module-label">Exam Results</span></button>
+                <button type="button" class="parent-module-tile module-results" onclick="openParentModule('results')"><span class="module-icon" aria-hidden="true">📋</span><span class="module-label">Exam Results<br><small style="font-size:11px;font-weight:700;color:var(--text-muted);">(Marks)</small></span></button>
                 <button type="button" class="parent-module-tile module-fees" onclick="openParentModule('fees')"><span class="module-icon" aria-hidden="true">💳</span><span class="module-label">Fee Payments</span></button>
                 <button type="button" class="parent-module-tile module-attendance" onclick="openParentModule('attendance')"><span class="module-icon" aria-hidden="true">🗓️</span><span class="module-label">Attendance</span></button>
                 <button type="button" class="parent-module-tile module-poll" onclick="openParentModule('poll')"><span class="module-icon" aria-hidden="true">📊</span><span class="module-label">Opinion Poll</span></button>
@@ -125,6 +127,30 @@
                 <button type="button" class="parent-module-tile module-events" onclick="openParentModule('events')"><span class="module-icon" aria-hidden="true">🎪</span><span class="module-label">Events &amp; Gallery</span></button>
             </div>
         </section>
+
+        <!-- Active View Banner Indicator -->
+        <div id="activeViewBanner" class="active-module-bar" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="activeViewIcon" style="font-size: 20px;">📋</span>
+                <span id="activeViewTitle" style="font-size: 15px; font-weight: 800; color: var(--text-dark);">Viewing: Exam Results (Marks)</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="openParentModule('attendance')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid var(--border-clean); border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">🗓️ View Attendance</button>
+                <button onclick="openParentModule('results')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid var(--border-clean); border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">📋 View Marks</button>
+            </div>
+        </div>
+
+        <!-- Other Module Placeholder Section -->
+        <div class="bento-card" id="otherModuleSection" style="display: none; text-align: center; padding: 40px 20px;">
+            <div id="otherModuleIcon" style="font-size: 48px; margin-bottom: 12px;">🏛️</div>
+            <h3 id="otherModuleTitle" style="font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px;">Service Module</h3>
+            <p id="otherModuleDesc" style="font-size: 14px; color: var(--text-muted); max-width: 500px; margin: 0 auto 20px; line-height: 1.5;">This service is currently being synchronized with the institutional academic ledger.</p>
+            <div style="display: flex; justify-content: center; gap: 12px;">
+                <button onclick="openParentModule('attendance')" style="padding: 10px 18px; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">← Return to Attendance</button>
+                <button onclick="openParentModule('results')" style="padding: 10px 18px; background: #eff6ff; color: var(--primary-blue); border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">View Marks (Results) →</button>
+            </div>
+        </div>
+
         <!-- Notifications Box -->
         <div class="bento-card" id="parentAlertsSection">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
@@ -260,25 +286,123 @@
         }
         document.getElementById("parentName").innerText = parentName;
         function openParentModule(module) {
-            if (module === 'announcements') {
-                document.getElementById('parentAlertsSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // 1. Clear active styling from all service tiles
+            document.querySelectorAll('.parent-module-tile').forEach(t => t.classList.remove('active'));
+
+            // 2. Hide all view containers so Marks and Attendance NEVER appear together
+            const alertsSec = document.getElementById('parentAlertsSection');
+            const attendanceSec = document.getElementById('parentAttendanceSection');
+            const resultsSec = document.getElementById('examResultsSection');
+            const otherSec = document.getElementById('otherModuleSection');
+            const banner = document.getElementById('activeViewBanner');
+            const bannerIcon = document.getElementById('activeViewIcon');
+            const bannerTitle = document.getElementById('activeViewTitle');
+
+            if (alertsSec) alertsSec.style.display = 'none';
+            if (attendanceSec) attendanceSec.style.display = 'none';
+            if (resultsSec) resultsSec.style.display = 'none';
+            if (otherSec) otherSec.style.display = 'none';
+            if (banner) banner.style.display = 'flex';
+
+            if (module === 'results' || module === 'marks') {
+                // Highlight results / marks tile
+                document.querySelector('.module-results')?.classList.add('active');
+                if (bannerIcon) bannerIcon.innerText = '📋';
+                if (bannerTitle) bannerTitle.innerText = 'Viewing: Exam Results & Marks Scorecard';
+                if (resultsSec) {
+                    resultsSec.style.display = 'block';
+                    resultsSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    autoOpenRelevantSemesterMarks();
+                }
                 return;
             }
-            if (module === 'results') {
-                document.getElementById('examResultsSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                return;
-            }
+
             if (module === 'attendance') {
-                document.getElementById('parentAttendanceSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                loadParentAttendance();
+                // Highlight attendance tile
+                document.querySelector('.module-attendance')?.classList.add('active');
+                if (bannerIcon) bannerIcon.innerText = '🗓️';
+                if (bannerTitle) bannerTitle.innerText = 'Viewing: Student Attendance Summary';
+                if (attendanceSec) {
+                    attendanceSec.style.display = 'block';
+                    attendanceSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    loadParentAttendance();
+                }
                 return;
             }
-            const moduleNames = {
-                achievements: 'Achievements', fees: 'Fee Payments', attendance: 'Attendance',
-                poll: 'Opinion Poll', concerns: 'Parent Concerns', wellness: 'Wellness',
-                events: 'Events & Gallery'
+
+            if (module === 'announcements') {
+                // Highlight announcements tile
+                document.querySelector('.module-announcements')?.classList.add('active');
+                if (bannerIcon) bannerIcon.innerText = '📣';
+                if (bannerTitle) bannerTitle.innerText = 'Viewing: Announcements & Alerts';
+                if (alertsSec) {
+                    alertsSec.style.display = 'block';
+                    alertsSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                return;
+            }
+
+            // Other service modules (achievements, fees, poll, concerns, wellness, events)
+            const targetTile = document.querySelector(`.module-${module}`);
+            if (targetTile) targetTile.classList.add('active');
+
+            const moduleMeta = {
+                achievements: { icon: '🏅', title: 'Student Achievements & Honors', desc: 'Academic rankings, hackathon awards, and certifications earned by your ward.' },
+                fees: { icon: '💳', title: 'Fee Payments & Invoices', desc: 'Tuition breakdown, installment schedules, and official fee payment verification.' },
+                poll: { icon: '📊', title: 'Institutional Opinion Polls', desc: 'Participate in surveys and academic feedback sessions initiated by the department.' },
+                concerns: { icon: '📝', title: 'Parent Concerns & Grievance Desk', desc: 'Submit questions directly to your ward’s proctor or department leadership.' },
+                wellness: { icon: '🪷', title: 'Student Wellness & Mentorship', desc: 'Faculty mentor observations, wellness records, and counseling support.' },
+                events: { icon: '🎪', title: 'Events & Institutional Gallery', desc: 'College symposiums, technical fests, guest lectures, and department photo galleries.' }
             };
-            showPopupNotification(`${moduleNames[module] || 'This feature'} is displayed in the dashboard, but its data/service is not connected in the current parent.html yet.`, 'error');
+
+            const info = moduleMeta[module] || { icon: '🏛️', title: 'Academic Service Module', desc: 'This service is currently being synchronized with the institution ERP.' };
+            const otherIcon = document.getElementById('otherModuleIcon');
+            const otherTitle = document.getElementById('otherModuleTitle');
+            const otherDesc = document.getElementById('otherModuleDesc');
+            if (otherIcon) otherIcon.innerText = info.icon;
+            if (otherTitle) otherTitle.innerText = info.title;
+            if (otherDesc) otherDesc.innerText = info.desc;
+            if (bannerIcon) bannerIcon.innerText = info.icon;
+            if (bannerTitle) bannerTitle.innerText = `Viewing: ${info.title}`;
+
+            if (otherSec) {
+                otherSec.style.display = 'block';
+                otherSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function autoOpenRelevantSemesterMarks() {
+            if (activeTableId) return; // Keep already opened table if parent selected one
+
+            // Determine latest semester with records
+            let targetSem = 0;
+            for (let s = 8; s >= 1; s--) {
+                const tbody = document.getElementById(`data-sem${s}`);
+                if (tbody && tbody.innerHTML.trim() && !tbody.innerHTML.includes('No records found')) {
+                    targetSem = s;
+                    break;
+                }
+            }
+
+            if (!targetSem) {
+                const classText = document.getElementById('childClassSec')?.innerText || '';
+                const match = classText.match(/\d+/);
+                targetSem = match ? parseInt(match[0], 10) : 5;
+            }
+
+            const yearNum = Math.ceil(targetSem / 2);
+            const yearContentId = `year${yearNum}-content`;
+            const yearEl = document.getElementById(yearContentId);
+            if (yearEl) {
+                document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
+                yearEl.style.display = 'block';
+            }
+
+            const semBtnId = `btn-sem${targetSem}`;
+            const semTableId = `table-sem${targetSem}`;
+            if (document.getElementById(semTableId) && document.getElementById(semBtnId)) {
+                toggleTable(semTableId, semBtnId);
+            }
         }
         function toggleYear(id) {
             const el = document.getElementById(id);
@@ -511,7 +635,8 @@
             document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
             loadParentDashboardData();
             loadParentNotifications();
-            loadParentAttendance();
+            // Default to Attendance module in strict isolation (Marks and Alerts hidden until clicked)
+            openParentModule('attendance');
         };
     </script>
 </body>

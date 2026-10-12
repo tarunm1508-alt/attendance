@@ -3,220 +3,641 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parent Portal | Academic Monitoring</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
+    <title>Parent Executive Dashboard | Dr. AIT</title>
     <style>
-        :root { --primary: #2c3e50; --accent: #3498db; --bg: #f4f2f5; --success: #27ae60; --dark: #333; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--dark); }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 35px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-        
-        .header-box { background: #eef2f3; padding: 25px; border-radius: 12px; margin-bottom: 25px; text-align: left; border-left: 6px solid #f1c40f; position: relative; }
-        .live-indicator { position: absolute; top: 25px; right: 25px; color: var(--success); font-size: 12px; font-weight: bold; letter-spacing: 1px; }
-
-        /* Student Metadata Profiles Card */
-        .student-profile-card { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; background: white; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #e0e0e0; }
-        .profile-meta-item { font-size: 14px; color: #555; }
-        .profile-meta-item strong { color: var(--primary); }
-
-        .year-card { margin-bottom: 15px; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; box-shadow: 0 3px 6px rgba(0,0,0,0.02); }
-        .year-header { background: var(--primary); color: white; padding: 18px; cursor: pointer; font-weight: 600; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
-        .year-header:hover { background: #1a252f; }
-        
-        .sem-content { display: none; padding: 20px; background: #fff; border-top: 1px solid #eee; }
-        .sem-btn-row { display: flex; gap: 12px; margin-bottom: 20px; }
-        .sem-btn { background: var(--accent); color: white; border: none; padding: 10px 22px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .sem-btn:hover { background: #2980b9; transform: translateY(-1px); }
-        .sem-btn.active { background: #1a252f; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); }
-
-        .table-wrapper { display: none; margin-top: 15px; overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        th { background: #f8f9fa; padding: 12px; border: 1px solid #ddd; font-size: 13px; color: #444; }
-        td { padding: 12px; border: 1px solid #ddd; text-align: center; font-size: 14px; }
-        
-        /* Specialized UI/UX styling for separate subject attendance tracks */
-        .attendance-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-        .attendance-good { background: #d4edda; color: #155724; border-color: #c3e6cb; }
-        .attendance-critical { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-
-        .logout-btn { background: #e74c3c; color: white; padding: 14px; border: none; border-radius: 8px; cursor: pointer; margin-top: 25px; font-weight: bold; width: 100%; font-size: 15px; transition: 0.2s; }
-        .logout-btn:hover { background: #c0392b; }
+        :root {
+            --bg-canvas: #f8fafc;
+            --surface-card: #ffffff;
+            --border-clean: #cbd5e1;
+            --primary-blue: #1e40af;
+            --accent: #10b981;
+            --accent-red: #ef4444;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); padding: 24px 20px; min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .bento-card { background: white; border: 1px solid var(--border-clean); border-radius: 18px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04); }
+        .profile-banner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .parent-badge { display: flex; align-items: center; gap: 14px; }
+        .avatar-circle { width: 54px; height: 54px; border-radius: 50%; background: #eff6ff; border: 2px solid var(--primary-blue); display: flex; justify-content: center; align-items: center; font-size: 24px; }
+        .parent-name { font-size: 20px; font-weight: 800; color: var(--text-dark); }
+        .parent-dept { font-size: 13px; color: var(--primary-blue); font-weight: 700; margin-top: 2px; }
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 16px; }
+        .info-box { background: #f8fafc; border: 1px solid var(--border-clean); padding: 16px; border-radius: 12px; }
+        .info-box h4 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .info-box .val { font-size: 16px; font-weight: 800; color: var(--text-dark); }
+        .year-btn, .sem-btn { width: 100%; padding: 14px; text-align: left; font-weight: 800; font-size: 14px; border-radius: 12px; border: 1px solid var(--border-clean); background: #ffffff; cursor: pointer; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .sem-content { display: none; padding-left: 15px; margin-bottom: 15px; }
+        .sem-btn { background: #f8fafc; font-size: 13px; }
+        .sem-btn.active { background: var(--primary-blue); color: white; border-color: var(--primary-blue); }
+        .table-wrapper { display: none; overflow-x: auto; margin-top: 12px; border-radius: 12px; border: 1px solid var(--border-clean); }
+        table { width: 100%; border-collapse: collapse; background: white; text-align: center; }
+        th, td { border: 1px solid var(--border-clean); padding: 10px 12px; font-size: 13px; }
+        th { background: #f1f5f9; font-weight: 800; color: var(--text-dark); }
+        .attendance-badge { padding: 4px 10px; border-radius: 20px; font-weight: 700; font-size: 11px; display: inline-block; }
+        .attendance-good { background: #dcfce7; color: #047857; }
+        .attendance-critical { background: #fef2f2; color: #b91c1c; }
+        .parent-modules-section { padding: 24px; }
+        .modules-heading { font-size: 20px; font-weight: 900; margin-bottom: 18px; }
+        .parent-modules-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+        .parent-module-tile { appearance: none; width: 100%; min-height: 190px; border: 1px solid #dbeafe; border-radius: 22px; background: linear-gradient(145deg, #ffffff, #f8fbff); padding: 18px 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; cursor: pointer; color: var(--text-dark); box-shadow: 0 5px 14px rgba(15,23,42,.06); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+        .parent-module-tile:hover, .parent-module-tile:focus-visible { transform: translateY(-3px); box-shadow: 0 12px 22px rgba(30,64,175,.12); border-color: #93c5fd; outline: none; }
+        .parent-module-tile.active { border-color: var(--primary-blue); background: linear-gradient(145deg, #eff6ff, #dbeafe); box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.22), 0 10px 24px rgba(30,64,175,.15); transform: translateY(-2px); }
+        .active-module-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid var(--border-clean); border-radius: 14px; padding: 12px 18px; font-size: 14px; font-weight: 700; color: var(--primary-blue); box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        .module-icon { width: 94px; height: 94px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 48px; box-shadow: inset 0 1px 0 rgba(255,255,255,.8); }
+        .module-label { font-size: 16px; font-weight: 850; line-height: 1.25; text-align: center; }
+        .module-announcements .module-icon { background: #e0f2fe; }
+        .module-achievements .module-icon { background: #fef3c7; }
+        .module-results .module-icon { background: #dbeafe; }
+        .module-fees .module-icon { background: #dcfce7; }
+        .module-attendance .module-icon { background: #dbeafe; }
+        .module-poll .module-icon { background: #fef3c7; }
+        .module-concerns .module-icon { background: #fee2e2; }
+        .module-wellness .module-icon { background: #d1fae5; }
+        .module-events .module-icon { background: #ede9fe; }
+        .attendance-summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin:14px 0; }
+        .attendance-stat { background:#f8fafc; border:1px solid var(--border-clean); border-radius:12px; padding:14px; }
+        .attendance-stat .label { color:var(--text-muted); font-size:11px; font-weight:800; text-transform:uppercase; }
+        .attendance-stat .number { font-size:24px; font-weight:900; margin-top:6px; }
+        .attendance-progress { height:9px; background:#e2e8f0; border-radius:99px; overflow:hidden; margin-top:9px; }
+        .attendance-progress span { display:block; height:100%; width:0; background:#10b981; transition:width .2s ease; }
+        .attendance-table-wrap { overflow-x:auto; margin-top:14px; border:1px solid var(--border-clean); border-radius:12px; }
+        .attendance-table-wrap table { min-width:560px; }
+        .attendance-refresh { padding:9px 14px; border:1px solid var(--border-clean); border-radius:10px; background:#eff6ff; color:var(--primary-blue); font-weight:800; cursor:pointer; }
+        .attendance-note { color:var(--text-muted); font-size:13px; line-height:1.5; }
+        @media (max-width: 760px) { body { padding: 14px 10px; } .parent-modules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .parent-module-tile { min-height: 155px; border-radius: 17px; } .module-icon { width: 76px; height: 76px; border-radius: 18px; font-size: 38px; } .module-label { font-size: 14px; } .parent-modules-section { padding: 18px; } }
+        @media (max-width: 360px) { .parent-modules-grid { grid-template-columns: 1fr 1fr; gap: 8px; } .parent-module-tile { padding: 12px 6px; min-height: 135px; } .module-icon { width: 66px; height: 66px; font-size: 32px; } .module-label { font-size: 12px; } }
+        #customToastPopup {
+            position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: white;
+            padding: 14px 22px; border-radius: 14px; font-weight: 700; font-size: 13px; z-index: 10000;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateY(20px); opacity: 0; transition: all 0.3s ease;
+        }
+        #customToastPopup.show { transform: translateY(0); opacity: 1; }
     </style>
 </head>
 <body>
+    <div id="customToastPopup"></div>
+    <div class="container">
+        <!-- Profile Header -->
+        <div class="bento-card">
+            <div class="profile-banner">
+                <div class="parent-badge">
+                    <div class="avatar-circle">👪</div>
+                    <div>
+                        <div class="parent-name" id="parentName">Parent Guardian</div>
+                        <div class="parent-dept">Parent Portal Gateway | Dr. AIT</div>
+                    </div>
+                </div>
+                <button onclick="logout()" style="padding: 10px 18px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">Logout ⬅️</button>
+            </div>
+            <div class="info-grid">
+                <div class="info-box">
+                    <h4>Linked Student Name</h4>
+                    <div class="val" id="childName">Loading...</div>
+                </div>
+                <div class="info-box">
+                    <h4>Student USN / ID</h4>
+                    <div class="val" id="displaySRN">Loading...</div>
+                </div>
+                <div class="info-box">
+                    <h4>Department Branch</h4>
+                    <div class="val" id="childBranch">AIML</div>
+                </div>
+                <div class="info-box">
+                    <h4>Current Academic Year & Class</h4>
+                    <div class="val" id="childClassSec">3rd Semester - A</div>
+                </div>
+            </div>
+        </div>
+        <!-- Parent Portal Feature Tiles -->
+        <section class="bento-card parent-modules-section" aria-labelledby="parentModulesHeading">
+            <h2 class="modules-heading" id="parentModulesHeading">Parent Portal Services</h2>
+            <div class="parent-modules-grid">
+                <button type="button" class="parent-module-tile module-announcements" onclick="openParentModule('announcements')"><span class="module-icon" aria-hidden="true">📣</span><span class="module-label">Announcements</span></button>
+                <button type="button" class="parent-module-tile module-achievements" onclick="openParentModule('achievements')"><span class="module-icon" aria-hidden="true">🏅</span><span class="module-label">Achievements</span></button>
+                <button type="button" class="parent-module-tile module-results" onclick="openParentModule('results')"><span class="module-icon" aria-hidden="true">📋</span><span class="module-label">Exam Results<br><small style="font-size:11px;font-weight:700;color:var(--text-muted);">(Marks)</small></span></button>
+                <button type="button" class="parent-module-tile module-fees" onclick="openParentModule('fees')"><span class="module-icon" aria-hidden="true">💳</span><span class="module-label">Fee Payments</span></button>
+                <button type="button" class="parent-module-tile module-attendance" onclick="openParentModule('attendance')"><span class="module-icon" aria-hidden="true">🗓️</span><span class="module-label">Attendance</span></button>
+                <button type="button" class="parent-module-tile module-poll" onclick="openParentModule('poll')"><span class="module-icon" aria-hidden="true">📊</span><span class="module-label">Opinion Poll</span></button>
+                <button type="button" class="parent-module-tile module-concerns" onclick="openParentModule('concerns')"><span class="module-icon" aria-hidden="true">📝</span><span class="module-label">Parent Concerns</span></button>
+                <button type="button" class="parent-module-tile module-wellness" onclick="openParentModule('wellness')"><span class="module-icon" aria-hidden="true">🪷</span><span class="module-label">Wellness</span></button>
+                <button type="button" class="parent-module-tile module-events" onclick="openParentModule('events')"><span class="module-icon" aria-hidden="true">🎪</span><span class="module-label">Events &amp; Gallery</span></button>
+            </div>
+        </section>
 
-<div class="container">
-    <div class="header-box">
-        <span class="live-indicator">● LIVE TRACKING ACTIVE</span>
-        <h1 style="margin:0; color:var(--primary); font-size: 28px;">👪 Parent Dashboard</h1>
-        <p style="margin:5px 0 0 0; color:#7f8c8d;">Logged in as: <span id="parentName" style="font-weight:bold; color:#333;"></span></p>
-        
-        <div class="student-profile-card">
-            <div class="profile-meta-item"><strong>Child Name:</strong> <span id="childName">Loading...</span></div>
-            <div class="profile-meta-item"><strong>USN/SRN:</strong> <span id="displaySRN">Loading...</span></div>
-            <div class="profile-meta-item"><strong>Branch:</strong> <span id="childBranch">AIML</span></div>
-            <div class="profile-meta-item"><strong>Class & Sec:</strong> <span id="childClassSec">-</span></div>
+        <!-- Active View Banner Indicator -->
+        <div id="activeViewBanner" class="active-module-bar" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span id="activeViewIcon" style="font-size: 20px;">📋</span>
+                <span id="activeViewTitle" style="font-size: 15px; font-weight: 800; color: var(--text-dark);">Viewing: Exam Results (Marks)</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button onclick="openParentModule('attendance')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid var(--border-clean); border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">🗓️ View Attendance</button>
+                <button onclick="openParentModule('results')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid var(--border-clean); border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">📋 View Marks</button>
+            </div>
+        </div>
+
+        <!-- Other Module Placeholder Section -->
+        <div class="bento-card" id="otherModuleSection" style="display: none; text-align: center; padding: 40px 20px;">
+            <div id="otherModuleIcon" style="font-size: 48px; margin-bottom: 12px;">🏛️</div>
+            <h3 id="otherModuleTitle" style="font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px;">Service Module</h3>
+            <p id="otherModuleDesc" style="font-size: 14px; color: var(--text-muted); max-width: 500px; margin: 0 auto 20px; line-height: 1.5;">This service is currently being synchronized with the institutional academic ledger.</p>
+            <div style="display: flex; justify-content: center; gap: 12px;">
+                <button onclick="openParentModule('attendance')" style="padding: 10px 18px; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">← Return to Attendance</button>
+                <button onclick="openParentModule('results')" style="padding: 10px 18px; background: #eff6ff; color: var(--primary-blue); border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">View Marks (Results) →</button>
+            </div>
+        </div>
+
+        <!-- Notifications Box -->
+        <div class="bento-card" id="parentAlertsSection">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">🔔</span>
+                    <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Parent Alerts & Broadcasts</h3>
+                    <span id="parentMessageBadge" style="background: var(--primary-blue); color: white; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 12px;">0 New</span>
+                </div>
+                <button onclick="manualRefreshMessages()" style="background: #f1f5f9; border: 1px solid var(--border-clean); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer;">🔄 Refresh</button>
+            </div>
+            <div id="parentMessagesFeed" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto;">
+                <div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 10px;">Loading alerts...</div>
+            </div>
+        </div>
+        <!-- Student attendance connected to the linked child USN -->
+        <div class="bento-card" id="parentAttendanceSection">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+                <div>
+                    <h3 style="font-size:18px;font-weight:800;">🗓️ Student Attendance</h3>
+                    <p class="attendance-note" style="margin-top:5px;">Attendance for the student linked to this parent account.</p>
+                </div>
+                <button type="button" class="attendance-refresh" onclick="loadParentAttendance()">🔄 Refresh Attendance</button>
+            </div>
+            <div id="attendanceStatus" class="attendance-note" style="padding:14px 0;">Loading linked student's attendance…</div>
+            <div id="attendanceContent" hidden>
+                <div class="attendance-summary-grid">
+                    <div class="attendance-stat"><div class="label">Overall Attendance</div><div class="number" id="attendanceOverall">—</div><div class="attendance-progress"><span id="attendanceProgress"></span></div></div>
+                    <div class="attendance-stat"><div class="label">Classes Attended</div><div class="number" id="attendanceAttended">—</div></div>
+                    <div class="attendance-stat"><div class="label">Classes Conducted</div><div class="number" id="attendanceConducted">—</div></div>
+                    <div class="attendance-stat"><div class="label">Semester</div><div class="number" id="attendanceSemester">—</div></div>
+                </div>
+                <p id="attendanceStudentMeta" class="attendance-note"></p>
+                <div class="attendance-table-wrap">
+                    <table>
+                        <thead><tr><th style="text-align:left;">Subject</th><th>Conducted</th><th>Attended</th><th>Attendance</th><th>Status</th></tr></thead>
+                        <tbody id="attendanceSubjectRows"><tr><td colspan="5">Loading…</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- Academic Scorecard Years & Semesters -->
+        <div class="bento-card" id="examResultsSection">
+            <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 16px;">Exam Results</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin: -6px 0 16px;">Existing student marks from the current portal are shown below, grouped by semester.</p>
+            <!-- Year 1 -->
+            <button class="year-btn" onclick="toggleYear('year1-content')"><span>📅 1st Year (Semesters 1 & 2)</span> <span>▼</span></button>
+            <div id="year1-content" class="sem-content">
+                <button class="sem-btn" id="btn-sem1" onclick="toggleTable('table-sem1', 'btn-sem1')">Semester 1 Scorecard</button>
+                <div id="table-sem1" class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="text-align:left;">Subject Name</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem1"><tr><td colspan="5">No records found.</td></tr></tbody>
+                    </table>
+                </div>
+                <button class="sem-btn" id="btn-sem2" onclick="toggleTable('table-sem2', 'btn-sem2')">Semester 2 Scorecard</button>
+                <div id="table-sem2" class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="text-align:left;">Subject Name</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem2"><tr><td colspan="5">No records found.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Year 2 -->
+            <button class="year-btn" onclick="toggleYear('year2-content')"><span>📅 2nd Year (Semesters 3 & 4)</span> <span>▼</span></button>
+            <div id="year2-content" class="sem-content">
+                <button class="sem-btn" id="btn-sem3" onclick="toggleTable('table-sem3', 'btn-sem3')">Semester 3 Scorecard</button>
+                <div id="table-sem3" class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="text-align:left;">Subject Name</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem3"><tr><td colspan="5">No records found.</td></tr></tbody>
+                    </table>
+                </div>
+                <button class="sem-btn" id="btn-sem4" onclick="toggleTable('table-sem4', 'btn-sem4')">Semester 4 Scorecard</button>
+                <div id="table-sem4" class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="text-align:left;">Subject Name</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem4"><tr><td colspan="5">No records found.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Year 3 -->
+            <button class="year-btn" onclick="toggleYear('year3-content')"><span>📅 3rd Year (Semesters 5 & 6)</span> <span>▼</span></button>
+            <div id="year3-content" class="sem-content">
+                <button class="sem-btn" id="btn-sem5" onclick="toggleTable('table-sem5', 'btn-sem5')">Semester 5 Scorecard</button>
+                <div id="table-sem5" class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="text-align:left;">Subject Name</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem5"><tr><td colspan="5">No records found.</td></tr></tbody>
+                    </table>
+                </div>
+                <button class="sem-btn" id="btn-sem6" onclick="toggleTable('table-sem6', 'btn-sem6')">Semester 6 Scorecard</button>
+                <div id="table-sem6" class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="text-align:left;">Subject Name</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem6"><tr><td colspan="5">No records found.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- Year 4 -->
+            <button class="year-btn" onclick="toggleYear('year4-content')"><span>📅 4th Year (Semesters 7 & 8)</span> <span>▼</span></button>
+            <div id="year4-content" class="sem-content">
+                <button class="sem-btn" id="btn-sem7" onclick="toggleTable('table-sem7', 'btn-sem7')">Semester 7 Scorecard</button>
+                <div id="table-sem7" class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="text-align:left;">Subject Name</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem7"><tr><td colspan="5">No records found.</td></tr></tbody>
+                    </table>
+                </div>
+                <button class="sem-btn" id="btn-sem8" onclick="toggleTable('table-sem8', 'btn-sem8')">Semester 8 Scorecard</button>
+                <div id="table-sem8" class="table-wrapper">
+                    <table>
+                        <thead><tr><th style="text-align:left;">Subject Name</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem8"><tr><td colspan="5">No records found.</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
+    <script>
+        let BACKEND_URL = window.location.origin;
+        if (BACKEND_URL.includes("-5501.")) BACKEND_URL = BACKEND_URL.replace("-5501.", "-5000.");
+        else if (BACKEND_URL.includes(":5501")) BACKEND_URL = BACKEND_URL.replace(":5501", ":5000");
+        else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            BACKEND_URL = "http://localhost:5000";
+        }
+        const parentUsn = localStorage.getItem("userUsn") || localStorage.getItem("parent_usn") || localStorage.getItem("parentUsn") || "";
+        const parentName = localStorage.getItem("userName") || localStorage.getItem("user_name") || "Parent";
+        let childSRN = localStorage.getItem("childUsn") || localStorage.getItem("student_id") || "";
+        const institutionId = localStorage.getItem("institutionId") || "DR_AIT";
+        let activeTableId = null;
+        if (!localStorage.getItem("userRole") && !localStorage.getItem("role") || (localStorage.getItem("userRole") !== 'parent' && localStorage.getItem("role") !== 'parent')) {
+            window.location.href = 'login.html?role=parent';
+        }
+        document.getElementById("parentName").innerText = parentName;
+        function openParentModule(module) {
+            // 1. Clear active styling from all service tiles
+            document.querySelectorAll('.parent-module-tile').forEach(t => t.classList.remove('active'));
 
-    <div id="academicSection">
-        <div class="year-card">
-            <div class="year-header" onclick="toggleYear('year1')">YEAR 1 (Semesters 1 & 2) <span>▼</span></div>
-            <div id="year1" class="sem-content">
-                <div class="sem-btn-row">
-                    <button class="sem-btn" id="btnSem1" onclick="toggleTable('tableSem1', 'btnSem1')">Semester 1</button>
-                    <button class="sem-btn" id="btnSem2" onclick="toggleTable('tableSem2', 'btnSem2')">Semester 2</button>
-                </div>
-                <div id="tableSem1" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem1"></tbody></table></div>
-                <div id="tableSem2" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem2"></tbody></table></div>
-            </div>
-        </div>
+            // 2. Hide all view containers so Marks and Attendance NEVER appear together
+            const alertsSec = document.getElementById('parentAlertsSection');
+            const attendanceSec = document.getElementById('parentAttendanceSection');
+            const resultsSec = document.getElementById('examResultsSection');
+            const otherSec = document.getElementById('otherModuleSection');
+            const banner = document.getElementById('activeViewBanner');
+            const bannerIcon = document.getElementById('activeViewIcon');
+            const bannerTitle = document.getElementById('activeViewTitle');
 
-        <div class="year-card">
-            <div class="year-header" onclick="toggleYear('year2')">YEAR 2 (Semesters 3 & 4) <span>▼</span></div>
-            <div id="year2" class="sem-content">
-                <div class="sem-btn-row">
-                    <button class="sem-btn" id="btnSem3" onclick="toggleTable('tableSem3', 'btnSem3')">Semester 3</button>
-                    <button class="sem-btn" id="btnSem4" onclick="toggleTable('tableSem4', 'btnSem4')">Semester 4</button>
-                </div>
-                <div id="tableSem3" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem3"></tbody></table></div>
-                <div id="tableSem4" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem4"></tbody></table></div>
-            </div>
-        </div>
+            if (alertsSec) alertsSec.style.display = 'none';
+            if (attendanceSec) attendanceSec.style.display = 'none';
+            if (resultsSec) resultsSec.style.display = 'none';
+            if (otherSec) otherSec.style.display = 'none';
+            if (banner) banner.style.display = 'flex';
 
-        <div class="year-card">
-            <div class="year-header" onclick="toggleYear('year3')">YEAR 3 (Semesters 5 & 6) <span>▼</span></div>
-            <div id="year3" class="sem-content">
-                <div class="sem-btn-row">
-                    <button class="sem-btn" id="btnSem5" onclick="toggleTable('tableSem5', 'btnSem5')">Semester 5</button>
-                    <button class="sem-btn" id="btnSem6" onclick="toggleTable('tableSem6', 'btnSem6')">Semester 6</button>
-                </div>
-                <div id="tableSem5" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem5"></tbody></table></div>
-                <div id="tableSem6" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem6"></tbody></table></div>
-            </div>
-        </div>
+            if (module === 'results' || module === 'marks') {
+                // Highlight results / marks tile
+                document.querySelector('.module-results')?.classList.add('active');
+                if (bannerIcon) bannerIcon.innerText = '📋';
+                if (bannerTitle) bannerTitle.innerText = 'Viewing: Exam Results & Marks Scorecard';
+                if (resultsSec) {
+                    resultsSec.style.display = 'block';
+                    resultsSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    autoOpenRelevantSemesterMarks();
+                }
+                return;
+            }
 
-        <div class="year-card">
-            <div class="year-header" onclick="toggleYear('year4')">YEAR 4 (Semesters 7 & 8) <span>▼</span></div>
-            <div id="year4" class="sem-content">
-                <div class="sem-btn-row">
-                    <button class="sem-btn" id="btnSem7" onclick="toggleTable('tableSem7', 'btnSem7')">Semester 7</button>
-                    <button class="sem-btn" id="btnSem8" onclick="toggleTable('tableSem8', 'btnSem8')">Semester 8</button>
-                </div>
-                <div id="tableSem7" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem7"></tbody></table></div>
-                <div id="tableSem8" class="table-wrapper"><table><thead><tr><th>Subject</th><th>C1</th><th>C2</th><th>C3</th><th>Lab</th><th>SEE</th><th>Attendance Track</th></tr></thead><tbody id="data-sem8"></tbody></table></div>
-            </div>
-        </div>
-    </div>
+            if (module === 'attendance') {
+                // Highlight attendance tile
+                document.querySelector('.module-attendance')?.classList.add('active');
+                if (bannerIcon) bannerIcon.innerText = '🗓️';
+                if (bannerTitle) bannerTitle.innerText = 'Viewing: Student Attendance Summary';
+                if (attendanceSec) {
+                    attendanceSec.style.display = 'block';
+                    attendanceSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    loadParentAttendance();
+                }
+                return;
+            }
 
-    <button class="logout-btn" onclick="logout()">Secure Logout</button>
-</div>
+            if (module === 'announcements') {
+                // Highlight announcements tile
+                document.querySelector('.module-announcements')?.classList.add('active');
+                if (bannerIcon) bannerIcon.innerText = '📣';
+                if (bannerTitle) bannerTitle.innerText = 'Viewing: Announcements & Alerts';
+                if (alertsSec) {
+                    alertsSec.style.display = 'block';
+                    alertsSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                return;
+            }
 
-<script>
-    // ⚡ SYNCED TUNNEL URL ENDPOINT
-    const BACKEND_URL = "https://d0mp6n0b-5000.inc1.devtunnels.ms";
+            // Other service modules (achievements, fees, poll, concerns, wellness, events)
+            const targetTile = document.querySelector(`.module-${module}`);
+            if (targetTile) targetTile.classList.add('active');
 
-    const childSRN = localStorage.getItem("student_id");
-    const parentName = localStorage.getItem("user_name");
-    let activeTableId = null;
+            const moduleMeta = {
+                achievements: { icon: '🏅', title: 'Student Achievements & Honors', desc: 'Academic rankings, hackathon awards, and certifications earned by your ward.' },
+                fees: { icon: '💳', title: 'Fee Payments & Invoices', desc: 'Tuition breakdown, installment schedules, and official fee payment verification.' },
+                poll: { icon: '📊', title: 'Institutional Opinion Polls', desc: 'Participate in surveys and academic feedback sessions initiated by the department.' },
+                concerns: { icon: '📝', title: 'Parent Concerns & Grievance Desk', desc: 'Submit questions directly to your ward’s proctor or department leadership.' },
+                wellness: { icon: '🪷', title: 'Student Wellness & Mentorship', desc: 'Faculty mentor observations, wellness records, and counseling support.' },
+                events: { icon: '🎪', title: 'Events & Institutional Gallery', desc: 'College symposiums, technical fests, guest lectures, and department photo galleries.' }
+            };
 
-    if (!localStorage.getItem("role") || localStorage.getItem("role") !== 'parent') {
-        window.location.href = 'login.html?role=parent';
-    }
+            const info = moduleMeta[module] || { icon: '🏛️', title: 'Academic Service Module', desc: 'This service is currently being synchronized with the institution ERP.' };
+            const otherIcon = document.getElementById('otherModuleIcon');
+            const otherTitle = document.getElementById('otherModuleTitle');
+            const otherDesc = document.getElementById('otherModuleDesc');
+            if (otherIcon) otherIcon.innerText = info.icon;
+            if (otherTitle) otherTitle.innerText = info.title;
+            if (otherDesc) otherDesc.innerText = info.desc;
+            if (bannerIcon) bannerIcon.innerText = info.icon;
+            if (bannerTitle) bannerTitle.innerText = `Viewing: ${info.title}`;
 
-    document.getElementById("parentName").innerText = parentName || "Parent";
-    document.getElementById("displaySRN").innerText = childSRN || "Not Linked";
-
-    function toggleYear(id) {
-        const el = document.getElementById(id);
-        const isCurrentlyVisible = el.style.display === 'block';
-        
-        // Hide all blocks and reset active row sub-grids cleanly
-        document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
-        document.querySelectorAll('.table-wrapper').forEach(t => t.style.display = 'none');
-        document.querySelectorAll('.sem-btn').forEach(b => b.classList.remove('active'));
-        activeTableId = null;
-
-        el.style.display = isCurrentlyVisible ? 'none' : 'block';
-    }
-
-    function toggleTable(tableId, buttonId) {
-        const targetTable = document.getElementById(tableId);
-        
-        // 🎯 SMOOTH TOGGLE CORE LOGIC
-        if (activeTableId === tableId) {
-            targetTable.style.display = 'none';
-            document.getElementById(buttonId).classList.remove('active');
-            activeTableId = null;
-            return;
+            if (otherSec) {
+                otherSec.style.display = 'block';
+                otherSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
-        document.querySelectorAll('.table-wrapper').forEach(t => t.style.display = 'none');
-        document.querySelectorAll('.sem-btn').forEach(b => b.classList.remove('active'));
-        
-        targetTable.style.display = 'block';
-        document.getElementById(buttonId).classList.add('active');
-        activeTableId = tableId;
-    }
+        function autoOpenRelevantSemesterMarks() {
+            if (activeTableId) return; // Keep already opened table if parent selected one
 
-    async function loadParentDashboardData() {
-        if (!childSRN || childSRN === "null") return;
-
-        try {
-            // 🎯 FIXED DYNAMIC TUNNEL ENDPOINT IMPLEMENTATION
-            const profileRes = await fetch(`${BACKEND_URL}/api/marks/student-profile/${childSRN}`);
-            const data = await profileRes.json();
-
-            if(data) {
-                document.getElementById("childName").innerText = data.student_name || "Tarun Bali";
-                document.getElementById("childBranch").innerText = data.branch || "AIML";
-                document.getElementById("childClassSec").innerText = `${data.current_class || '2nd Year'} - ${data.section || 'A'}`;
+            // Determine latest semester with records
+            let targetSem = 0;
+            for (let s = 8; s >= 1; s--) {
+                const tbody = document.getElementById(`data-sem${s}`);
+                if (tbody && tbody.innerHTML.trim() && !tbody.innerHTML.includes('No records found')) {
+                    targetSem = s;
+                    break;
+                }
             }
 
-            if (data.academic) {
-                // Clear any leftover artifacts inside text row items
-                for(let i = 1; i <= 8; i++) {
-                    const box = document.getElementById(`data-sem${i}`);
-                    if(box) box.innerHTML = "";
+            if (!targetSem) {
+                const classText = document.getElementById('childClassSec')?.innerText || '';
+                const match = classText.match(/\d+/);
+                targetSem = match ? parseInt(match[0], 10) : 5;
+            }
+
+            const yearNum = Math.ceil(targetSem / 2);
+            const yearContentId = `year${yearNum}-content`;
+            const yearEl = document.getElementById(yearContentId);
+            if (yearEl) {
+                document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
+                yearEl.style.display = 'block';
+            }
+
+            const semBtnId = `btn-sem${targetSem}`;
+            const semTableId = `table-sem${targetSem}`;
+            if (document.getElementById(semTableId) && document.getElementById(semBtnId)) {
+                toggleTable(semTableId, semBtnId);
+            }
+        }
+        function toggleYear(id) {
+            const el = document.getElementById(id);
+            const isCurrentlyVisible = el.style.display === 'block';
+            document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('.table-wrapper').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.sem-btn').forEach(b => b.classList.remove('active'));
+            activeTableId = null;
+            el.style.display = isCurrentlyVisible ? 'none' : 'block';
+        }
+        function toggleTable(tableId, buttonId) {
+            const targetTable = document.getElementById(tableId);
+            if (activeTableId === tableId) {
+                targetTable.style.display = 'none';
+                document.getElementById(buttonId).classList.remove('active');
+                activeTableId = null;
+                return;
+            }
+            document.querySelectorAll('.table-wrapper').forEach(t => t.style.display = 'none');
+            document.querySelectorAll('.sem-btn').forEach(b => b.classList.remove('active'));
+            targetTable.style.display = 'block';
+            document.getElementById(buttonId).classList.add('active');
+            activeTableId = tableId;
+        }
+        async function loadParentAndStudentProfile() {
+            try {
+                const queryId = parentUsn || childSRN;
+                if (!queryId) return;
+                const profileRes = await fetch(`${BACKEND_URL}/api/parent/profile?parentId=${encodeURIComponent(queryId)}&institutionId=${institutionId}`);
+                const data = await profileRes.json();
+                if (data && data.success) {
+                    if (data.parentName && data.parentName !== "Guardian") {
+                        document.getElementById("parentName").innerText = data.parentName;
+                    }
+                    if (data.childUsn && data.childUsn !== "N/A") {
+                        childSRN = data.childUsn;
+                        localStorage.setItem("student_id", childSRN);
+                        localStorage.setItem("childUsn", childSRN);
+                    }
+                    document.getElementById("childName").innerText = data.studentName || "Linked Ward";
+                    document.getElementById("displaySRN").innerText = childSRN || "Not Linked";
+                }
+                if (childSRN) {
+                    const fallbackRes = await fetch(`${BACKEND_URL}/api/marks/student-profile/${encodeURIComponent(childSRN)}?institutionId=${institutionId}`);
+                    const fallbackData = await fallbackRes.json();
+                    if (fallbackData) {
+                        if (fallbackData.student_name) {
+                            document.getElementById("childName").innerText = fallbackData.student_name;
+                        }
+                        document.getElementById("displaySRN").innerText = childSRN;
+                        document.getElementById("childBranch").innerText = fallbackData.branch || "AIML";
+                        document.getElementById("childClassSec").innerText = `Sem ${fallbackData.current_class || '3'} - ${fallbackData.section || 'A'}`;
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading profile details:", e);
+                document.getElementById("displaySRN").innerText = childSRN || "Not Linked";
+            }
+        }
+        async function loadParentDashboardData() {
+            await loadParentAndStudentProfile();
+            if (!childSRN || childSRN === "null") return;
+            try {
+                const profileRes = await fetch(`${BACKEND_URL}/api/marks/student-profile/${encodeURIComponent(childSRN)}?institutionId=${institutionId}`);
+                const data = await profileRes.json();
+                if (data) {
+                    if (data.student_name) document.getElementById("childName").innerText = data.student_name;
+                    document.getElementById("childBranch").innerText = data.branch || "AIML";
+                    document.getElementById("childClassSec").innerText = `Sem ${data.current_class || '3'} - ${data.section || 'A'}`;
+                }
+                if (data && data.academic) {
+                    for (let i = 1; i <= 8; i++) {
+                        const box = document.getElementById(`data-sem${i}`);
+                        if (box) box.innerHTML = `<tr><td colspan="5">No records found.</td></tr>`;
+                    }
+                    data.academic.forEach(record => {
+                        const semNum = record.semester || record.semester_number || 3;
+                        const tbody = document.getElementById(`data-sem${semNum}`);
+                        if (tbody) {
+                            if (tbody.innerHTML.includes("No records found")) {
+                                tbody.innerHTML = "";
+                            }
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td style="text-align:left; font-weight:600;">${record.subject_name || record.subject_code || 'Subject'}</td>
+                                    <td>${record.cie1 ?? record.cie_1 ?? 0}</td>
+                                    <td>${record.cie2 ?? record.cie_2 ?? 0}</td>
+                                    <td>${record.cie3 ?? record.cie_3 ?? 0}</td>
+                                    <td style="font-weight:600;">${record.see ?? record.see_marks ?? 0}</td>
+                                </tr>
+                            `;
+                        }
+                    });
+                }
+            } catch (e) { console.error("Error setting up view layer dashboard map:", e); }
+        }
+        function safeText(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+
+        async function loadParentAttendance() {
+            const status = document.getElementById('attendanceStatus');
+            const content = document.getElementById('attendanceContent');
+            const rows = document.getElementById('attendanceSubjectRows');
+            content.hidden = true;
+            status.textContent = 'Loading linked student attendance…';
+
+            try {
+                // Resolve child from the authenticated parent's profile before requesting the ledger.
+                if (!childSRN) await loadParentAndStudentProfile();
+                const usn = String(childSRN || '').trim();
+                if (!usn || ['null','undefined','n/a','not linked'].includes(usn.toLowerCase())) {
+                    status.textContent = 'No student USN is linked to this parent account. Please ask the administrator to link the child USN to the parent profile.';
+                    return;
                 }
 
-                data.academic.forEach(record => {
-                    const tbody = document.getElementById(`data-sem${record.semester}`);
-                    if (tbody) {
-                        const perc = record.total_classes > 0 ? ((record.attended_classes / record.total_classes) * 100).toFixed(1) : 0;
-                        
-                        let attendanceClass = "attendance-badge";
-                        if(perc >= 75) attendanceClass += " attendance-good";
-                        if(perc < 65) attendanceClass += " attendance-critical";
+                const profileResponse = await fetch(`${BACKEND_URL}/api/marks/student-profile/${encodeURIComponent(usn)}?institutionId=${encodeURIComponent(institutionId)}`);
+                const profile = await profileResponse.json().catch(() => ({}));
+                if (!profileResponse.ok) throw new Error(profile.message || profile.error || 'Unable to load student profile.');
 
-                        tbody.innerHTML += `
-                            <tr>
-                                <td style="text-align:left; font-weight:600;">${record.subject_name}</td>
-                                <td>${record.cie_1 || 0}</td>
-                                <td>${record.cie_2 || 0}</td>
-                                <td>${record.cie_3 || 0}</td>
-                                <td>${record.lab_marks || 0}</td>
-                                <td style="font-weight:600;">${record.see_marks || 0}</td>
-                                <td>
-                                    <span class="${attendanceClass}">${record.attended_classes}/${record.total_classes} (${perc}%)</span>
-                                </td>
-                            </tr>
-                        `;
+                const sem = Number(profile.current_class || profile.semester_number || profile.semesterNumber || 5);
+                const ledgerUrl = `${BACKEND_URL}/api/auth/student-attendance-ledger?studentId=${encodeURIComponent(usn)}&institutionId=${encodeURIComponent(institutionId)}&semesterNumber=${encodeURIComponent(sem)}`;
+                const response = await fetch(ledgerUrl);
+                const ledger = await response.json().catch(() => ({}));
+                if (!response.ok || ledger.success === false) throw new Error(ledger.message || ledger.error || 'Attendance API could not load records.');
+
+                const sessions = Array.isArray(ledger.conductedSessions) ? ledger.conductedSessions : [];
+                const scanMap = ledger.studentScanMap || {};
+                const subjects = Array.isArray(ledger.mappedSubjects) ? ledger.mappedSubjects : [];
+                const student = ledger.student || profile;
+                const subjectMap = new Map();
+
+                // Only count sessions for the child's mapped branch/semester; don't use other branches.
+                const allowedCodes = new Set(subjects.map(x => String(x.subject_code || '').trim().toUpperCase()).filter(Boolean));
+                sessions.forEach(session => {
+                    const code = String(session.subject_code || '').trim().toUpperCase();
+                    const name = String(session.subject_name || session.subject_code || 'General').trim();
+                    if (allowedCodes.size && code && !allowedCodes.has(code)) return;
+                    const key = code || name.toUpperCase();
+                    if (!subjectMap.has(key)) subjectMap.set(key, { name, conducted:new Set(), attended:new Set() });
+                    const item = subjectMap.get(key);
+                    const sessionCode = String(session.session_code || '').trim().toUpperCase();
+                    const date = String(session.session_date || '').trim();
+                    if (sessionCode) {
+                        item.conducted.add(sessionCode);
+                        if (scanMap[sessionCode] === true) item.attended.add(sessionCode);
+                    } else if (date) {
+                        item.conducted.add(date);
+                        if (scanMap[`DATE_${date}`] === true || scanMap[date] === true) item.attended.add(date);
                     }
                 });
-            }
-        } catch (e) { console.error("Error setting up view layer dashboard map:", e); }
-    }
 
-    function logout() { localStorage.clear(); window.location.href = "index.html"; }
-    
-    window.onload = function() {
-        // Enforce safe clean start bounds
-        document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
-        loadParentDashboardData();
-    };
-</script>
+                // Include mapped subjects even if no class sessions have been recorded yet.
+                subjects.forEach(subject => {
+                    const code = String(subject.subject_code || '').trim().toUpperCase();
+                    if (!code || subjectMap.has(code)) return;
+                    subjectMap.set(code, { name:subject.subject_name || code, conducted:new Set(), attended:new Set() });
+                });
+
+                let totalConducted = 0, totalAttended = 0;
+                const subjectRows = [...subjectMap.values()].map(item => {
+                    const conducted = item.conducted.size;
+                    const attended = Math.min(item.attended.size, conducted);
+                    const pct = conducted ? Math.round(attended / conducted * 100) : 0;
+                    totalConducted += conducted;
+                    totalAttended += attended;
+                    const badgeClass = conducted && pct >= 75 ? 'attendance-good' : 'attendance-critical';
+                    const state = !conducted ? 'No sessions' : pct >= 75 ? 'Eligible' : 'Below 75%';
+                    return `<tr><td style="text-align:left;font-weight:700;">${safeText(item.name)}</td><td>${conducted}</td><td>${attended}</td><td>${conducted ? pct + '%' : '—'}</td><td><span class="attendance-badge ${badgeClass}">${state}</span></td></tr>`;
+                });
+
+                const overall = totalConducted ? Math.round(totalAttended / totalConducted * 100) : 0;
+                document.getElementById('attendanceOverall').textContent = totalConducted ? `${overall}%` : '—';
+                document.getElementById('attendanceProgress').style.width = `${totalConducted ? overall : 0}%`;
+                document.getElementById('attendanceProgress').style.background = overall >= 75 ? '#10b981' : '#ef4444';
+                document.getElementById('attendanceAttended').textContent = totalAttended;
+                document.getElementById('attendanceConducted').textContent = totalConducted;
+                document.getElementById('attendanceSemester').textContent = sem ? `Sem ${sem}` : '—';
+                document.getElementById('attendanceStudentMeta').textContent = `${student.name || student.student_name || document.getElementById('childName').textContent || 'Student'} · ${usn} · ${student.branch || profile.branch || document.getElementById('childBranch').textContent || ''}`;
+                rows.innerHTML = subjectRows.length ? subjectRows.join('') : '<tr><td colspan="5">No mapped subjects found for this student and semester.</td></tr>';
+                content.hidden = false;
+                status.textContent = totalConducted ? 'Attendance updated from the student attendance ledger.' : 'No conducted class sessions were found for this student’s mapped subjects yet.';
+            } catch (error) {
+                console.error('Parent attendance load error:', error);
+                status.textContent = `Could not load attendance: ${error.message}. Check the backend server and attendance records, then refresh.`;
+            }
+        }
+
+        async function loadParentNotifications() {
+            const feed = document.getElementById('parentMessagesFeed');
+            const badge = document.getElementById('parentMessageBadge');
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/notifications?userId=${encodeURIComponent(parentUsn)}&role=parent&institutionId=${institutionId}`);
+                const messages = await res.json();
+                if (!messages || messages.length === 0) {
+                    feed.innerHTML = `<div style="text-align: center; color: var(--text-muted); font-size: 13px; padding: 10px;">📬 No current messages or alerts.</div>`;
+                    badge.innerText = "0 New";
+                    return;
+                }
+                badge.innerText = `${messages.length} New`;
+                feed.innerHTML = "";
+                messages.forEach(msg => {
+                    const card = document.createElement('div');
+                    card.style.cssText = "background: #f8fafc; border-left: 4px solid var(--primary-blue); padding: 8px 12px; border-radius: 6px; font-size: 12px; text-align: left;";
+                    card.innerHTML = `<strong>${msg.title || 'ALERT'}:</strong> ${msg.message}`;
+                    feed.appendChild(card);
+                });
+            } catch (err) {
+                console.error("Notification load error:", err);
+            }
+        }
+        async function manualRefreshMessages() {
+            await loadParentNotifications();
+            showPopupNotification("🔄 Parent notifications and alerts refreshed!");
+        }
+        function logout() { localStorage.clear(); window.location.href = "index.html"; }
+        function showPopupNotification(message, type = 'success') {
+            let toast = document.getElementById('customToastPopup');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'customToastPopup';
+                document.body.appendChild(toast);
+            }
+            toast.style.background = type === 'success' ? '#0f172a' : '#991b1b';
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2500);
+        }
+        window.onload = function() {
+            document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
+            loadParentDashboardData();
+            loadParentNotifications();
+            // Default to Attendance module in strict isolation (Marks and Alerts hidden until clicked)
+            openParentModule('attendance');
+        };
+    </script>
 </body>
 </html>
