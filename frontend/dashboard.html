@@ -193,6 +193,43 @@
             }
         }
     </style>
+
+<style id="mobile-profile-timetable-fix">
+/* Keep dashboard cards and their children inside the viewport. */
+*, *::before, *::after { box-sizing: border-box; }
+#studentSectionLayout, #studentIdentityProfileCard, #studentAcademicUpdates,
+#studentCircularsList, #studentTimetableList, #parentWardProfileFields,
+#studentIdentityProfileFields { min-width: 0; max-width: 100%; }
+#studentIdentityProfileCard, #studentAcademicUpdates { overflow: hidden; }
+#studentIdentityProfileFields, #parentWardProfileFields {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+#studentIdentityProfileFields > div, #parentWardProfileFields > div {
+  min-width: 0 !important;
+  padding: 9px !important;
+  overflow-wrap: anywhere;
+}
+#studentTimetableList { width: 100%; overflow: hidden; }
+#studentTimetableList > div { max-width: 100%; min-width: 0; overflow-x: auto !important; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+#studentTimetableList table { width: max-content !important; min-width: 940px !important; max-width: none !important; table-layout: fixed; }
+#studentTimetableList th, #studentTimetableList td { overflow-wrap: anywhere; word-break: normal; }
+#studentTimetableList td > div { max-width: 100%; }
+@media (max-width: 480px) {
+  #studentIdentityProfileCard, #studentAcademicUpdates { padding: 12px !important; margin-bottom: 14px !important; border-radius: 16px !important; }
+  #studentIdentityProfileCard h3 { font-size: 15px !important; margin-bottom: 10px !important; }
+  #studentIdentityProfileFields, #parentWardProfileFields { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 7px !important; }
+  #studentIdentityProfileFields > div, #parentWardProfileFields > div { padding: 8px !important; border-radius: 10px !important; }
+  #studentIdentityProfileFields > div > div:first-child, #parentWardProfileFields > div > div:first-child { font-size: 9px !important; letter-spacing: 0 !important; }
+  #studentIdentityProfileFields > div > div:last-child, #parentWardProfileFields > div > div:last-child { font-size: 12px !important; line-height: 1.35 !important; }
+  #studentAcademicUpdates > div:first-child { gap: 8px !important; margin-bottom: 12px !important; }
+  #studentAcademicUpdates > div:nth-child(2) { grid-template-columns: minmax(0, 1fr) !important; gap: 12px !important; }
+  #studentAcademicUpdates > div:nth-child(2) > div { padding: 10px !important; min-width: 0 !important; max-width: 100% !important; }
+  #studentTimetableList th, #studentTimetableList td { padding: 7px 5px !important; }
+}
+</style>
+
 </head>
 <body>
 
@@ -1083,7 +1120,15 @@
                 ========================================================================== -->
             <div id="studentSectionLayout" style="display: none;">
 
-                <!-- 📢 STUDENT CIRCULARS + 🗓️ HOD TIMETABLE -->
+                                <!-- DATABASE-BACKED STUDENT PROFILE -->
+                <section id="studentIdentityProfileCard" class="bento-card" style="margin-bottom:24px;text-align:left;">
+                    <h3 style="font-size:16px;font-weight:800;color:var(--primary-blue);margin-bottom:14px;">🎓 My Academic Profile</h3>
+                    <div id="studentIdentityProfileFields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+                        <div style="color:var(--text-muted);font-size:12px;">Loading profile from database...</div>
+                    </div>
+                </section>
+
+<!-- 📢 STUDENT CIRCULARS + 🗓️ HOD TIMETABLE -->
                 <section id="studentAcademicUpdates" class="bento-card" style="margin-bottom:24px; text-align:left;">
                     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
                         <div>
@@ -1285,7 +1330,13 @@
                 👪 GUARDIAN / PARENT INTERFACE HUB
                 ========================================================================== -->
             <div id="parentSectionLayout" style="display: none;">
-                <div class="stats-grid">
+                                <section id="parentWardProfileCard" class="bento-card" style="margin-bottom:24px;text-align:left;">
+                    <h3 style="font-size:16px;font-weight:800;color:var(--primary-blue);margin-bottom:14px;">🎓 Ward Academic Profile</h3>
+                    <div id="parentWardProfileFields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+                        <div style="color:var(--text-muted);font-size:12px;">Loading ward profile from database...</div>
+                    </div>
+                </section>
+<div class="stats-grid">
                     <div class="stat-box" style="border-left: 4px solid var(--primary-blue);">
                         <h4>Ward Cumulative Attendance</h4>
                         <div id="parent_overall_ratio" class="count-number">0%</div>
@@ -2219,6 +2270,71 @@
             }
         }
 
+        function profileField(label, value) {
+            const safeValue = (value === null || value === undefined || String(value).trim() === '')
+                ? 'Not set in database'
+                : String(value);
+            return `<div style="background:#f8fafc;border:1px solid var(--bento-border);border-radius:12px;padding:12px;min-width:0;">
+                <div style="font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;">${escapeStudentUpdateHtml(label)}</div>
+                <div style="font-size:13px;font-weight:800;color:var(--text-dark);overflow-wrap:anywhere;">${escapeStudentUpdateHtml(safeValue)}</div>
+            </div>`;
+        }
+
+        async function loadDatabaseStudentProfile(studentId, targetId) {
+            const target = document.getElementById(targetId);
+            if (!target) return null;
+            if (!studentId) {
+                target.innerHTML = '<div style="color:#b91c1c;font-size:12px;">Student USN is not available in this session.</div>';
+                return null;
+            }
+
+            target.innerHTML = '<div style="color:var(--text-muted);font-size:12px;">Loading profile from database...</div>';
+            try {
+                const url = `${API_BASE}/api/marks/student-profile/${encodeURIComponent(studentId)}?institutionId=${encodeURIComponent(institutionId)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                if (!response.ok || data.success === false) {
+                    throw new Error(data.message || data.error || `Profile request failed (${response.status})`);
+                }
+
+                const profile = {
+                    usn: data.usn || studentId,
+                    name: data.student_name || data.name,
+                    branch: data.branch,
+                    semester: data.semester_number ?? data.current_class,
+                    section: data.section,
+                    academicYear: data.academic_year ?? data.academicYear
+                };
+
+                target.innerHTML = [
+                    profileField('Student Name', profile.name),
+                    profileField('USN', profile.usn),
+                    profileField('Branch', profile.branch),
+                    profileField('Semester', profile.semester !== null && profile.semester !== undefined && profile.semester !== '' ? `Semester ${profile.semester}` : null),
+                    profileField('Section', profile.section),
+                    profileField('Academic Year', profile.academicYear)
+                ].join('');
+
+                const prefix = targetId === 'studentIdentityProfileFields' ? 'student' : 'child';
+                if (profile.branch) localStorage.setItem(prefix + 'Branch', profile.branch);
+                if (profile.section) localStorage.setItem(prefix + 'Section', profile.section);
+                if (profile.academicYear) localStorage.setItem(prefix + 'AcademicYear', profile.academicYear);
+
+                if (targetId === 'studentIdentityProfileFields' &&
+                    profile.semester !== null && profile.semester !== undefined &&
+                    profile.semester !== '' && Number.isInteger(Number(profile.semester)) &&
+                    Number(profile.semester) > 0) {
+                    userSemester = Number(profile.semester);
+                    localStorage.setItem('userSemester', String(userSemester));
+                }
+                return profile;
+            } catch (error) {
+                console.error('Database student profile load failed:', error);
+                target.innerHTML = `<div style="color:#b91c1c;font-size:12px;">Could not load the profile from the database. ${escapeStudentUpdateHtml(error.message || 'Check the marks route and backend.')}</div>`;
+                return null;
+            }
+        }
+
         async function initializeFunctionalWorkspaceRouter() {
             // 🛡️ Normalize role so both 'faculty' and 'teacher' open the teacher workspace
             let role = userRole.toLowerCase().trim();
@@ -2244,12 +2360,14 @@
             } else if (role === 'parent') {
                 if (document.getElementById('parentSectionLayout')) document.getElementById('parentSectionLayout').style.display = 'block';
                 await resolveParentAndChildProfile();
+                await loadDatabaseStudentProfile(childUsn, 'parentWardProfileFields');
                 initializeIsolatedParentWorkspaceHUD();
                 loadParentSemesterData();
             } else {
                 if (document.getElementById('studentSectionLayout')) document.getElementById('studentSectionLayout').style.display = 'block';
                 if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | USN: ${userUsn}`;
                  
+                await loadDatabaseStudentProfile(userUsn, 'studentIdentityProfileFields');
                 checkAttendanceShortagesAutomatically();
                 initializeStudentPerformanceLayout();
                 refreshStudentAcademicUpdates();

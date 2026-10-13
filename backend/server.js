@@ -100,7 +100,9 @@ app.get("/api/auth/student-subject-metrics", async (req, res) => {
             SELECT TRIM(usn) AS usn,
                    TRIM(name) AS name,
                    TRIM(branch) AS branch,
-                   semester_number
+                   semester_number,
+                   TRIM(COALESCE(section, '')) AS section,
+                   TRIM(COALESCE(academic_year, '')) AS academic_year
             FROM users
             WHERE UPPER(TRIM(usn)) = $1
               AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
@@ -269,7 +271,9 @@ app.get("/api/auth/student-subject-metrics", async (req, res) => {
                 usn: student.usn,
                 name: student.name,
                 branch: student.branch,
-                semester_number: student.semester_number
+                semester_number: student.semester_number,
+                section: student.section || "",
+                academic_year: student.academic_year || ""
             },
             semester_number: targetSem,
             ai_predictions: dynamicPredictions,
@@ -359,8 +363,16 @@ app.get("/api/auth/student-attendance-ledger", async (req, res) => {
                 ) AS subject_name,
                 TO_CHAR(cs.created_at, 'YYYY-MM-DD') AS session_date
             FROM class_sessions cs
-            JOIN weekly_timetables wt 
-              ON (UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_code)) OR UPPER(TRIM(wt.subject_name)) ILIKE '%' || UPPER(TRIM(cs.subject_code)) || '%')
+            JOIN weekly_timetables wt
+              ON UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
+                 UPPER(TRIM($1))
+             AND (
+                    (NULLIF(TRIM(cs.subject_code), '') IS NOT NULL
+                     AND UPPER(TRIM(wt.subject_code)) = UPPER(TRIM(cs.subject_code)))
+                    OR
+                    (NULLIF(TRIM(cs.subject_name), '') IS NOT NULL
+                     AND UPPER(TRIM(wt.subject_name)) = UPPER(TRIM(cs.subject_name)))
+                 )
             WHERE UPPER(COALESCE(TRIM(cs.institution_id), 'DR_AIT')) = UPPER(TRIM($1))
               AND wt.semester_number = $2
               AND UPPER(TRIM(wt.branch)) = UPPER(TRIM($3))
@@ -687,21 +699,42 @@ app.get("/api/auth/teacher-session-roster", async (req, res) => {
 
         const session = sessionResult.rows[0];
 
-        const slot = await pool.query(`
-            SELECT TRIM(branch) AS branch, semester_number
-            FROM weekly_timetables
-            WHERE (
-                UPPER(TRIM(subject_code)) = UPPER(TRIM($1))
-                OR UPPER(TRIM(subject_name)) ILIKE '%' || UPPER(TRIM($1)) || '%'
-            )
-            AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
-                UPPER(TRIM($2))
-            ORDER BY semester_number
-            LIMIT 1
-        `, [session.subject_code || session.subject_name, tenant]);
+        const sessionSubjectCode = clean(session.subject_code);
+        const sessionSubjectName = clean(session.subject_name);
 
-        const branch = slot.rows[0]?.branch || "AIML";
-        const semester = slot.rows[0]?.semester_number || 5;
+        const slot = await pool.query(`
+            SELECT DISTINCT TRIM(branch) AS branch, semester_number
+            FROM weekly_timetables
+            WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
+                  UPPER(TRIM($1))
+              AND (
+                    (NULLIF(TRIM($2), '') IS NOT NULL
+                     AND UPPER(TRIM(subject_code)) = UPPER(TRIM($2)))
+                    OR
+                    (NULLIF(TRIM($3), '') IS NOT NULL
+                     AND UPPER(TRIM(subject_name)) = UPPER(TRIM($3)))
+                  )
+            ORDER BY semester_number, TRIM(branch)
+        `, [tenant, sessionSubjectCode, sessionSubjectName]);
+
+        if (slot.rows.length !== 1) {
+            return res.status(409).json({
+                success: false,
+                error: slot.rows.length
+                    ? "This subject is mapped to multiple branch/semester groups. Pass an explicit branch and semester or correct the timetable mapping."
+                    : "No matching branch/semester timetable mapping was found for this session. The roster was not generated to avoid marking another branch absent."
+            });
+        }
+
+        const branch = clean(slot.rows[0].branch);
+        const semester = parseInt(slot.rows[0].semester_number, 10);
+
+        if (!branch || !Number.isInteger(semester) || semester < 1 || semester > 8) {
+            return res.status(409).json({
+                success: false,
+                error: "The timetable mapping for this session has an invalid branch or semester."
+            });
+        }
 
         const studentsResult = await pool.query(`
             SELECT TRIM(usn) AS usn, TRIM(name) AS name, phone_number
@@ -3414,8 +3447,7 @@ app.use((err, req, res, next) => {
     if (res.headersSent) return next(err);
     res.status(500).json({
         success: false,
-        message: "Something went wrong on the server.",
-        error: err.message
+        message: "Something went wrong on the server."
     });
 });
 

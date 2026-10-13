@@ -193,6 +193,23 @@
             text-align: center;
         }
         .biometric-status { font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-top: 8px; }
+
+        select:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            background: #f8fafc;
+        }
+
+        .form-group small {
+            line-height: 1.45;
+        }
+
+        @media (max-width: 520px) {
+            body { padding: 18px 12px; align-items: flex-start; }
+            .signup-container { padding: 28px 20px; max-width: 100%; }
+            h2 { font-size: 25px; }
+            input, select { min-width: 0; }
+        }
     </style>
 </head>
 <body>
@@ -213,6 +230,46 @@
                     <option value="hod">HOD (Head of Department)</option>
                     <option value="parent">Parent</option>
                 </select>
+            </div>
+
+            <!-- STUDENT-ONLY ACADEMIC DETAILS -->
+            <div id="studentAcademicGroup" style="display: none;">
+                <div class="form-group">
+                    <label for="studentBranch">Department / Branch *</label>
+                    <select id="studentBranch">
+                        <option value="">Select your branch</option>
+                        <option value="AIML">Artificial Intelligence &amp; Machine Learning (AIML)</option>
+                        <option value="CSBS">Computer Science &amp; Business Systems (CSBS)</option>
+                        <option value="CSE">Computer Science &amp; Engineering (CSE)</option>
+                        <option value="ISE">Information Science &amp; Engineering (ISE)</option>
+                        <option value="ECE">Electronics &amp; Communication Engineering (ECE)</option>
+                        <option value="EEE">Electrical &amp; Electronics Engineering (EEE)</option>
+                        <option value="MECH">Mechanical Engineering (MECH)</option>
+                        <option value="CIVIL">Civil Engineering (CIVIL)</option>
+                        <option value="MATHS">Mathematics Department</option>
+                        <option value="CHEM">Chemistry Department</option>
+                        <option value="PHYSICS">Physics Department</option>
+                        <option value="BIOLOGY">Biology Department</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="section">Section *</label>
+                    <select id="section" disabled>
+                        <option value="">Select branch first</option>
+                    </select>
+                    <small id="sectionHelp" style="display:block; margin-top:6px; color:var(--text-muted); font-size:11px;">
+                        Choose the section assigned by your department.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="academicYear">Academic Year *</label>
+                    <select id="academicYear">
+                        <option value="2026-2027" selected>2026–2027</option>
+                        <option value="2025-2026">2025–2026</option>
+                    </select>
+                </div>
             </div>
 
             <!-- Branch Selection Group (For HOD & Teachers) -->
@@ -312,6 +369,7 @@
 
         window.onload = function() {
             toggleRoleFields();
+            setupStudentAcademicFields();
             getOrCreateDeviceFingerprint();
         };
 
@@ -346,6 +404,24 @@
             const branchGroup = document.getElementById('branchGroup');
             const bioBox = document.getElementById('studentBiometricBox');
             const phoneGroup = document.getElementById('phoneGroup');
+            const studentAcademicGroup = document.getElementById('studentAcademicGroup');
+            const studentBranchInput = document.getElementById('studentBranch');
+            const sectionInput = document.getElementById('section');
+            const academicYearInput = document.getElementById('academicYear');
+
+            // Academic fields are visible and required ONLY for student signup.
+            const isStudent = role === 'student';
+            studentAcademicGroup.style.display = isStudent ? 'block' : 'none';
+            studentBranchInput.required = isStudent;
+            sectionInput.required = isStudent;
+            academicYearInput.required = isStudent;
+
+            if (role !== 'student') {
+                studentBranchInput.value = '';
+                sectionInput.innerHTML = '<option value="">Select branch first</option>';
+                sectionInput.disabled = true;
+                academicYearInput.value = '2026-2027';
+            }
 
             if (role === 'parent') {
                 nameLabel.innerText = "Parent Full Name";
@@ -391,6 +467,48 @@
                 childUsnInput.required = false;
                 childUsnInput.value = "";
             }
+        }
+
+        // Section availability is configured per branch. A-E are offered for
+        // engineering branches here as a starting configuration; confirm the
+        // exact sections with Dr. AIT's official department records.
+        // Change any array below if a department has fewer sections.
+        const BRANCH_SECTIONS = {
+            AIML: ['A', 'B', 'C', 'D', 'E'],
+            CSBS: ['A', 'B', 'C', 'D', 'E'],
+            CSE: ['A', 'B', 'C', 'D', 'E'],
+            ISE: ['A', 'B', 'C', 'D', 'E'],
+            ECE: ['A', 'B', 'C', 'D', 'E'],
+            EEE: ['A', 'B', 'C', 'D', 'E'],
+            MECH: ['A', 'B', 'C', 'D', 'E'],
+            CIVIL: ['A', 'B', 'C', 'D', 'E'],
+            MATHS: ['A', 'B', 'C', 'D', 'E'],
+            CHEM: ['A', 'B', 'C', 'D', 'E'],
+            PHYSICS: ['A', 'B', 'C', 'D', 'E'],
+            BIOLOGY: ['A', 'B', 'C', 'D', 'E']
+        };
+
+        function setupStudentAcademicFields() {
+            const branchSelect = document.getElementById('studentBranch');
+            const sectionSelect = document.getElementById('section');
+
+            branchSelect.addEventListener('change', function () {
+                const branch = this.value;
+                const sections = BRANCH_SECTIONS[branch] || [];
+                sectionSelect.innerHTML = '';
+
+                if (!branch || sections.length === 0) {
+                    sectionSelect.innerHTML = '<option value="">No sections configured</option>';
+                    sectionSelect.disabled = true;
+                    return;
+                }
+
+                sectionSelect.appendChild(new Option('Select your section', ''));
+                sections.forEach(section => {
+                    sectionSelect.appendChild(new Option('Section ' + section, section));
+                });
+                sectionSelect.disabled = false;
+            });
         }
 
         async function registerHardwareFingerprint() {
@@ -486,6 +604,15 @@
                 return;
             }
 
+            if (role === 'student' && (!studentBranch || !section || !academicYear)) {
+                alertBox.innerText = "⚠️ Please select your branch, section, and academic year.";
+                alertBox.style.display = 'block';
+                if (!studentBranch) document.getElementById('studentBranch').focus();
+                else if (!section) document.getElementById('section').focus();
+                else document.getElementById('academicYear').focus();
+                return;
+            }
+
             if (role === 'student' && !enrolledCredentialId) {
                 alertBox.innerText = "⚠️ You must register your phone fingerprint sensor before completing signup.";
                 alertBox.style.display = 'block';
@@ -504,9 +631,12 @@
                         password, 
                         role, 
                         name, 
-                        childUsn, 
-                        branch, 
-                        phoneNumber, 
+                        childUsn,
+                        // Existing branch field is used by teacher/HOD signup.
+                        branch: role === 'student' ? studentBranch : branch,
+                        section: role === 'student' ? section : '',
+                        academicYear: role === 'student' ? academicYear : '',
+                        phoneNumber,
                         institutionId: 'DR_AIT',
                         deviceFingerprint: deviceFingerprint
                     })
