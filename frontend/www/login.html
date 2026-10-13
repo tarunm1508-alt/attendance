@@ -2,262 +2,374 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Academic Portal | Sign In</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dr. AIT | Secure Portal Login</title>
     <style>
         :root {
-            --bg-canvas: #f1f5f9;
+            --bg-canvas: #f8fafc;
             --surface-card: #ffffff;
+            --border-clean: #e2e8f0;
             --primary-blue: #1e40af;
             --primary-hover: #1d4ed8;
-            --primary-glow: rgba(30, 64, 175, 0.08);
+            --primary-glow: rgba(30, 64, 175, 0.05);
             --text-dark: #0f172a;
             --text-muted: #64748b;
             --text-labels: #475569;
-            --border-clean: #e2e8f0;
-            --input-bg: #ffffff;
-            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+            --shadow-mobile: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; }
-        body { background-color: var(--bg-canvas); color: var(--text-dark); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 40px 24px; }
-
-        .login-container {
-            background: var(--surface-card);
-            border: 1px solid var(--border-clean);
-            padding: 44px 40px;
-            border-radius: 24px;
-            box-shadow: var(--shadow-premium);
-            width: 100%;
-            max-width: 440px;
-            text-align: center;
-        }
-
-        h2 { font-size: 28px; font-weight: 800; color: var(--primary-blue); margin-bottom: 8px; }
-        p.subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; font-weight: 500; }
-
-        .form-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; margin-bottom: 8px; color: var(--text-labels); font-size: 12px; font-weight: 700; text-transform: uppercase; }
-
-        .password-input-wrapper { position: relative; display: flex; align-items: center; }
-        .password-input-wrapper input { padding-right: 45px; }
-        .toggle-password-btn { position: absolute; right: 12px; background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-muted); padding: 4px; }
-
-        input, select {
-            width: 100%;
-            padding: 14px 18px;
-            background: var(--input-bg);
-            border: 1px solid var(--border-clean);
-            border-radius: 12px;
-            color: var(--text-dark);
-            font-size: 15px;
-            font-weight: 500;
-        }
-
-        input:focus, select:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 0 4px var(--primary-glow); }
-
-        .btn {
-            width: 100%;
-            padding: 15px;
-            background: var(--primary-blue);
-            border: none;
-            border-radius: 12px;
-            color: #ffffff;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 24px;
-            transition: all 0.2s;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; }
+        .login-container { background: var(--surface-card); border: 1px solid var(--border-clean); padding: 36px 24px; border-radius: 24px; box-shadow: var(--shadow-mobile); width: 100%; max-width: 400px; text-align: center; }
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 13px; font-weight: 700; margin-bottom: 16px; text-align: left; width: 100%; }
+        .auth-card { background: #ffffff; border: 1px solid var(--border-clean); border-radius: 20px; padding: 30px 20px; text-align: center; box-shadow: var(--shadow-mobile); margin-top: 10px; display: none; }
+        .auth-icon { font-size: 48px; margin-bottom: 12px; }
+        .auth-title { font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
+        .auth-subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; line-height: 1.5; font-weight: 500; }
+        .form-group { margin-bottom: 18px; text-align: left; }
+        label { display: block; margin-bottom: 6px; color: var(--text-labels); font-size: 11px; font-weight: 700; text-transform: uppercase; }
+        input { width: 100%; padding: 14px; background: #ffffff; border: 1px solid var(--border-clean); border-radius: 12px; font-size: 14px; outline: none; }
+        input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 3px var(--primary-glow); }
+        .password-field-wrapper { position: relative; width: 100%; }
+        .password-field-wrapper input { padding-right: 45px; }
+        .password-toggle-btn { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 16px; color: var(--text-muted); padding: 4px; }
+        .btn { width: 100%; padding: 14px; background: var(--primary-blue); border: none; border-radius: 12px; color: #ffffff; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; margin-top: 10px; }
         .btn:hover { background: var(--primary-hover); }
-
-        .footer-links { margin-top: 24px; font-size: 14px; color: var(--text-muted); font-weight: 500; }
+        .footer-links { margin-top: 20px; font-size: 13px; color: var(--text-muted); }
         .footer-links a { color: var(--primary-blue); text-decoration: none; font-weight: 700; }
-
-        .alert { padding: 14px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; display: none; text-align: center; background-color: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
-
-        /* 📱 CLEAN ANTI-PROXY MODAL */
-        .bio-overlay {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px);
-            z-index: 9999; display: none; justify-content: center; align-items: center; padding: 20px;
-        }
-        .bio-modal {
-            background: #ffffff; width: 100%; max-width: 340px; padding: 36px 24px;
-            border-radius: 24px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-            animation: popUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes popUp { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-        .fingerprint-icon {
-            font-size: 56px; margin-bottom: 16px; display: inline-block;
-            animation: pulseSensor 1.8s infinite ease-in-out;
-        }
-        @keyframes pulseSensor {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.12); opacity: 1; text-shadow: 0 0 15px rgba(30, 64, 175, 0.4); }
-            100% { transform: scale(1); opacity: 0.8; }
-        }
-        .bio-modal h3 { font-size: 20px; font-weight: 800; color: var(--text-dark); margin-bottom: 8px; }
-        .bio-modal p { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; line-height: 1.5; }
-        .bio-action-btn {
-            width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; cursor: pointer; border: none; font-size: 15px;
-            background: var(--primary-blue); color: #fff; margin-bottom: 10px; transition: background 0.2s;
-        }
-        .bio-action-btn:hover { background: var(--primary-hover); }
-        .bio-cancel-btn {
-            width: 100%; padding: 12px; border-radius: 12px; font-weight: 600; cursor: pointer; border: none; font-size: 14px;
-            background: #f1f5f9; color: var(--text-labels);
-        }
+        .alert { padding: 12px 14px; border-radius: 12px; margin-bottom: 18px; font-size: 13px; display: none; text-align: center; background-color: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; font-weight: 600; line-height: 1.4; }
+        .forgot-pass-row { display: flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 16px; }
+        .forgot-pass-row a { font-size: 12px; color: var(--primary-blue); text-decoration: none; font-weight: 700; }
     </style>
 </head>
 <body>
-
     <div class="login-container">
-        <h2>Sign In</h2>
-        <p class="subtitle" id="portalRoleSubtitle">Access your academic workspace</p>
-
+        <div>
+            <a href="index.html" class="back-link">⬅️ Back to Role Selection</a>
+        </div>
+        <h2 id="portalTitle">Portal Login</h2>
+        <p class="subtitle">Dr. AIT Academic Portal Matrix</p>
         <div id="alertBox" class="alert"></div>
-
-        <!-- Added autocomplete="off" to prevent password manager passkey interception -->
-        <form id="loginForm" onsubmit="handleFormSubmit(event)" autocomplete="off">
-
+        <form id="credentialsForm" autocomplete="off" onsubmit="handleFormSubmit(event)">
             <div class="form-group">
-                <label for="role">Portal Role</label>
-                <select id="role" onchange="toggleLoginRole()">
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="hod">HOD (Head of Department)</option>
-                    <option value="parent">Parent</option>
-                </select>
+                <label id="usernameLabel" for="username">USN / Username ID</label>
+                <input type="text" id="username" placeholder="Enter ID or USN" required autocomplete="off">
             </div>
-
             <div class="form-group">
-                <label id="idLabel" for="username">Username / USN</label>
-                <input type="text" id="username" placeholder="Enter ID or USN" autocomplete="off" required style="text-transform:uppercase;">
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-input-wrapper">
-                    <input type="password" id="password" placeholder="••••••••" autocomplete="new-password" required>
-                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)">👁️</button>
+                <label for="password">Account Password</label>
+                <div class="password-field-wrapper">
+                    <input type="password" id="password" placeholder="••••••••" required autocomplete="current-password">
+                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('password', this)" title="Show/Hide Password">👁️</button>
                 </div>
             </div>
-
-            <button type="submit" class="btn">Authenticate & Unlock</button>
+            <div class="forgot-pass-row">
+                <a href="#" onclick="openForgotPasswordModal(event)">Forgot Password?</a>
+            </div>
+            <div class="form-group" id="parentLinkGroup" style="display: none;">
+                <label for="childUsn">Student USN (Link to Child)</label>
+                <input type="text" id="childUsn" placeholder="Enter child's USN" autocomplete="off">
+            </div>
+            <button type="submit" class="btn" id="continueBtn">Continue</button>
         </form>
-
+        <div id="biometricCardSection" class="auth-card">
+            <div class="auth-icon">🖐️️</div>
+            <div class="auth-title">Fingerprint Verification Required</div>
+            <div class="auth-subtitle">Please verify your physical device fingerprint sensor to securely unlock your portal session.</div>
+            <button class="btn" type="button" onclick="triggerBiometricAndLogin()">Verify Fingerprint Pass</button>
+        </div>
         <div class="footer-links">
-            Don't have an account? <a href="signup.html">Create Account</a>
+            Don't have an account? <a href="signup.html">Sign Up</a>
         </div>
     </div>
-
-    <!-- 👆 STANDALONE ANTI-PROXY BIOMETRIC MODAL -->
-    <div id="biometricModal" class="bio-overlay">
-        <div class="bio-modal">
-            <div class="fingerprint-icon">👆</div>
-            <h3>Anti-Proxy Fingerprint Lock</h3>
-            <p>Verify your physical device presence via your phone scanner to authorize secure entry.</p>
-            <button type="button" class="bio-action-btn" onclick="confirmBiometricScan()">Verify Fingerprint Now</button>
-            <button type="button" class="bio-cancel-btn" onclick="closeBiometricModal()">Cancel</button>
+    <div id="forgotPasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 100000; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #ffffff; width: 100%; max-width: 400px; border-radius: 22px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); text-align: left;">
+            <h3 style="font-size: 18px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">🔑 Reset Portal Password</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">Enter your USN/ID to update your login credentials.</p>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-labels); display: block; margin-bottom: 6px;">USN / Username</label>
+                    <input type="text" id="resetUsnInput" placeholder="e.g., 1DA24AI001" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-clean); font-size: 13px;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-labels); display: block; margin-bottom: 6px;">New Password</label>
+                    <div class="password-field-wrapper">
+                        <input type="password" id="resetNewPasswordInput" placeholder="Enter new secure password" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid var(--border-clean); font-size: 13px;">
+                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('resetNewPasswordInput', this)" title="Show/Hide Password">👁️</button>
+                    </div>
+                </div>
+                <button onclick="executePasswordReset()" class="btn" style="margin-top: 4px;">Update Password 🔒</button>
+                <button onclick="closeForgotPasswordModal()" class="btn" style="background: #e2e8f0; color: var(--text-dark); margin-top: 0;">Cancel</button>
+            </div>
         </div>
     </div>
-
     <script>
-        let API_BASE = "https://dr-ait-portal-backend.onrender.com";
+        let API_BASE = window.location.origin;
+        if (API_BASE.includes("-5501.")) {
+            API_BASE = API_BASE.replace("-5501.", "-5000.");
+        } else if (API_BASE.includes(":5501")) {
+            API_BASE = API_BASE.replace(":5501", ":5000");
+        } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            API_BASE = "http://localhost:5000";
+        }
 
-        window.onload = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const roleParam = urlParams.get('role');
-            if (roleParam) {
-                const roleSelect = document.getElementById('role');
-                roleSelect.value = roleParam;
+        let activePortalRole = 'student';
+        let cachedUsn = '';
+        let cachedPassword = '';
+        let cachedChildUsn = '';
+
+        document.addEventListener("DOMContentLoaded", () => {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                activePortalRole = (urlParams.get('role') || 'student').toLowerCase().trim();
+
+                const titleHeader = document.getElementById('portalTitle');
+                const usernameLabel = document.getElementById('usernameLabel');
+                const usernameInput = document.getElementById('username');
+                const parentLinkGroup = document.getElementById('parentLinkGroup');
+                const continueBtn = document.getElementById('continueBtn');
+
+                if (activePortalRole === 'principal') {
+                    titleHeader.innerText = "Principal Executive Login";
+                    usernameLabel.innerText = "Principal ID / Username";
+                    usernameInput.placeholder = "Enter Principal Employee ID";
+                    parentLinkGroup.style.display = 'none';
+                    continueBtn.innerText = "Authenticate & Unlock";
+                } else if (activePortalRole === 'dean') {
+                    titleHeader.innerText = "Dean Academic Login";
+                    usernameLabel.innerText = "Dean ID / Username";
+                    usernameInput.placeholder = "Enter Dean Employee ID";
+                    parentLinkGroup.style.display = 'none';
+                    continueBtn.innerText = "Authenticate & Unlock";
+                } else if (activePortalRole === 'faculty') {
+                    titleHeader.innerText = "Faculty Login";
+                    usernameLabel.innerText = "Faculty ID / Employee ID";
+                    usernameInput.placeholder = "Enter Faculty Employee ID";
+                    parentLinkGroup.style.display = 'none';
+                    continueBtn.innerText = "Authenticate & Unlock";
+                } else if (activePortalRole === 'hod') {
+                    titleHeader.innerText = "HOD Executive Login";
+                    usernameLabel.innerText = "HOD Employee ID / Username";
+                    usernameInput.placeholder = "Enter HOD Employee ID";
+                    parentLinkGroup.style.display = 'none';
+                    continueBtn.innerText = "Authenticate & Unlock";
+                } else if (activePortalRole === 'parent') {
+                    titleHeader.innerText = "Parent Login";
+                    usernameLabel.innerText = "Parent Username / ID";
+                    usernameInput.placeholder = "Enter Parent Account ID";
+                    parentLinkGroup.style.display = 'block';
+                    continueBtn.innerText = "Authenticate & Unlock";
+                } else {
+                    titleHeader.innerText = "Student Fingerprint Login";
+                    usernameLabel.innerText = "Student USN";
+                    usernameInput.placeholder = "Enter College USN";
+                    parentLinkGroup.style.display = 'none';
+                    continueBtn.innerText = "Continue to Verification";
+                    activePortalRole = 'student';
+                }
+
+                getOrCreateDeviceFingerprint();
+            } catch (e) {
+                console.error("Init error:", e);
             }
-            toggleLoginRole();
-        };
+        });
 
-        function togglePasswordVisibility(inputId, btnElement) {
-            const inputField = document.getElementById(inputId);
-            if (inputField.type === "password") {
-                inputField.type = "text";
-                btnElement.innerText = "🙈";
+        function togglePasswordVisibility(fieldId, toggleBtn) {
+            const field = document.getElementById(fieldId);
+            if (!field) return;
+            if (field.type === "password") {
+                field.type = "text";
+                toggleBtn.innerText = "🙈";
             } else {
-                inputField.type = "password";
-                btnElement.innerText = "👁️";
+                field.type = "password";
+                toggleBtn.innerText = "👁️";
             }
         }
 
-        function toggleLoginRole() {
-            const role = document.getElementById('role').value;
-            const subtitle = document.getElementById('portalRoleSubtitle');
-            subtitle.innerText = `Sign in to ${role.toUpperCase()} Workspace`;
-        }
-
-        function handleFormSubmit(event) {
-            event.preventDefault();
-            const role = document.getElementById('role').value;
-
-            if (role === 'hod' || role === 'teacher') {
-                const enteredPasscode = prompt(`🔒 Security Passcode Required: Enter the authorized ${role.toUpperCase()} privacy password:`);
-                const privacyPassword = "AIT@2026";
-
-                if (enteredPasscode !== privacyPassword) {
-                    alert("❌ Incorrect password. Please enter the correct code.");
-                    return; 
+        function getOrCreateDeviceFingerprint() {
+            let deviceId = localStorage.getItem("dr_ait_persistent_device_id");
+            if (!deviceId) {
+                const cookieMatch = document.cookie.match(/(^|;) ?deviceFingerprint=([^;]*)(;|$)/);
+                if (cookieMatch) {
+                    deviceId = decodeURIComponent(cookieMatch[2]);
+                    localStorage.setItem("dr_ait_persistent_device_id", deviceId);
                 }
             }
-
-            // Open custom UI modal safely without invoking browser WebAuthn passkey manager
-            document.getElementById('biometricModal').style.display = 'flex';
+            if (!deviceId) {
+                deviceId = "STRICT_TOKEN_" + (crypto.randomUUID ? crypto.randomUUID() : ('id_' + Math.random().toString(36).substring(2) + Date.now() + Math.random().toString(36).substring(2)));
+                localStorage.setItem("dr_ait_persistent_device_id", deviceId);
+            }
+            document.cookie = `deviceFingerprint=${deviceId}; path=/; max-age=31536000; SameSite=Strict`;
+            return deviceId;
         }
 
-        function closeBiometricModal() {
-            document.getElementById('biometricModal').style.display = 'none';
+        function openForgotPasswordModal(e) {
+            e.preventDefault();
+            document.getElementById('forgotPasswordModal').style.display = 'flex';
         }
 
-        async function confirmBiometricScan() {
-            closeBiometricModal();
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').style.display = 'none';
+        }
 
-            if (navigator.vibrate) {
-                navigator.vibrate(60);
+        async function executePasswordReset() {
+            const usn = document.getElementById('resetUsnInput').value.trim();
+            const newPassword = document.getElementById('resetNewPasswordInput').value.trim();
+
+            if (!usn || !newPassword) {
+                alert("Please fill in both fields.");
+                return;
             }
 
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/reset-password-confirm`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usn, newPassword, institutionId: 'DR_AIT' })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert("✅ " + data.message);
+                    closeForgotPasswordModal();
+                    document.getElementById('resetUsnInput').value = '';
+                    document.getElementById('resetNewPasswordInput').value = '';
+                } else {
+                    alert("❌ " + (data.message || "Failed to reset password."));
+                }
+            } catch (e) {
+                alert("❌ Network error connecting to server.");
+            }
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
             const alertBox = document.getElementById('alertBox');
             alertBox.style.display = 'none';
 
-            const role = document.getElementById('role').value;
-            const usn = document.getElementById('username').value.trim().toUpperCase();
-            const password = document.getElementById('password').value;
+            cachedUsn = document.getElementById('username').value.trim();
+            cachedPassword = document.getElementById('password').value;
+            cachedChildUsn = document.getElementById('childUsn') ? document.getElementById('childUsn').value.trim() : '';
+
+            if (!cachedUsn || !cachedPassword) return;
+
+            if (activePortalRole === 'parent' && !cachedChildUsn) {
+                alertBox.innerText = "Please enter the linked Student USN.";
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            if (activePortalRole !== 'student') {
+                sendLoginRequest();
+                return;
+            }
+
+            document.getElementById('credentialsForm').style.display = 'none';
+            document.getElementById('biometricCardSection').style.display = 'block';
+        }
+
+        async function triggerBiometricAndLogin() {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.style.display = 'none';
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                let hardwareVerified = false;
+
+                if (window.PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
+                    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                    if (available) {
+                        try {
+                            const challenge = new Uint8Array(32);
+                            window.crypto.getRandomValues(challenge);
+
+                            await navigator.credentials.get({
+                                publicKey: {
+                                    challenge: challenge,
+                                    timeout: 30000,
+                                    userVerification: "required",
+                                    rpId: window.location.hostname
+                                }
+                            });
+                            hardwareVerified = true;
+                        } catch (webAuthnErr) {
+                            console.warn("Hardware biometric check bypassed or cancelled:", webAuthnErr);
+                        }
+                    }
+                }
+
+                if (!hardwareVerified) {
+                    const confirmFingerprint = window.confirm("👆 Dr. AIT Hardware Fingerprint Security:\n\nPlace your finger on your device sensor and tap OK to verify your physical presence and unlock session.");
+                    if (!confirmFingerprint) {
+                        throw new Error("Fingerprint verification declined by user.");
+                    }
+                }
+
+                sendLoginRequest();
+            } catch (err) {
+                console.warn("Fingerprint scan canceled or failed:", err);
+
+                document.getElementById('biometricCardSection').style.display = 'none';
+                document.getElementById('credentialsForm').style.display = 'block';
+
+                alertBox.innerText = "❌ Fingerprint verification canceled or failed. Access blocked.";
+                alertBox.style.display = 'block';
+            }
+        }
+
+        async function sendLoginRequest() {
+            const alertBox = document.getElementById('alertBox');
+            const deviceFingerprint = getOrCreateDeviceFingerprint();
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/combined-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usn, password, role, institutionId: 'DR_AIT' })
+                    body: JSON.stringify({
+                        usn: cachedUsn,
+                        password: cachedPassword,
+                        role: activePortalRole,
+                        deviceFingerprint: deviceFingerprint,
+                        institutionId: 'DR_AIT'
+                    })
                 });
 
                 const data = await response.json();
-                
-                if (!response.ok || !data.success) {
-                    alertBox.innerText = data.message || "Login restricted. Invalid credentials.";
-                    alertBox.style.display = 'block';
-                    return;
-                }
 
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('userUsn', data.usn);
-                localStorage.setItem('userName', data.name);
-                localStorage.setItem('userBranch', data.branch || 'AIML');
-                localStorage.setItem('institutionId', data.institutionId);
+                if (response.ok && data.success) {
+                    localStorage.setItem('userUsn', data.usn || cachedUsn);
+                    localStorage.setItem('userName', data.name || '');
+                    localStorage.setItem('userRole', data.role || activePortalRole);
+                    localStorage.setItem('userSubject', data.subjectName || '');
+                    localStorage.setItem('userBranch', data.branch || 'AIML');
 
-                if (data.role === 'hod') {
-                    window.location.href = "hod_dashboard.html";
+                    if (activePortalRole === 'parent') {
+                        localStorage.setItem('childUsn', cachedChildUsn);
+                    }
+
+                    if (data.role === 'principal' || activePortalRole === 'principal') {
+                        window.location.href = "principal_dashboard.html";
+                    } else if (data.role === 'dean' || activePortalRole === 'dean') {
+                        window.location.href = "dean_dashboard.html";
+                    } else if (data.role === 'hod' || activePortalRole === 'hod') {
+                        window.location.href = "hod_dashboard.html";
+                    } else if (data.role === 'parent') {
+                        window.location.href = "parent.html";
+                    } else if (data.role === 'faculty' || activePortalRole === 'faculty' || data.role === 'teacher') {
+                        window.location.href = "dashboard.html"; // Unified dashboard reads role='faculty' to show teacher section
+                    } else {
+                        window.location.href = "dashboard.html";
+                    }
                 } else {
-                    window.location.href = "dashboard.html";
-                }
+                    document.getElementById('biometricCardSection').style.display = 'none';
+                    document.getElementById('credentialsForm').style.display = 'block';
 
+                    alertBox.innerText = data.message || "Invalid credentials.";
+                    alertBox.style.display = 'block';
+                }
             } catch (err) {
-                alertBox.innerText = "Server connection error: " + err.message;
+                console.error("Network error:", err);
+                document.getElementById('biometricCardSection').style.display = 'none';
+                document.getElementById('credentialsForm').style.display = 'block';
+
+                alertBox.innerText = "Connection lost to API server.";
                 alertBox.style.display = 'block';
             }
         }

@@ -3404,6 +3404,85 @@ app.post("/api/hod/respond-swap", async (req, res) => {
 });
 
 /* ==========================================================================
+   🏛️ PRINCIPAL & DEAN EXECUTIVE INSTITUTIONAL METRICS
+  ========================================================================== */
+app.get("/api/admin/institutional-metrics", async (req, res) => {
+    const tenant = tenantOf(req.query.institutionId);
+
+    try {
+        const [
+            deptRes,
+            facultyRes,
+            studentRes,
+            circularsRes,
+            pubsRes,
+            fdpRes,
+            deptBreakdownRes
+        ] = await Promise.all([
+            pool.query(`
+                SELECT COUNT(DISTINCT UPPER(TRIM(branch))) AS total_depts
+                FROM users
+                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($1))
+                  AND branch IS NOT NULL AND branch != '' AND branch != 'ADMIN' AND branch != 'ACADEMIC'
+            `, [tenant]),
+            pool.query(`
+                SELECT COUNT(*) AS total_faculty
+                FROM users
+                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($1))
+                  AND LOWER(TRIM(role)) IN ('faculty', 'teacher', 'hod')
+            `, [tenant]),
+            pool.query(`
+                SELECT COUNT(*) AS total_students
+                FROM users
+                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($1))
+                  AND LOWER(TRIM(role)) = 'student'
+            `, [tenant]),
+            pool.query(`
+                SELECT COUNT(*) AS total_circulars
+                FROM institution_circulars
+                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($1))
+            `, [tenant]).catch(() => ({ rows: [{ total_circulars: 0 }] })),
+            pool.query(`
+                SELECT COUNT(*) AS total_pubs
+                FROM faculty_publications
+                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($1))
+            `, [tenant]).catch(() => ({ rows: [{ total_pubs: 0 }] })),
+            pool.query(`
+                SELECT COUNT(*) AS total_fdps
+                FROM faculty_fdp_attended
+                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($1))
+            `, [tenant]).catch(() => ({ rows: [{ total_fdps: 0 }] })),
+            pool.query(`
+                SELECT 
+                    UPPER(TRIM(branch)) AS branch,
+                    COUNT(CASE WHEN LOWER(TRIM(role)) IN ('faculty', 'teacher', 'hod') THEN 1 END) AS faculty_count,
+                    COUNT(CASE WHEN LOWER(TRIM(role)) = 'student' THEN 1 END) AS student_count
+                FROM users
+                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($1))
+                  AND branch IS NOT NULL AND branch != '' AND branch != 'ADMIN' AND branch != 'ACADEMIC'
+                GROUP BY UPPER(TRIM(branch))
+                ORDER BY branch ASC
+            `, [tenant])
+        ]);
+
+        res.json({
+            success: true,
+            institutionId: tenant,
+            totalDepartments: parseInt(deptRes.rows[0]?.total_depts || 0, 10),
+            totalFaculty: parseInt(facultyRes.rows[0]?.total_faculty || 0, 10),
+            totalStudents: parseInt(studentRes.rows[0]?.total_students || 0, 10),
+            totalCirculars: parseInt(circularsRes.rows[0]?.total_circulars || 0, 10),
+            totalPublications: parseInt(pubsRes.rows[0]?.total_pubs || 0, 10),
+            totalFdps: parseInt(fdpRes.rows[0]?.total_fdps || 0, 10),
+            departments: deptBreakdownRes.rows
+        });
+    } catch (err) {
+        console.error("Institutional metrics error:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/* ==========================================================================
    EXISTING ROUTE MODULES
   ========================================================================== */
 const authRoutes = require("./routes/auth");

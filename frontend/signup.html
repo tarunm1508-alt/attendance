@@ -226,9 +226,11 @@
                 <label for="role">Portal Role</label>
                 <select id="role" onchange="toggleRoleFields()">
                     <option value="student" selected>Student (Requires Hardware Fingerprint)</option>
-                    <option value="teacher">Teacher</option>
+                    <option value="teacher">Faculty / Teacher</option>
                     <option value="hod">HOD (Head of Department)</option>
-                    <option value="parent">Parent</option>
+                    <option value="dean">Dean (Academic Affairs)</option>
+                    <option value="principal">Principal (Head of Institution)</option>
+                    <option value="parent">Parent / Guardian</option>
                 </select>
             </div>
 
@@ -368,6 +370,13 @@
         let enrolledPublicKey = null;
 
         window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roleParam = urlParams.get('role');
+            if (roleParam && ['student', 'teacher', 'faculty', 'hod', 'dean', 'principal', 'parent'].includes(roleParam.toLowerCase())) {
+                const mappedRole = roleParam.toLowerCase() === 'faculty' ? 'teacher' : roleParam.toLowerCase();
+                const roleSelect = document.getElementById('role');
+                if (roleSelect) roleSelect.value = mappedRole;
+            }
             toggleRoleFields();
             setupStudentAcademicFields();
             getOrCreateDeviceFingerprint();
@@ -452,6 +461,28 @@
                 parentLinkGroup.style.display = 'none';
                 branchGroup.style.display = 'block';
                 bioBox.style.display = 'none'; // 🚫 Hidden for HODs
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
+            } else if (role === 'dean') {
+                nameLabel.innerText = "Dean Full Name";
+                fullNameInput.placeholder = "Enter Dean full name (e.g. Dr. S. K. Nandeesh)";
+                idLabel.innerText = "Dean Employee ID";
+                usernameInput.placeholder = "Enter Dean ID (e.g. DEAN01)";
+                parentLinkGroup.style.display = 'none';
+                branchGroup.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for Deans
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
+            } else if (role === 'principal') {
+                nameLabel.innerText = "Principal Full Name";
+                fullNameInput.placeholder = "Enter Principal full name (e.g. Dr. C. Ramesh)";
+                idLabel.innerText = "Principal Employee ID";
+                usernameInput.placeholder = "Enter Principal ID (e.g. PRIN01)";
+                parentLinkGroup.style.display = 'none';
+                branchGroup.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for Principal
                 phoneGroup.style.display = 'block';
                 childUsnInput.required = false;
                 childUsnInput.value = "";
@@ -632,8 +663,8 @@
                         role, 
                         name, 
                         childUsn,
-                        // Existing branch field is used by teacher/HOD signup.
-                        branch: role === 'student' ? studentBranch : branch,
+                        // Branch field for student, principal, dean, and teacher/HOD
+                        branch: role === 'student' ? studentBranch : (role === 'principal' ? 'ADMIN' : (role === 'dean' ? 'ACADEMIC' : branch)),
                         section: role === 'student' ? section : '',
                         academicYear: role === 'student' ? academicYear : '',
                         phoneNumber,
@@ -652,8 +683,8 @@
 
                 setTimeout(() => {
                     document.getElementById('biometricAuthModal').style.display = 'none';
-                    alert("🎉 Account & phone successfully bound! Please login using your password.");
-                    window.location.href = `login.html?role=${role}`;
+                    alert("🎉 Account created successfully! Please login using your credentials.");
+                    window.location.href = `login.html?role=${role === 'teacher' ? 'faculty' : role}`;
                 }, 1000);
 
             } catch (err) {

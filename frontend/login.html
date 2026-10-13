@@ -128,7 +128,19 @@
                 const parentLinkGroup = document.getElementById('parentLinkGroup');
                 const continueBtn = document.getElementById('continueBtn');
 
-                if (activePortalRole === 'faculty') {
+                if (activePortalRole === 'principal') {
+                    titleHeader.innerText = "Principal Executive Login";
+                    usernameLabel.innerText = "Principal ID / Username";
+                    usernameInput.placeholder = "Enter Principal Employee ID";
+                    parentLinkGroup.style.display = 'none';
+                    continueBtn.innerText = "Authenticate & Unlock";
+                } else if (activePortalRole === 'dean') {
+                    titleHeader.innerText = "Dean Academic Login";
+                    usernameLabel.innerText = "Dean ID / Username";
+                    usernameInput.placeholder = "Enter Dean Employee ID";
+                    parentLinkGroup.style.display = 'none';
+                    continueBtn.innerText = "Authenticate & Unlock";
+                } else if (activePortalRole === 'faculty') {
                     titleHeader.innerText = "Faculty Login";
                     usernameLabel.innerText = "Faculty ID / Employee ID";
                     usernameInput.placeholder = "Enter Faculty Employee ID";
@@ -332,7 +344,11 @@
                         localStorage.setItem('childUsn', cachedChildUsn);
                     }
 
-                    if (data.role === 'hod' || activePortalRole === 'hod') {
+                    if (data.role === 'principal' || activePortalRole === 'principal') {
+                        window.location.href = "principal_dashboard.html";
+                    } else if (data.role === 'dean' || activePortalRole === 'dean') {
+                        window.location.href = "dean_dashboard.html";
+                    } else if (data.role === 'hod' || activePortalRole === 'hod') {
                         window.location.href = "hod_dashboard.html";
                     } else if (data.role === 'parent') {
                         window.location.href = "parent.html";

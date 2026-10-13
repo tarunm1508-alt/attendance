@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Principal Executive Management Portal | Dr. AIT</title>
+    <!-- CDNs for visual export & charting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-canvas: #f8fafc;
+            --surface-card: #ffffff;
+            --border-clean: #cbd5e1;
+            --primary-blue: #1e40af;
+            --primary-hover: #1d4ed8;
+            --accent-green: #10b981;
+            --accent-purple: #6366f1;
+            --accent-red: #ef4444;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 10px 15px -3px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); padding: 24px; min-height: 100vh; display: flex; justify-content: center; }
+        
+        .container { max-width: 1200px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .bento-card { background: var(--surface-card); border: 1px solid var(--border-clean); border-radius: 20px; padding: 26px; box-shadow: var(--shadow-premium); width: 100%; }
+
+        /* Profile Header */
+        .profile-banner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .principal-badge { display: flex; align-items: center; gap: 14px; }
+        .avatar-circle { width: 56px; height: 56px; border-radius: 50%; background: #eff6ff; border: 2.5px solid var(--primary-blue); display: flex; justify-content: center; align-items: center; font-size: 26px; }
+        .principal-name { font-size: 20px; font-weight: 850; color: var(--text-dark); }
+        .principal-dept { font-size: 13px; color: var(--primary-blue); font-weight: 700; margin-top: 2px; }
+
+        /* KPI Stats Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 14px; }
+        .kpi-box { background: #f8fafc; border: 1px solid var(--border-clean); padding: 18px; border-radius: 14px; transition: transform 0.2s; }
+        .kpi-box:hover { transform: translateY(-2px); border-color: var(--primary-blue); }
+        .kpi-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .kpi-val { font-size: 26px; font-weight: 900; color: var(--text-dark); margin-top: 6px; }
+
+        /* Module Workspace Navigation */
+        .modules-nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 14px; }
+        .module-tile { background: white; border: 1.5px solid var(--border-clean); border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.2s ease; text-align: left; }
+        .module-tile:hover { border-color: var(--primary-blue); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(30,64,175,0.08); }
+        .module-tile.active { border-color: var(--primary-blue); background: #eff6ff; box-shadow: 0 0 0 2px var(--primary-blue); }
+        .module-tile-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .module-tile-header h4 { font-size: 16px; font-weight: 800; color: var(--text-dark); }
+        .module-tile-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+        /* Workspace View Section */
+        .workspace-panel { display: none; }
+        .workspace-panel.active { display: block; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border-clean); padding-bottom: 14px; }
+        .panel-header h3 { font-size: 18px; font-weight: 850; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+
+        /* Filters & Inputs */
+        .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        select, input[type="text"], textarea { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-clean); font-weight: 600; font-size: 13px; background: white; outline: none; }
+        select:focus, input:focus, textarea:focus { border-color: var(--primary-blue); }
+        .btn-action { padding: 10px 20px; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-action:hover { background: var(--primary-hover); }
+
+        /* Tables */
+        .table-responsive { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border-clean); margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: white; text-align: left; }
+        th, td { border: 1px solid var(--border-clean); padding: 10px 14px; font-size: 13px; }
+        th { background: #f1f5f9; font-weight: 800; color: var(--text-dark); }
+        tr:hover td { background-color: #f8fafc; }
+
+        /* Branch pills */
+        .branch-pill { padding: 8px 16px; border-radius: 10px; border: 1px solid var(--border-clean); background: white; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .branch-pill:hover { border-color: var(--primary-blue); color: var(--primary-blue); }
+        .branch-pill.active { background: #0f172a; color: white; border-color: #0f172a; }
+
+        /* Toast Popup */
+        #customToastPopup {
+            position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: white;
+            padding: 14px 22px; border-radius: 14px; font-weight: 700; font-size: 13px;
+            z-index: 10000; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            transform: translateY(20px); opacity: 0; transition: all 0.3s ease;
+        }
+        #customToastPopup.show { transform: translateY(0); opacity: 1; }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .modules-nav-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="customToastPopup"></div>
+
+    <div class="container">
+        <!-- 🏛️ 1. Principal Profile Header -->
+        <div class="bento-card">
+            <div class="profile-banner">
+                <div class="principal-badge">
+                    <div class="avatar-circle">🎓</div>
+                    <div>
+                        <div class="principal-name" id="displayPrincipalName">Dr. C. Ramesh</div>
+                        <div class="principal-dept">Principal &amp; Institutional Executive Head | Dr. AIT</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="refreshAllMetrics()" style="padding: 10px 18px; background: #eff6ff; color: var(--primary-blue); border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">🔄 Refresh KPIs</button>
+                    <button onclick="handleLogout()" style="padding: 10px 18px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">Logout ⬅️</button>
+                </div>
+            </div>
+
+            <!-- College-wide Institutional KPI Stats -->
+            <div class="kpi-grid">
+                <div class="kpi-box">
+                    <div class="kpi-label">🏛️ Total Departments</div>
+                    <div class="kpi-val" id="kpiDepts">8</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">👨‍🏫 Faculty Strength</div>
+                    <div class="kpi-val" id="kpiFaculty">Loading...</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">🎓 Enrolled Students</div>
+                    <div class="kpi-val" id="kpiStudents">Loading...</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">📢 Official Circulars</div>
+                    <div class="kpi-val" id="kpiCirculars">0</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">📚 Research Papers</div>
+                    <div class="kpi-val" id="kpiPubs">0</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">🏛️ FDP Certifications</div>
+                    <div class="kpi-val" id="kpiFdps">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🧭 2. Executive Workspaces Selector -->
+        <div class="bento-card">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px; color: var(--text-dark);">🏛️ Institutional Governance Workspaces</h3>
+            <div class="modules-nav-grid">
+                <div class="module-tile active" id="tab_departments" onclick="switchPrincipalWorkspace('departments')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">🏢</span>
+                        <h4>Departments Overview</h4>
+                    </div>
+                    <p class="module-tile-desc">Inspect branch faculty allocations, student strength, and department staff rosters.</p>
+                </div>
+
+                <div class="module-tile" id="tab_circulars" onclick="switchPrincipalWorkspace('circulars')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">📢</span>
+                        <h4>College Circulars Desk</h4>
+                    </div>
+                    <p class="module-tile-desc">Issue official college-wide directives to all departments, faculty, students, and parents.</p>
+                </div>
+
+                <div class="module-tile" id="tab_research" onclick="switchPrincipalWorkspace('research')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">📚</span>
+                        <h4>Research &amp; Publications</h4>
+                    </div>
+                    <p class="module-tile-desc">Track Scopus, Web of Science publications, DOI listings, and department research output.</p>
+                </div>
+
+                <div class="module-tile" id="tab_fdp" onclick="switchPrincipalWorkspace('fdp')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">🏛️</span>
+                        <h4>Faculty FDP Records</h4>
+                    </div>
+                    <p class="module-tile-desc">Audit faculty professional development programs, ATAL/DST sponsorships, and training records.</p>
+                </div>
+
+                <div class="module-tile" id="tab_timetable" onclick="switchPrincipalWorkspace('timetable')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">📅</span>
+                        <h4>Master Schedule Audit</h4>
+                    </div>
+                    <p class="module-tile-desc">Inspect live weekly master timetables across all semesters and engineering branches.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🏢 WORKSPACE 1: Departments & Staff Directory -->
+        <div class="bento-card workspace-panel active" id="panel_departments">
+            <div class="panel-header">
+                <h3>🏢 Department Governance &amp; Staff Distribution</h3>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Dr. AIT Autonomous Campus</span>
+            </div>
+            
+            <div class="filter-row" id="branchSelectorRow">
+                <!-- Branch pills rendered dynamically -->
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Employee ID / USN</th>
+                            <th>Faculty Name</th>
+                            <th>Role / Designation</th>
+                            <th>Department</th>
+                            <th>Institutional Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="departmentStaffTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Select a department to view staff members.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 📢 WORKSPACE 2: College Circulars & Directives Desk -->
+        <div class="bento-card workspace-panel" id="panel_circulars">
+            <div class="panel-header">
+                <h3>📢 Publish Official College-Wide Circular</h3>
+                <button class="btn-action" onclick="togglePublishCircularForm()">+ New Directive</button>
+            </div>
+
+            <div id="publishCircularBox" style="display: none; background: #f8fafc; border: 1px solid var(--border-clean); border-radius: 14px; padding: 20px; margin-bottom: 20px;">
+                <h4 style="margin-bottom: 14px; font-size: 15px;">Broadcast Executive Directive</h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Circular Title</label>
+                        <input type="text" id="circTitle" placeholder="e.g. Schedule for Academic Autonomous Council Meeting" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Audience Scope</label>
+                        <select id="circScope" style="width: 100%;">
+                            <option value="college">Entire Institution (All Departments, Students &amp; Parents)</option>
+                            <option value="faculty">All Faculty &amp; HODs Only</option>
+                            <option value="branch">Specific Branch</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Official Directive Text</label>
+                        <textarea id="circMessage" rows="4" placeholder="Enter notification message or directive guidelines..." style="width: 100%;"></textarea>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Document / PDF URL (Optional)</label>
+                        <input type="text" id="circDocUrl" placeholder="https://..." style="width: 100%;">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-action" onclick="submitCollegeCircular()">Dispatch Directive 🚀</button>
+                        <button onclick="togglePublishCircularForm()" style="padding: 10px 18px; background: #e2e8f0; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Published Date</th>
+                            <th>Directive Title</th>
+                            <th>Scope</th>
+                            <th>Issued By</th>
+                            <th>Details / PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="principalCircularsTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading institution circulars...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 📚 WORKSPACE 3: Research & Publications Oversight -->
+        <div class="bento-card workspace-panel" id="panel_research">
+            <div class="panel-header">
+                <h3>📚 Institutional Research &amp; Publications Ledger</h3>
+                <input type="text" id="researchSearchInput" placeholder="🔍 Search papers or author..." onkeyup="filterResearchTable()" style="max-width: 280px;">
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Faculty Name</th>
+                            <th>Branch</th>
+                            <th>Paper Title</th>
+                            <th>Journal / Conference</th>
+                            <th>Year</th>
+                            <th>Quartile / DOI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="principalPubsTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading research records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 🏛️ WORKSPACE 4: Faculty Development Programs (FDP) -->
+        <div class="bento-card workspace-panel" id="panel_fdp">
+            <div class="panel-header">
+                <h3>🏛️ Faculty Professional Development (FDP) Records</h3>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">NBA / NAAC Accreditation Documentation</span>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Faculty Name</th>
+                            <th>Branch</th>
+                            <th>Program Title</th>
+                            <th>Sponsoring Organization</th>
+                            <th>Duration / Date</th>
+                            <th>Certificate</th>
+                        </tr>
+                    </thead>
+                    <tbody id="principalFdpTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading FDP records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 📅 WORKSPACE 5: Master Timetable Audit -->
+        <div class="bento-card workspace-panel" id="panel_timetable">
+            <div class="panel-header">
+                <h3>📅 Weekly Master Timetable Audit</h3>
+                <div style="display: flex; gap: 10px;">
+                    <select id="ttBranchSelect" onchange="loadMasterTimetable()">
+                        <option value="AIML">AIML</option>
+                        <option value="CSBS">CSBS</option>
+                        <option value="CSE">CSE</option>
+                        <option value="ISE">ISE</option>
+                        <option value="ECE">ECE</option>
+                    </select>
+                    <select id="ttSemSelect" onchange="loadMasterTimetable()">
+                        <option value="5">Semester 5</option>
+                        <option value="3">Semester 3</option>
+                        <option value="7">Semester 7</option>
+                        <option value="1">Semester 1</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="masterTimetableTable">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>09:00 - 10:00</th>
+                            <th>10:00 - 11:00</th>
+                            <th>11:15 - 12:15</th>
+                            <th>12:15 - 01:15</th>
+                            <th>02:00 - 03:00</th>
+                            <th>03:00 - 04:00</th>
+                        </tr>
+                    </thead>
+                    <tbody id="masterTimetableBody">
+                        <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Select department and semester to view schedule.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let BACKEND_URL = window.location.origin;
+        if (BACKEND_URL.includes("-5501.")) BACKEND_URL = BACKEND_URL.replace("-5501.", "-5000.");
+        else if (BACKEND_URL.includes(":5501")) BACKEND_URL = BACKEND_URL.replace(":5501", ":5000");
+        else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            BACKEND_URL = "http://localhost:5000";
+        }
+
+        const institutionId = localStorage.getItem("institutionId") || "DR_AIT";
+        let activeBranch = "AIML";
+        let cachedResearchPapers = [];
+
+        // 🔒 Principal Role Guard
+        (function checkPrincipalAuth() {
+            const role = (localStorage.getItem("userRole") || localStorage.getItem("role") || "").toLowerCase().trim();
+            if (role !== "principal" && role !== "admin") {
+                alert("🔒 Access Restricted: Principal credentials required.");
+                window.location.href = "login.html?role=principal";
+            }
+        })();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const storedName = localStorage.getItem("userName");
+            if (storedName) document.getElementById("displayPrincipalName").innerText = storedName;
+            
+            refreshAllMetrics();
+            loadDepartmentsAndStaff();
+        });
+
+        function showPopupNotification(msg, type = "success") {
+            const toast = document.getElementById("customToastPopup");
+            toast.innerText = msg;
+            toast.style.background = type === "success" ? "#0f172a" : "#991b1b";
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 2500);
+        }
+
+        function switchPrincipalWorkspace(wsId) {
+            document.querySelectorAll(".module-tile").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".workspace-panel").forEach(p => p.classList.remove("active"));
+            
+            document.getElementById(`tab_${wsId}`)?.classList.add("active");
+            document.getElementById(`panel_${wsId}`)?.classList.add("active");
+
+            if (wsId === 'circulars') loadCollegeCirculars();
+            if (wsId === 'research') loadCollegePublications();
+            if (wsId === 'fdp') loadCollegeFdpRecords();
+            if (wsId === 'timetable') loadMasterTimetable();
+        }
+
+        async function refreshAllMetrics() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/institutional-metrics?institutionId=${institutionId}`);
+                const data = await res.json();
+                if (data && data.success) {
+                    document.getElementById("kpiDepts").innerText = data.totalDepartments || 8;
+                    document.getElementById("kpiFaculty").innerText = data.totalFaculty || 0;
+                    document.getElementById("kpiStudents").innerText = data.totalStudents || 0;
+                    document.getElementById("kpiCirculars").innerText = data.totalCirculars || 0;
+                    document.getElementById("kpiPubs").innerText = data.totalPublications || 0;
+                    document.getElementById("kpiFdps").innerText = data.totalFdps || 0;
+
+                    renderBranchPills(data.departments || []);
+                }
+            } catch (err) {
+                console.error("KPI Error:", err);
+            }
+        }
+
+        function renderBranchPills(departments) {
+            const row = document.getElementById("branchSelectorRow");
+            const branches = departments.length ? departments.map(d => d.branch) : ["AIML", "CSBS", "CSE", "ISE", "ECE", "EEE", "ME", "CV"];
+            row.innerHTML = "";
+
+            branches.forEach(b => {
+                const pill = document.createElement("button");
+                pill.className = `branch-pill ${b === activeBranch ? 'active' : ''}`;
+                pill.innerText = b;
+                pill.onclick = () => {
+                    activeBranch = b;
+                    document.querySelectorAll(".branch-pill").forEach(p => p.classList.remove("active"));
+                    pill.classList.add("active");
+                    loadDepartmentStaff(b);
+                };
+                row.appendChild(pill);
+            });
+
+            loadDepartmentStaff(activeBranch);
+        }
+
+        async function loadDepartmentStaff(branch) {
+            const tbody = document.getElementById("departmentStaffTableBody");
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading ${branch} faculty members...</td></tr>`;
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/teachers?branch=${encodeURIComponent(branch)}&institutionId=${institutionId}`);
+                const teachers = await res.json();
+
+                if (!Array.isArray(teachers) || !teachers.length) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No faculty records found for Department of ${branch}.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = teachers.map(t => `
+                    <tr>
+                        <td style="font-weight: 700;">${t.usn || t.id || 'N/A'}</td>
+                        <td style="font-weight: 800; color: var(--primary-blue);">${t.name || 'Faculty Member'}</td>
+                        <td>${t.current_designation || t.role || 'Assistant Professor'}</td>
+                        <td><span style="background: #eff6ff; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">${branch}</span></td>
+                        <td>${t.email || '—'}</td>
+                    </tr>
+                `).join("");
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--accent-red);">Failed to load department staff list.</td></tr>`;
+            }
+        }
+
+        function loadDepartmentsAndStaff() {
+            renderBranchPills([]);
+        }
+
+        function togglePublishCircularForm() {
+            const box = document.getElementById("publishCircularBox");
+            box.style.display = box.style.display === "none" ? "block" : "none";
+        }
+
+        async function submitCollegeCircular() {
+            const title = document.getElementById("circTitle").value.trim();
+            const message = document.getElementById("circMessage").value.trim();
+            const scope = document.getElementById("circScope").value;
+            const docUrl = document.getElementById("circDocUrl").value.trim();
+
+            if (!title || !message) {
+                alert("Please provide both circular title and message text.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/circulars`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title,
+                        message,
+                        documentUrl: docUrl,
+                        audienceScope: scope,
+                        branch: scope === "branch" ? activeBranch : null,
+                        createdBy: localStorage.getItem("userUsn") || "PRIN01",
+                        createdByName: localStorage.getItem("userName") || "Dr. C. Ramesh (Principal)",
+                        institutionId: institutionId
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showPopupNotification("✅ College Directive published successfully!");
+                    document.getElementById("circTitle").value = "";
+                    document.getElementById("circMessage").value = "";
+                    document.getElementById("circDocUrl").value = "";
+                    togglePublishCircularForm();
+                    loadCollegeCirculars();
+                    refreshAllMetrics();
+                } else {
+                    alert("❌ Failed to publish: " + (data.message || "Server error"));
+                }
+            } catch (e) {
+                alert("Network error connecting to API server.");
+            }
+        }
+
+        async function loadCollegeCirculars() {
+            const tbody = document.getElementById("principalCircularsTableBody");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/circulars?institutionId=${institutionId}`);
+                const data = await res.json();
+                const circulars = data.circulars || [];
+
+                if (!circulars.length) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No circulars found.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = circulars.map(c => `
+                    <tr>
+                        <td>${new Date(c.created_at || c.published_at).toLocaleDateString()}</td>
+                        <td style="font-weight: 700; color: var(--text-dark);">${c.title}</td>
+                        <td><span style="background: #f1f5f9; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; text-transform: uppercase;">${c.audience_scope || 'College'}</span></td>
+                        <td>${c.created_by_name || 'Office of Principal'}</td>
+                        <td>${c.document_url ? `<a href="${c.document_url}" target="_blank" style="color: var(--primary-blue); font-weight: 700;">View Doc ↗</a>` : 'Notice Only'}</td>
+                    </tr>
+                `).join("");
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--accent-red);">Failed to load circulars.</td></tr>`;
+            }
+        }
+
+        async function loadCollegePublications() {
+            const tbody = document.getElementById("principalPubsTableBody");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/publications?institutionId=${institutionId}`);
+                const data = await res.json();
+                cachedResearchPapers = Array.isArray(data) ? data : (data.publications || []);
+
+                if (!cachedResearchPapers.length) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No research papers logged yet.</td></tr>`;
+                    return;
+                }
+
+                renderResearchRows(cachedResearchPapers);
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--accent-red);">Failed to load publications.</td></tr>`;
+            }
+        }
+
+        function renderResearchRows(papers) {
+            const tbody = document.getElementById("principalPubsTableBody");
+            tbody.innerHTML = papers.map(p => `
+                <tr>
+                    <td style="font-weight: 800;">${p.faculty_name || p.author || 'Faculty Author'}</td>
+                    <td><span style="background: #eff6ff; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 700;">${p.branch || 'AIML'}</span></td>
+                    <td style="font-weight: 600;">${p.title || 'Research Paper Title'}</td>
+                    <td>${p.journal_name || p.journal || 'Peer-reviewed Journal'}</td>
+                    <td>${p.publication_year || p.year || '—'}</td>
+                    <td>${p.doi ? `<a href="https://doi.org/${p.doi}" target="_blank" style="color: var(--primary-blue); font-weight: 750;">DOI ↗</a>` : (p.quartile || 'Scopus/WoS')}</td>
+                </tr>
+            `).join("");
+        }
+
+        function filterResearchTable() {
+            const q = document.getElementById("researchSearchInput").value.toLowerCase().trim();
+            if (!q) {
+                renderResearchRows(cachedResearchPapers);
+                return;
+            }
+            const filtered = cachedResearchPapers.filter(p => 
+                (p.title && p.title.toLowerCase().includes(q)) || 
+                (p.faculty_name && p.faculty_name.toLowerCase().includes(q)) ||
+                (p.journal_name && p.journal_name.toLowerCase().includes(q))
+            );
+            renderResearchRows(filtered);
+        }
+
+        async function loadCollegeFdpRecords() {
+            const tbody = document.getElementById("principalFdpTableBody");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/fdp-records?institutionId=${institutionId}`);
+                const data = await res.json();
+                const fdps = Array.isArray(data) ? data : (data.records || []);
+
+                if (!fdps.length) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No faculty FDP records submitted.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = fdps.map(f => `
+                    <tr>
+                        <td style="font-weight: 800;">${f.faculty_name || 'Faculty Member'}</td>
+                        <td><span style="background: #eff6ff; padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 700;">${f.branch || 'AIML'}</span></td>
+                        <td style="font-weight: 600;">${f.program_title || f.title || 'Development Program'}</td>
+                        <td>${f.organizing_body || f.organization || 'AICTE / ATAL'}</td>
+                        <td>${f.duration_days ? `${f.duration_days} Days` : (f.from_date || 'Completed')}</td>
+                        <td>${f.certificate_url ? `<a href="${f.certificate_url}" target="_blank" style="color: var(--primary-blue); font-weight: 700;">Certificate ↗</a>` : 'Verified'}</td>
+                    </tr>
+                `).join("");
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--accent-red);">Failed to load FDP logs.</td></tr>`;
+            }
+        }
+
+        async function loadMasterTimetable() {
+            const branch = document.getElementById("ttBranchSelect").value;
+            const sem = document.getElementById("ttSemSelect").value;
+            const tbody = document.getElementById("masterTimetableBody");
+
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Loading ${branch} Sem ${sem} Schedule...</td></tr>`;
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/weekly-timetable?branch=${encodeURIComponent(branch)}&semester=${encodeURIComponent(sem)}&institutionId=${institutionId}`);
+                const data = await res.json();
+                const rows = data.timetable || [];
+
+                const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                tbody.innerHTML = days.map(d => {
+                    const daySlots = rows.filter(r => (r.day_name || r.day_of_week) === d);
+                    return `
+                        <tr>
+                            <td style="font-weight: 800; background: #f8fafc;">${d}</td>
+                            <td>${daySlots.find(s => s.period_number === 1)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 2)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 3)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 4)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 5)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 6)?.subject_code || '—'}</td>
+                        </tr>
+                    `;
+                }).join("");
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--accent-red);">Could not load timetable matrix.</td></tr>`;
+            }
+        }
+
+        function handleLogout() {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
+
