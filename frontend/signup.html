@@ -229,6 +229,7 @@
                     <option value="teacher">Faculty / Teacher</option>
                     <option value="hod">HOD (Head of Department)</option>
                     <option value="dean">Dean (Academic Affairs)</option>
+                    <option value="dean_pd">Dean (Planning & Development)</option>
                     <option value="principal">Principal (Head of Institution)</option>
                     <option value="parent">Parent / Guardian</option>
                 </select>
@@ -475,6 +476,17 @@
                 phoneGroup.style.display = 'block';
                 childUsnInput.required = false;
                 childUsnInput.value = "";
+            } else if (role === 'dean_pd') {
+                nameLabel.innerText = "Dean (P&D) Full Name";
+                fullNameInput.placeholder = "Enter Dean full name (e.g. Dr. G. Rajendra)";
+                idLabel.innerText = "Dean (P&D) Employee ID";
+                usernameInput.placeholder = "Enter Dean (P&D) ID (e.g. DEAN_PD01)";
+                parentLinkGroup.style.display = 'none';
+                branchGroup.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for Dean P&D
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
             } else if (role === 'principal') {
                 nameLabel.innerText = "Principal Full Name";
                 fullNameInput.placeholder = "Enter Principal full name (e.g. Dr. C. Ramesh)";
@@ -664,7 +676,7 @@
                         name, 
                         childUsn,
                         // Branch field for student, principal, dean, and teacher/HOD
-                        branch: role === 'student' ? studentBranch : (role === 'principal' ? 'ADMIN' : (role === 'dean' ? 'ACADEMIC' : branch)),
+                        branch: role === 'student' ? studentBranch : (role === 'principal' ? 'ADMIN' : (role === 'dean' ? 'ACADEMIC' : (role === 'dean_pd' ? 'PLANNING' : branch))),
                         section: role === 'student' ? section : '',
                         academicYear: role === 'student' ? academicYear : '',
                         phoneNumber,

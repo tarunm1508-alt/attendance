@@ -3483,6 +3483,314 @@ app.get("/api/admin/institutional-metrics", async (req, res) => {
 });
 
 /* ==========================================================================
+   🏗️ DEAN (PLANNING & DEVELOPMENT) APIS & WORKSPACE LEDGER
+  ========================================================================== */
+let pdTablesReady = null;
+async function ensurePdTables() {
+    if (!pdTablesReady) {
+        pdTablesReady = (async () => {
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS institution_development_projects (
+                    id BIGSERIAL PRIMARY KEY,
+                    project_name TEXT NOT NULL,
+                    category TEXT NOT NULL DEFAULT 'Infrastructure',
+                    location_block TEXT,
+                    budget_allocated TEXT,
+                    budget_utilized TEXT,
+                    progress_percent INTEGER DEFAULT 0,
+                    status TEXT NOT NULL DEFAULT 'In Progress',
+                    target_completion TEXT,
+                    institution_id TEXT NOT NULL DEFAULT 'DR_AIT',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS department_development_proposals (
+                    id BIGSERIAL PRIMARY KEY,
+                    branch TEXT NOT NULL,
+                    proposal_title TEXT NOT NULL,
+                    description TEXT,
+                    estimated_cost TEXT,
+                    urgency_level TEXT DEFAULT 'Medium',
+                    status TEXT NOT NULL DEFAULT 'Under Review',
+                    submitted_by TEXT,
+                    institution_id TEXT NOT NULL DEFAULT 'DR_AIT',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS institutional_grants (
+                    id BIGSERIAL PRIMARY KEY,
+                    agency_name TEXT NOT NULL,
+                    scheme_name TEXT NOT NULL,
+                    sanctioned_amount TEXT,
+                    branch TEXT,
+                    principal_investigator TEXT,
+                    status TEXT NOT NULL DEFAULT 'Active',
+                    institution_id TEXT NOT NULL DEFAULT 'DR_AIT',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS industry_mous (
+                    id BIGSERIAL PRIMARY KEY,
+                    partner_organization TEXT NOT NULL,
+                    collaboration_scope TEXT,
+                    signing_date TEXT,
+                    validity_years TEXT DEFAULT '3 Years',
+                    branch TEXT,
+                    status TEXT NOT NULL DEFAULT 'Active',
+                    institution_id TEXT NOT NULL DEFAULT 'DR_AIT',
+                    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            const projCheck = await pool.query(`SELECT COUNT(*) FROM institution_development_projects WHERE institution_id = 'DR_AIT'`).catch(() => ({ rows: [{ count: 0 }] }));
+            if (parseInt(projCheck.rows[0]?.count || 0, 10) === 0) {
+                await pool.query(`
+                    INSERT INTO institution_development_projects (project_name, category, location_block, budget_allocated, budget_utilized, progress_percent, status, target_completion, institution_id)
+                    VALUES 
+                    ('AI & High-Performance Computing (HPC) Cluster Lab', 'IT Infrastructure', 'CSE/AIML Block - 3rd Floor', '₹ 48,50,000', '₹ 42,00,000', 85, 'In Progress', 'Nov 2026', 'DR_AIT'),
+                    ('Dr. AIT 250 kW Rooftop Solar Photovoltaic Grid', 'Green Campus', 'Main Academic & Admin Blocks', '₹ 75,00,000', '₹ 75,00,000', 100, 'Commissioned', 'Aug 2026', 'DR_AIT'),
+                    ('Smart Hybrid IoT & Audio-Visual Lecture Theatres', 'Classroom Modernization', 'Civil/Mechanical Wing', '₹ 32,00,000', '₹ 21,00,000', 65, 'In Progress', 'Dec 2026', 'DR_AIT'),
+                    ('Advanced Robotics, Mechatronics & Drone Testing Lab', 'Research Lab', 'Mechanical Workshop Block', '₹ 55,00,000', '₹ 15,00,000', 30, 'In Progress', 'Jan 2027', 'DR_AIT'),
+                    ('Campus-wide Optical Fiber 10Gbps Core Network Upgrade', 'Network & IT', 'Central Server Room', '₹ 28,00,000', '₹ 28,00,000', 100, 'Commissioned', 'Jul 2026', 'DR_AIT')
+                `).catch(() => {});
+            }
+
+            const propCheck = await pool.query(`SELECT COUNT(*) FROM department_development_proposals WHERE institution_id = 'DR_AIT'`).catch(() => ({ rows: [{ count: 0 }] }));
+            if (parseInt(propCheck.rows[0]?.count || 0, 10) === 0) {
+                await pool.query(`
+                    INSERT INTO department_development_proposals (branch, proposal_title, description, estimated_cost, urgency_level, status, submitted_by, institution_id)
+                    VALUES
+                    ('AIML', 'NVIDIA DGX Station A100 for Generative AI & Deep Learning Research', 'High-end GPU compute workstation for faculty & student AI capstone projects.', '₹ 22,50,000', 'High', 'Approved', 'HOD AIML', 'DR_AIT'),
+                    ('CSBS', 'Fintech Simulation Lab with Real-Time Market Feed Terminals', 'Trading floor setup for Business Systems financial engineering modules.', '₹ 18,00,000', 'Medium', 'Under Review', 'HOD CSBS', 'DR_AIT'),
+                    ('ECE', 'VLSI Cadence Tool Suite License & 5G RF Testing Equipment', 'Chip design EDA licenses and RF spectrum analyzer upgrade.', '₹ 35,00,000', 'High', 'Under Review', 'HOD ECE', 'DR_AIT'),
+                    ('CIVIL', 'Earthquake Simulation Shake Table & Modern Concrete Testing', 'Structural dynamics testing rig for VTU research center requirements.', '₹ 26,00,000', 'Medium', 'Fund Sanctioned', 'HOD CIVIL', 'DR_AIT')
+                `).catch(() => {});
+            }
+
+            const grantCheck = await pool.query(`SELECT COUNT(*) FROM institutional_grants WHERE institution_id = 'DR_AIT'`).catch(() => ({ rows: [{ count: 0 }] }));
+            if (parseInt(grantCheck.rows[0]?.count || 0, 10) === 0) {
+                await pool.query(`
+                    INSERT INTO institutional_grants (agency_name, scheme_name, sanctioned_amount, branch, principal_investigator, status, institution_id)
+                    VALUES
+                    ('AICTE', 'MODROBS (Modernization & Removal of Obsolescence)', '₹ 18,50,000', 'AIML', 'Dr. B. S. Shylaja', 'Active', 'DR_AIT'),
+                    ('VGST', 'CISEE (Centres of Innovative Science & Engineering Education)', '₹ 30,00,000', 'EEE', 'Dr. K. V. Suresh', 'Active', 'DR_AIT'),
+                    ('DST', 'FIST (Fund for Improvement of S&T Infrastructure)', '₹ 65,00,000', 'CHEM/MECH', 'Dr. T. Mohan', 'Approved', 'DR_AIT'),
+                    ('VTU', 'Competitive Research Grant Scheme', '₹ 12,00,000', 'CSE', 'Dr. C. N. Sowmyarani', 'Active', 'DR_AIT')
+                `).catch(() => {});
+            }
+
+            const mouCheck = await pool.query(`SELECT COUNT(*) FROM industry_mous WHERE institution_id = 'DR_AIT'`).catch(() => ({ rows: [{ count: 0 }] }));
+            if (parseInt(mouCheck.rows[0]?.count || 0, 10) === 0) {
+                await pool.query(`
+                    INSERT INTO industry_mous (partner_organization, collaboration_scope, signing_date, validity_years, branch, status, institution_id)
+                    VALUES
+                    ('Intel Technology India', 'Center of Excellence in Edge AI & Embedded Systems', '2025-08-15', '3 Years', 'AIML/CSE', 'Active', 'DR_AIT'),
+                    ('IBM India Pvt Ltd', 'Cloud Computing, Quantum & Cyber Security Academy', '2025-11-10', '3 Years', 'CSBS/ISE', 'Active', 'DR_AIT'),
+                    ('Cisco Networking Academy', 'Advanced Routing, Switching & Network Defense Lab', '2024-06-20', '5 Years', 'ECE/ISE', 'Active', 'DR_AIT'),
+                    ('Bosch Global Software', 'Automotive Embedded Software & AUTOSAR Training', '2025-02-14', '3 Years', 'MECH/ECE', 'Active', 'DR_AIT')
+                `).catch(() => {});
+            }
+        })().catch(err => {
+            console.error("Error setting up P&D tables:", err);
+            pdTablesReady = null;
+        });
+    }
+    await pdTablesReady;
+}
+
+// 1. P&D Overall Dashboard Metrics
+app.get("/api/admin/pd/metrics", async (req, res) => {
+    const tenant = tenantOf(req.query.institutionId);
+    try {
+        await ensurePdTables();
+        const [projRes, propRes, grantRes, mouRes] = await Promise.all([
+            pool.query(`SELECT COUNT(*) as count, COUNT(CASE WHEN status = 'In Progress' THEN 1 END) as in_progress, COUNT(CASE WHEN status = 'Commissioned' THEN 1 END) as completed FROM institution_development_projects WHERE institution_id = $1`, [tenant]),
+            pool.query(`SELECT COUNT(*) as count, COUNT(CASE WHEN status = 'Under Review' THEN 1 END) as pending FROM department_development_proposals WHERE institution_id = $1`, [tenant]),
+            pool.query(`SELECT COUNT(*) as count FROM institutional_grants WHERE institution_id = $1`, [tenant]),
+            pool.query(`SELECT COUNT(*) as count FROM industry_mous WHERE institution_id = $1`, [tenant])
+        ]);
+
+        res.json({
+            success: true,
+            totalProjects: parseInt(projRes.rows[0]?.count || 0, 10),
+            inProgressProjects: parseInt(projRes.rows[0]?.in_progress || 0, 10),
+            completedProjects: parseInt(projRes.rows[0]?.completed || 0, 10),
+            totalProposals: parseInt(propRes.rows[0]?.count || 0, 10),
+            pendingProposals: parseInt(propRes.rows[0]?.pending || 0, 10),
+            totalGrants: parseInt(grantRes.rows[0]?.count || 0, 10),
+            totalMous: parseInt(mouRes.rows[0]?.count || 0, 10)
+        });
+    } catch (err) {
+        console.error("P&D metrics error:", err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 2. Capital Infrastructure Projects
+app.get("/api/admin/pd/projects", async (req, res) => {
+    const tenant = tenantOf(req.query.institutionId);
+    try {
+        await ensurePdTables();
+        const result = await pool.query(`
+            SELECT * FROM institution_development_projects
+            WHERE institution_id = $1
+            ORDER BY created_at DESC, id DESC
+        `, [tenant]);
+        res.json({ success: true, projects: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post("/api/admin/pd/projects", async (req, res) => {
+    const tenant = tenantOf(req.body.institutionId);
+    const { projectName, category, locationBlock, budgetAllocated, budgetUtilized, progressPercent, status, targetCompletion } = req.body;
+    if (!projectName) return res.status(400).json({ success: false, message: "Project name is required." });
+    try {
+        await ensurePdTables();
+        const result = await pool.query(`
+            INSERT INTO institution_development_projects
+            (project_name, category, location_block, budget_allocated, budget_utilized, progress_percent, status, target_completion, institution_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            RETURNING *
+        `, [
+            projectName, category || 'Infrastructure', locationBlock || 'Main Campus',
+            budgetAllocated || '₹ 0', budgetUtilized || '₹ 0',
+            parseInt(progressPercent || 0, 10), status || 'In Progress', targetCompletion || 'TBD', tenant
+        ]);
+        res.status(201).json({ success: true, project: result.rows[0], message: "Project added successfully." });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 3. Departmental Proposals
+app.get("/api/admin/pd/proposals", async (req, res) => {
+    const tenant = tenantOf(req.query.institutionId);
+    try {
+        await ensurePdTables();
+        const result = await pool.query(`
+            SELECT * FROM department_development_proposals
+            WHERE institution_id = $1
+            ORDER BY created_at DESC, id DESC
+        `, [tenant]);
+        res.json({ success: true, proposals: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post("/api/admin/pd/proposals", async (req, res) => {
+    const tenant = tenantOf(req.body.institutionId);
+    const { branch, proposalTitle, description, estimatedCost, urgencyLevel, submittedBy } = req.body;
+    if (!branch || !proposalTitle) return res.status(400).json({ success: false, message: "Branch and title are required." });
+    try {
+        await ensurePdTables();
+        const result = await pool.query(`
+            INSERT INTO department_development_proposals
+            (branch, proposal_title, description, estimated_cost, urgency_level, status, submitted_by, institution_id)
+            VALUES ($1, $2, $3, $4, $5, 'Under Review', $6, $7)
+            RETURNING *
+        `, [branch.toUpperCase(), proposalTitle, description || '', estimatedCost || '₹ 0', urgencyLevel || 'Medium', submittedBy || 'HOD', tenant]);
+        res.status(201).json({ success: true, proposal: result.rows[0], message: "Proposal submitted successfully." });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.patch("/api/admin/pd/proposals/:id", async (req, res) => {
+    const tenant = tenantOf(req.body.institutionId);
+    const { status } = req.body;
+    try {
+        await ensurePdTables();
+        const result = await pool.query(`
+            UPDATE department_development_proposals
+            SET status = $1
+            WHERE id = $2 AND institution_id = $3
+            RETURNING *
+        `, [status, req.params.id, tenant]);
+        if (!result.rows.length) return res.status(404).json({ success: false, message: "Proposal not found." });
+        res.json({ success: true, proposal: result.rows[0], message: `Proposal updated to ${status}.` });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 4. Institutional Grants
+app.get("/api/admin/pd/grants", async (req, res) => {
+    const tenant = tenantOf(req.query.institutionId);
+    try {
+        await ensurePdTables();
+        const result = await pool.query(`
+            SELECT * FROM institutional_grants
+            WHERE institution_id = $1
+            ORDER BY created_at DESC, id DESC
+        `, [tenant]);
+        res.json({ success: true, grants: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post("/api/admin/pd/grants", async (req, res) => {
+    const tenant = tenantOf(req.body.institutionId);
+    const { agencyName, schemeName, sanctionedAmount, branch, principalInvestigator, status } = req.body;
+    if (!agencyName || !schemeName) return res.status(400).json({ success: false, message: "Agency and scheme are required." });
+    try {
+        await ensurePdTables();
+        const result = await pool.query(`
+            INSERT INTO institutional_grants
+            (agency_name, scheme_name, sanctioned_amount, branch, principal_investigator, status, institution_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+        `, [agencyName, schemeName, sanctionedAmount || '₹ 0', branch || 'ALL', principalInvestigator || 'Faculty PI', status || 'Active', tenant]);
+        res.status(201).json({ success: true, grant: result.rows[0], message: "Grant recorded successfully." });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+// 5. Industry MoUs
+app.get("/api/admin/pd/mous", async (req, res) => {
+    const tenant = tenantOf(req.query.institutionId);
+    try {
+        await ensurePdTables();
+        const result = await pool.query(`
+            SELECT * FROM industry_mous
+            WHERE institution_id = $1
+            ORDER BY created_at DESC, id DESC
+        `, [tenant]);
+        res.json({ success: true, mous: result.rows });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+app.post("/api/admin/pd/mous", async (req, res) => {
+    const tenant = tenantOf(req.body.institutionId);
+    const { partnerOrganization, collaborationScope, signingDate, validityYears, branch, status } = req.body;
+    if (!partnerOrganization) return res.status(400).json({ success: false, message: "Partner organization is required." });
+    try {
+        await ensurePdTables();
+        const result = await pool.query(`
+            INSERT INTO industry_mous
+            (partner_organization, collaboration_scope, signing_date, validity_years, branch, status, institution_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+        `, [partnerOrganization, collaborationScope || 'Academic & Research', signingDate || new Date().toISOString().split('T')[0], validityYears || '3 Years', branch || 'ALL', status || 'Active', tenant]);
+        res.status(201).json({ success: true, mou: result.rows[0], message: "MoU recorded successfully." });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/* ==========================================================================
    EXISTING ROUTE MODULES
   ========================================================================== */
 const authRoutes = require("./routes/auth");

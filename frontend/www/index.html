@@ -318,11 +318,19 @@
                     <div class="action-indicator">Proceed →</div>
                 </div>
 
-                <!-- 📜 Dean Card -->
+                <!-- 📜 Dean Academic Card -->
                 <div class="role-choice-card" onclick="routeToAuthentication('dean')">
                     <div class="role-icon-wrapper">📜</div>
-                    <h3>Dean Login</h3>
-                    <p class="role-subtext">Academic Governance, Syllabus &amp; Curricula</p>
+                    <h3>Dean (Academic) Login</h3>
+                    <p class="role-subtext">Curricular Governance, Syllabus &amp; Pacing</p>
+                    <div class="action-indicator">Proceed →</div>
+                </div>
+
+                <!-- 🏗️ Dean (Planning & Development) Card -->
+                <div class="role-choice-card" onclick="routeToAuthentication('dean_pd')">
+                    <div class="role-icon-wrapper">🏗️</div>
+                    <h3>Dean (P&amp;D) Login</h3>
+                    <p class="role-subtext">Planning, Infrastructure &amp; Growth</p>
                     <div class="action-indicator">Proceed →</div>
                 </div>
 
@@ -369,8 +377,8 @@
         }
 
         function routeToAuthentication(selectedProfileRole) {
-            // 🔒 SECURE ADMINISTRATION PASSCODE GATEWAY (Principal, Dean, HOD, Faculty)
-            if (['principal', 'dean', 'hod', 'faculty'].includes(selectedProfileRole) && !isAdminUnlocked) {
+            // 🔒 SECURE ADMINISTRATION PASSCODE GATEWAY (Principal, Dean, Dean P&D, HOD, Faculty)
+            if (['principal', 'dean', 'dean_pd', 'dean_planning', 'hod', 'faculty'].includes(selectedProfileRole) && !isAdminUnlocked) {
                 const enteredPassword = prompt(`🔒 Security Passcode Required: Enter the authorized ${selectedProfileRole.toUpperCase()} passcode to open portal:`);
                 
                 const departmentSecretPasscode = "AIT@2026";

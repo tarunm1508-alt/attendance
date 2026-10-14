@@ -140,6 +140,12 @@
                     usernameInput.placeholder = "Enter Dean Employee ID";
                     parentLinkGroup.style.display = 'none';
                     continueBtn.innerText = "Authenticate & Unlock";
+                } else if (activePortalRole === 'dean_pd' || activePortalRole === 'dean_planning') {
+                    titleHeader.innerText = "Dean (Planning & Development) Login";
+                    usernameLabel.innerText = "Dean (P&D) ID / Username";
+                    usernameInput.placeholder = "Enter Dean (P&D) Employee ID";
+                    parentLinkGroup.style.display = 'none';
+                    continueBtn.innerText = "Authenticate & Unlock";
                 } else if (activePortalRole === 'faculty') {
                     titleHeader.innerText = "Faculty Login";
                     usernameLabel.innerText = "Faculty ID / Employee ID";
@@ -346,6 +352,8 @@
 
                     if (data.role === 'principal' || activePortalRole === 'principal') {
                         window.location.href = "principal_dashboard.html";
+                    } else if (data.role === 'dean_pd' || data.role === 'dean_planning' || activePortalRole === 'dean_pd' || activePortalRole === 'dean_planning') {
+                        window.location.href = "dean_pd_dashboard.html";
                     } else if (data.role === 'dean' || activePortalRole === 'dean') {
                         window.location.href = "dean_dashboard.html";
                     } else if (data.role === 'hod' || activePortalRole === 'hod') {

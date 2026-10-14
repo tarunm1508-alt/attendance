@@ -84,12 +84,17 @@ function sameRoleGroup(requestedRole, storedRole) {
 
 
 
+    // Dean (Planning & Development) aliases:
+    if (
+        ['dean_pd', 'dean_planning', 'dean_p_d', 'dean-pd', 'dean-planning'].includes(requested) &&
+        ['dean_pd', 'dean_planning', 'dean_p_d', 'dean-pd', 'dean-planning'].includes(stored)
+    ) {
+        return true;
+    }
+
     // HOD has its own role, but keep compatibility with existing HOD/teacher
-
     // login flows only where the requested role is explicitly a teacher group.
-
     return false;
-
 }
 
 
@@ -189,17 +194,15 @@ router.post('/login-challenge', async (req, res) => {
                AND (
 
                     LOWER(TRIM(role)) = LOWER(TRIM($3))
-
                     OR (
-
                         LOWER(TRIM($3)) IN ('teacher', 'faculty', 'staff')
-
                         AND LOWER(TRIM(role)) IN ('teacher', 'faculty', 'staff')
-
                     )
-
+                    OR (
+                        LOWER(TRIM($3)) IN ('dean_pd', 'dean_planning', 'dean_p_d', 'dean-pd', 'dean-planning')
+                        AND LOWER(TRIM(role)) IN ('dean_pd', 'dean_planning', 'dean_p_d', 'dean-pd', 'dean-planning')
+                    )
                )
-
              LIMIT 1`,
 
             [cleanStudentOrUserUsn, targetTenant, requestedRole]
@@ -377,17 +380,15 @@ router.post('/combined-login', async (req, res) => {
                AND (
 
                     LOWER(TRIM(role)) = LOWER(TRIM($3))
-
                     OR (
-
                         LOWER(TRIM($3)) IN ('teacher', 'faculty', 'staff')
-
                         AND LOWER(TRIM(role)) IN ('teacher', 'faculty', 'staff')
-
                     )
-
+                    OR (
+                        LOWER(TRIM($3)) IN ('dean_pd', 'dean_planning', 'dean_p_d', 'dean-pd', 'dean-planning')
+                        AND LOWER(TRIM(role)) IN ('dean_pd', 'dean_planning', 'dean_p_d', 'dean-pd', 'dean-planning')
+                    )
                )
-
              LIMIT 1`,
 
             [cleanUserUsn, targetTenant, requestedRole]
