@@ -78,7 +78,7 @@
             <button class="btn" type="button" onclick="triggerBiometricAndLogin()">Verify Fingerprint Pass</button>
         </div>
         <div class="footer-links">
-            Don't have an account? <a href="signup.html">Sign Up</a>
+            Don't have an account? <a href="signup.html?role=student" id="signupLink">Sign Up</a>
         </div>
     </div>
     <div id="forgotPasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 100000; align-items: center; justify-content: center; padding: 20px;">
@@ -171,6 +171,11 @@
                     parentLinkGroup.style.display = 'none';
                     continueBtn.innerText = "Continue to Verification";
                     activePortalRole = 'student';
+                }
+
+                const signupLink = document.getElementById('signupLink');
+                if (signupLink) {
+                    signupLink.href = `signup.html?role=${activePortalRole}`;
                 }
 
                 getOrCreateDeviceFingerprint();

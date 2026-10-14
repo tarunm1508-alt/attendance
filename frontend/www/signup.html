@@ -215,14 +215,26 @@
 <body>
 
     <div class="signup-container">
-        <h2>Create Account</h2>
-        <p class="subtitle">Academic Biometric Management System</p>
+        <h2 id="signupHeader">Create Account</h2>
+        <p class="subtitle" id="signupSubtitle">Academic Biometric Management System</p>
 
         <div id="alertBox" class="alert"></div>
 
         <form id="signupForm" onsubmit="handleSignupSubmit(event)">
 
-            <div class="form-group">
+            <!-- 🔒 Locked Portal Banner (Displayed when role is designated from a portal) -->
+            <div id="lockedPortalBanner" style="display: none; background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 14px 18px; margin-bottom: 22px; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 26px;" id="lockedRoleIcon">🎓</span>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--primary-blue); letter-spacing: 0.05em;" id="lockedRoleTag">AUTHORIZED PORTAL</div>
+                        <div style="font-size: 15px; font-weight: 850; color: var(--text-dark);" id="lockedRoleTitle">Student Registration</div>
+                    </div>
+                </div>
+                <span style="font-size: 11px; font-weight: 800; color: #047857; background: #d1fae5; padding: 5px 12px; border-radius: 8px; border: 1px solid #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em;">🔒 Portal Locked</span>
+            </div>
+
+            <div class="form-group" id="roleGroup">
                 <label for="role">Portal Role</label>
                 <select id="role" onchange="toggleRoleFields()">
                     <option value="student" selected>Student (Requires Hardware Fingerprint)</option>
@@ -268,10 +280,10 @@
 
                 <div class="form-group">
                     <label for="academicYear">Academic Year *</label>
-                    <select id="academicYear">
-                        <option value="2026-2027" selected>2026–2027</option>
-                        <option value="2025-2026">2025–2026</option>
-                    </select>
+                    <input type="text" id="academicYear" placeholder="e.g. 2026-2027" autocomplete="off" value="2026-2027" required>
+                    <small style="display:block; margin-top:6px; color:var(--text-muted); font-size:11px;">
+                        Type your academic year (e.g., 2026-2027).
+                    </small>
                 </div>
             </div>
 
@@ -343,7 +355,7 @@
         </form>
 
         <div class="footer-links">
-            Already have an account? <a href="login.html">Sign In</a>
+            Already have an account? <a href="login.html" id="signInLink">Sign In</a>
         </div>
     </div>
 
@@ -369,15 +381,118 @@
 
         let enrolledCredentialId = null;
         let enrolledPublicKey = null;
+        let currentLockedRole = 'student';
+
+        const ROLE_METADATA = {
+            student: {
+                roleValue: 'student',
+                header: 'Create Student Account',
+                subtitle: 'Biometric Hardware Binding & USN Registration',
+                portalTitle: 'Student Portal Registration',
+                icon: '🎓'
+            },
+            teacher: {
+                roleValue: 'teacher',
+                header: 'Create Faculty Account',
+                subtitle: 'Faculty Ownership & QR Attendance Dispatcher',
+                portalTitle: 'Faculty / Teacher Portal Registration',
+                icon: '👨‍🏫'
+            },
+            faculty: {
+                roleValue: 'teacher',
+                header: 'Create Faculty Account',
+                subtitle: 'Faculty Ownership & QR Attendance Dispatcher',
+                portalTitle: 'Faculty / Teacher Portal Registration',
+                icon: '👨‍🏫'
+            },
+            hod: {
+                roleValue: 'hod',
+                header: 'Create HOD Account',
+                subtitle: 'Head of Department Executive Portal Registration',
+                portalTitle: 'HOD Portal Registration',
+                icon: '👔'
+            },
+            dean: {
+                roleValue: 'dean',
+                header: 'Create Dean (Academic) Account',
+                subtitle: 'Office of Academic Affairs & Governance Registration',
+                portalTitle: 'Dean (Academic Affairs) Registration',
+                icon: '📜'
+            },
+            dean_pd: {
+                roleValue: 'dean_pd',
+                header: 'Create Dean (Planning & Development) Account',
+                subtitle: 'Office of Infrastructure & Institutional Growth Registration',
+                portalTitle: 'Dean (Planning & Development) Registration',
+                icon: '🏗️'
+            },
+            dean_planning: {
+                roleValue: 'dean_pd',
+                header: 'Create Dean (Planning & Development) Account',
+                subtitle: 'Office of Infrastructure & Institutional Growth Registration',
+                portalTitle: 'Dean (Planning & Development) Registration',
+                icon: '🏗️'
+            },
+            principal: {
+                roleValue: 'principal',
+                header: 'Create Principal Executive Account',
+                subtitle: 'Institutional Executive Head Workspace Registration',
+                portalTitle: 'Principal Executive Portal Registration',
+                icon: '🎓'
+            },
+            parent: {
+                roleValue: 'parent',
+                header: 'Create Parent / Guardian Account',
+                subtitle: 'Student Ward Linkage & Academic Scorecard Portal',
+                portalTitle: 'Parent / Guardian Portal Registration',
+                icon: '👥'
+            }
+        };
 
         window.onload = function() {
             const urlParams = new URLSearchParams(window.location.search);
-            const roleParam = urlParams.get('role');
-            if (roleParam && ['student', 'teacher', 'faculty', 'hod', 'dean', 'principal', 'parent'].includes(roleParam.toLowerCase())) {
-                const mappedRole = roleParam.toLowerCase() === 'faculty' ? 'teacher' : roleParam.toLowerCase();
-                const roleSelect = document.getElementById('role');
-                if (roleSelect) roleSelect.value = mappedRole;
+            const roleParam = (urlParams.get('role') || 'student').toLowerCase().trim();
+
+            const config = ROLE_METADATA[roleParam] || ROLE_METADATA.student;
+            currentLockedRole = config.roleValue;
+
+            // Strictly lock the role selector: prune all other options and disable it
+            const roleSelect = document.getElementById('role');
+            if (roleSelect) {
+                roleSelect.innerHTML = `<option value="${config.roleValue}" selected>${config.portalTitle}</option>`;
+                roleSelect.value = config.roleValue;
+                roleSelect.disabled = true;
             }
+
+            // Hide the role selector dropdown container completely
+            const roleGroup = document.getElementById('roleGroup');
+            if (roleGroup) {
+                roleGroup.style.display = 'none';
+            }
+
+            // Display the locked portal banner
+            const lockedBanner = document.getElementById('lockedPortalBanner');
+            if (lockedBanner) {
+                lockedBanner.style.display = 'flex';
+                const iconEl = document.getElementById('lockedRoleIcon');
+                const titleEl = document.getElementById('lockedRoleTitle');
+                if (iconEl) iconEl.innerText = config.icon;
+                if (titleEl) titleEl.innerText = config.portalTitle;
+            }
+
+            // Update page header and subtitle
+            const header = document.getElementById('signupHeader');
+            const subtitle = document.getElementById('signupSubtitle');
+            if (header) header.innerText = config.header;
+            if (subtitle) subtitle.innerText = config.subtitle;
+
+            // Update footer sign-in link to return to that portal's login
+            const signInLink = document.getElementById('signInLink');
+            if (signInLink) {
+                const loginPortalRole = roleParam === 'teacher' ? 'faculty' : roleParam;
+                signInLink.href = `login.html?role=${loginPortalRole}`;
+            }
+
             toggleRoleFields();
             setupStudentAcademicFields();
             getOrCreateDeviceFingerprint();
@@ -404,7 +519,7 @@
         }
 
         function toggleRoleFields() {
-            const role = document.getElementById('role').value;
+            const role = currentLockedRole || (document.getElementById('role') ? document.getElementById('role').value : 'student');
             const nameLabel = document.getElementById('nameLabel');
             const idLabel = document.getElementById('idLabel');
             const fullNameInput = document.getElementById('fullName');
@@ -629,14 +744,22 @@
             const alertBox = document.getElementById('alertBox');
             alertBox.style.display = 'none';
 
-            const role = document.getElementById('role').value;
+            const role = currentLockedRole || (document.getElementById('role') ? document.getElementById('role').value : 'student');
             const name = document.getElementById('fullName').value.trim();
             const usn = document.getElementById('username').value.trim().toUpperCase();
             const email = document.getElementById('email').value.trim();
             const phoneNumber = document.getElementById('phoneNumber').value.trim();
             const password = document.getElementById('password').value;
-            const childUsn = document.getElementById('childUsn').value.trim();
-            const branch = document.getElementById('branch').value;
+            const childUsn = document.getElementById('childUsn') ? document.getElementById('childUsn').value.trim() : '';
+            const branch = document.getElementById('branch') ? document.getElementById('branch').value : '';
+            const studentBranch = document.getElementById('studentBranch') ? document.getElementById('studentBranch').value : '';
+            const section = document.getElementById('section') ? document.getElementById('section').value : '';
+            let academicYear = document.getElementById('academicYear') ? document.getElementById('academicYear').value.trim() : '';
+            academicYear = academicYear.replace(/\s+/g, '').replace(/[–—]/g, '-');
+            if (/^\d{4}-\d{2}$/.test(academicYear)) {
+                const parts = academicYear.split('-');
+                academicYear = `${parts[0]}-${parts[0].slice(0, 2)}${parts[1]}`;
+            }
             
             const deviceFingerprint = getOrCreateDeviceFingerprint();
 
@@ -648,11 +771,18 @@
             }
 
             if (role === 'student' && (!studentBranch || !section || !academicYear)) {
-                alertBox.innerText = "⚠️ Please select your branch, section, and academic year.";
+                alertBox.innerText = "⚠️ Please select your branch, section, and type your academic year.";
                 alertBox.style.display = 'block';
                 if (!studentBranch) document.getElementById('studentBranch').focus();
                 else if (!section) document.getElementById('section').focus();
                 else document.getElementById('academicYear').focus();
+                return;
+            }
+
+            if (role === 'student' && !/^\d{4}-\d{4}$/.test(academicYear)) {
+                alertBox.innerText = "⚠️ Please enter a valid academic year format like 2026-2027.";
+                alertBox.style.display = 'block';
+                document.getElementById('academicYear').focus();
                 return;
             }
 

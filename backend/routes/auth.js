@@ -590,7 +590,11 @@ router.post('/signup', async (req, res) => {
     const cleanSignupUsn = cleanUsn(usn);
     const cleanBranch = normalizeBranch(branch);
     const cleanSection = cleanText(section).toUpperCase();
-    const cleanAcademicYear = cleanText(academicYear);
+    let cleanAcademicYear = cleanText(academicYear).replace(/\s+/g, '').replace(/[–—]/g, '-');
+    if (/^\d{4}-\d{2}$/.test(cleanAcademicYear)) {
+        const parts = cleanAcademicYear.split('-');
+        cleanAcademicYear = `${parts[0]}-${parts[0].slice(0, 2)}${parts[1]}`;
+    }
 
     if (!cleanSignupUsn || !password) {
         return res.status(400).json({
