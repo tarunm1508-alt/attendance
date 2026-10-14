@@ -3657,7 +3657,7 @@ app.post("/api/admin/pd/projects", async (req, res) => {
         const result = await pool.query(`
             INSERT INTO institution_development_projects
             (project_name, category, location_block, budget_allocated, budget_utilized, progress_percent, status, target_completion, institution_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING *
         `, [
             projectName, category || 'Infrastructure', locationBlock || 'Main Campus',
