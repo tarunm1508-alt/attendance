@@ -5,6 +5,7 @@ const router = express.Router();
 const pool = require('../db');
 
 const crypto = require('crypto');
+const { sendManualAttendanceSms } = require('../services/smsService');
 
 
 
@@ -865,9 +866,10 @@ router.post('/submit-attendance', async (req, res) => {
         longitude,
 
         distance,
-
-        institutionId
-
+        institutionId,
+        isManualOverride,
+        facultyName,
+        facultyUsn
     } = req.body || {};
 
 
@@ -1182,14 +1184,10 @@ router.post('/submit-attendance', async (req, res) => {
 
         const studentLookup = await pool.query(
 
-            `SELECT usn, name, branch, semester_number
-
+            `SELECT usn, name, branch, semester_number, phone_number
              FROM users
-
              WHERE UPPER(TRIM(usn)) = UPPER(TRIM($1))
-
                AND COALESCE(institution_id, $2) ILIKE $2
-
              LIMIT 1`,
 
             [cleanStudentId, tenant]
@@ -1334,16 +1332,28 @@ router.post('/submit-attendance', async (req, res) => {
 
 
 
+        let smsResult = null;
+        if (isManualOverride || distance === '0.00_MANUAL') {
+            smsResult = await sendManualAttendanceSms({
+                pool,
+                studentUsn: student.usn,
+                studentName: studentFullName,
+                studentPhone: student.phone_number,
+                subjectName: session.subject_name || cleanSubjectName,
+                sessionCode: cleanSessionCode,
+                facultyName: cleanText(facultyName) || 'Faculty In-Charge',
+                institutionId: tenant
+            });
+        }
+
         return res.status(200).json({
-
             success: true,
-
             message: '✅ Attendance successfully recorded!',
-
             distance: `${roundedDistance}m`,
-
-            sessionCode: cleanSessionCode
-
+            sessionCode: cleanSessionCode,
+            smsDispatched: smsResult ? smsResult.dispatched : false,
+            recipientPhone: smsResult ? smsResult.phone : (student.phone_number || null),
+            smsMessage: smsResult ? smsResult.message : null
         });
 
     } catch (err) {
@@ -2048,7 +2058,9 @@ router.post('/hod/override-attendance', async (req, res) => {
 
         subjectName,
 
-        institutionId
+        institutionId,
+
+        hodName
 
     } = req.body || {};
 
@@ -2080,7 +2092,7 @@ router.post('/hod/override-attendance', async (req, res) => {
 
         const studentLookup = await pool.query(
 
-            `SELECT name
+            `SELECT name, phone_number
 
              FROM users
 
@@ -2111,6 +2123,7 @@ router.post('/hod/override-attendance', async (req, res) => {
 
 
         const studentFullName = studentLookup.rows[0].name || 'Student';
+        const studentPhoneNumber = studentLookup.rows[0].phone_number;
 
 
 
@@ -2190,11 +2203,30 @@ router.post('/hod/override-attendance', async (req, res) => {
 
 
 
+        let smsResult = null;
+        try {
+            smsResult = await sendManualAttendanceSms({
+                pool,
+                studentUsn: cleanStudentUsn,
+                studentName: studentFullName,
+                studentPhone: studentPhoneNumber,
+                subjectName: cleanText(subjectName) || 'Department Subject',
+                sessionCode: cleanSessionCode,
+                facultyName: cleanText(hodName) || 'Head of Department (HOD)',
+                institutionId: tenant
+            });
+        } catch (smsErr) {
+            console.error('Failed to dispatch HOD override SMS:', smsErr);
+        }
+
         return res.json({
 
             success: true,
 
-            message: `Successfully excused and marked ${cleanStudentUsn} present!`
+            message: `Successfully excused and marked ${cleanStudentUsn} present!`,
+            smsDispatched: smsResult ? smsResult.dispatched : false,
+            recipientPhone: smsResult ? smsResult.phone : (studentPhoneNumber || null),
+            smsMessage: smsResult ? smsResult.message : null
 
         });
 

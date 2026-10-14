@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const pool = require("./db");
+const { sendManualAttendanceSms } = require("./services/smsService");
 
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -599,6 +600,8 @@ app.post("/api/auth/submit-attendance", async (req, res) => {
     const sessionCode = clean(req.body.sessionCode);
     const tenant = tenantOf(req.body.institutionId);
     const subjectName = clean(req.body.subjectName, "General");
+    const isManualOverride = Boolean(req.body.isManualOverride || req.body.distance === '0.00_MANUAL');
+    const facultyName = clean(req.body.facultyName, "Faculty In-Charge");
 
     if (!usn || !sessionCode) {
         return res.status(400).json({
@@ -608,7 +611,7 @@ app.post("/api/auth/submit-attendance", async (req, res) => {
     }
 
     try {
-        const session = await pool.query(`
+        let session = await pool.query(`
             SELECT *
             FROM class_sessions
             WHERE session_code = $1
@@ -618,54 +621,109 @@ app.post("/api/auth/submit-attendance", async (req, res) => {
         `, [sessionCode, tenant]);
 
         if (!session.rows.length) {
-            return res.status(400).json({
-                success: false,
-                message: "Attendance session is invalid or expired."
-            });
+            if (isManualOverride) {
+                // If manual override and session doesn't exist yet, insert session entry
+                await pool.query(`
+                    INSERT INTO class_sessions (session_code, subject_name, subject_code, institution_id, created_at)
+                    VALUES ($1, $2, $3, $4, NOW())
+                    ON CONFLICT DO NOTHING
+                `, [sessionCode, subjectName, subjectName, tenant]);
+                session = await pool.query(`
+                    SELECT * FROM class_sessions WHERE session_code = $1 LIMIT 1
+                `, [sessionCode]);
+            } else {
+                return res.status(400).json({
+                    success: false,
+                    message: "Attendance session is invalid or expired."
+                });
+            }
         }
 
-        const lat = Number(req.body.latitude);
-        const lng = Number(req.body.longitude);
+        // Student details lookup (for name, phone_number)
+        const studentLookup = await pool.query(`
+            SELECT usn, name, phone_number
+            FROM users
+            WHERE UPPER(TRIM(usn)) = UPPER(TRIM($1))
+              AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($2))
+            LIMIT 1
+        `, [usn, tenant]);
 
-        if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-            return res.status(403).json({
-                success: false,
-                message: "GPS coordinates are required."
-            });
+        const student = studentLookup.rows[0] || {};
+        const studentFullName = student.name || 'Student';
+        const studentPhoneNumber = student.phone_number || '';
+
+        let distanceValue = '0.00_MANUAL';
+
+        if (!isManualOverride) {
+            const lat = Number(req.body.latitude);
+            const lng = Number(req.body.longitude);
+
+            if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+                return res.status(403).json({
+                    success: false,
+                    message: "GPS coordinates are required."
+                });
+            }
+
+            const CLASSROOM_LAT = 12.9641;
+            const CLASSROOM_LNG = 77.5065;
+            const R = 6371000;
+
+            const dLat = (lat - CLASSROOM_LAT) * Math.PI / 180;
+            const dLng = (lng - CLASSROOM_LNG) * Math.PI / 180;
+            const a =
+                Math.sin(dLat / 2) ** 2 +
+                Math.cos(CLASSROOM_LAT * Math.PI / 180) *
+                Math.cos(lat * Math.PI / 180) *
+                Math.sin(dLng / 2) ** 2;
+
+            const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            const MAX_DISTANCE = 500;
+
+            if (distance > MAX_DISTANCE) {
+                return res.status(403).json({
+                    success: false,
+                    message: `Check-in blocked. Distance is approximately ${Math.round(distance)}m.`
+                });
+            }
+            distanceValue = distance.toFixed(2);
         }
 
-        const CLASSROOM_LAT = 12.9641;
-        const CLASSROOM_LNG = 77.5065;
-        const R = 6371000;
-
-        const dLat = (lat - CLASSROOM_LAT) * Math.PI / 180;
-        const dLng = (lng - CLASSROOM_LNG) * Math.PI / 180;
-        const a =
-            Math.sin(dLat / 2) ** 2 +
-            Math.cos(CLASSROOM_LAT * Math.PI / 180) *
-            Math.cos(lat * Math.PI / 180) *
-            Math.sin(dLng / 2) ** 2;
-
-        const distance = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const MAX_DISTANCE = 500;
-
-        if (distance > MAX_DISTANCE) {
-            return res.status(403).json({
-                success: false,
-                message: `Check-in blocked. Distance is approximately ${Math.round(distance)}m.`
-            });
-        }
-
-        await pool.query(`
+        const insertResult = await pool.query(`
             INSERT INTO users_attendance
-                (student_id, session_code, subject_name, distance, institution_id)
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT DO NOTHING
-        `, [usn, sessionCode, subjectName, distance.toFixed(2), tenant]);
+                (student_id, student_full_name, session_code, subject_name, distance, institution_id, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, NOW())
+            ON CONFLICT (student_id, session_code) DO NOTHING
+            RETURNING id
+        `, [usn, studentFullName, sessionCode, subjectName, distanceValue, tenant]);
+
+        const alreadyMarked = insertResult.rows.length === 0;
+
+        let smsResult = null;
+        if (isManualOverride && !alreadyMarked) {
+            try {
+                smsResult = await sendManualAttendanceSms({
+                    pool,
+                    studentUsn: usn,
+                    studentName: studentFullName,
+                    studentPhone: studentPhoneNumber,
+                    subjectName: subjectName,
+                    sessionCode: sessionCode,
+                    facultyName: facultyName,
+                    institutionId: tenant
+                });
+            } catch (smsErr) {
+                console.error("SMS notification dispatch failed:", smsErr);
+            }
+        }
 
         res.json({
             success: true,
-            message: "Attendance verified and recorded successfully."
+            alreadyMarked: alreadyMarked,
+            message: alreadyMarked ? "Attendance already marked for this session." : "Attendance verified and recorded successfully.",
+            smsDispatched: smsResult ? smsResult.dispatched : false,
+            recipientPhone: smsResult ? smsResult.phone : (studentPhoneNumber || null),
+            smsMessage: smsResult ? smsResult.message : null
         });
     } catch (err) {
         console.error("Attendance submission error:", err);

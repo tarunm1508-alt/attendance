@@ -1,5 +1,6 @@
 const { Pool } = require('pg');
-require('dotenv').config(); // Load environment variables from .env file
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') }); // Load environment variables from .env file
 
 // Use Cloud Connection String if provided, otherwise use Localhost default
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:YOUR_LOCAL_PASSWORD@localhost:5432/YOUR_LOCAL_DB';

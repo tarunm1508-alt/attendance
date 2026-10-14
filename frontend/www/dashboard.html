@@ -693,10 +693,11 @@
 
                     <!-- ➕ MANUAL ATTENDANCE OVERRIDE BOX FOR STUDENTS WITHOUT PHONES/BIOMETRICS -->
                     <div class="manual-attendance-box" style="margin-top: 20px; padding: 15px; background: #f8f9fa; border: 1px solid #ddd; border-radius: 8px;">
-                        <h4 style="font-size: 13px; font-weight: 800; color: var(--primary-blue); margin-bottom: 8px;">➕ Manual Attendance Override (For Students Without Phones/Biometrics)</h4>
+                        <h4 style="font-size: 13px; font-weight: 800; color: var(--primary-blue); margin-bottom: 4px;">➕ Manual Attendance Override (For Students Without Phones/Biometrics)</h4>
+                        <p style="font-size: 11px; color: #4b5563; margin-top: 2px; margin-bottom: 8px;">📲 <strong>Automatic SMS Notification:</strong> An official SMS alert with your name, subject, date, and time will be dispatched instantly to the student's phone number.</p>
                         <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <input type="text" id="manualStudentUsn" placeholder="Enter Student USN" style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px; font-size: 13px;">
-                            <button onclick="submitManualAttendance()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 13px;">Add Student</button>
+                            <input type="text" id="manualStudentUsn" placeholder="Enter Student USN (e.g. 1DA22CS001)" style="padding: 8px; flex: 1; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; text-transform: uppercase;">
+                            <button onclick="submitManualAttendance()" style="padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 700; font-size: 13px;">Mark Present & Send SMS</button>
                         </div>
                     </div>
                 </div>
@@ -2301,6 +2302,8 @@
             const studentId = document.getElementById('manualStudentUsn')?.value.trim();
             const sessionCode = currentGeneratedSessionToken;
             const subjectName = (userSubject || 'AI').trim();
+            const currentFacultyName = (typeof userName !== 'undefined' && userName) ? userName : (localStorage.getItem('userName') || localStorage.getItem('user_name') || 'Faculty In-Charge');
+            const currentFacultyUsn = (typeof userUsn !== 'undefined' && userUsn) ? userUsn : (localStorage.getItem('userUsn') || '');
 
             if (!studentId || !sessionCode) {
                 alert("Please ensure an active session is running and enter a valid Student USN.");
@@ -2317,13 +2320,23 @@
                         sessionCode: sessionCode,
                         latitude: 12.9641,  // Teacher override coordinates (Campus center)
                         longitude: 77.5065,
-                        institutionId: institutionId
+                        institutionId: institutionId,
+                        isManualOverride: true,
+                        facultyName: currentFacultyName,
+                        facultyUsn: currentFacultyUsn
                     })
                 });
 
                 const data = await response.json();
                 if (response.ok && data.success) {
-                    alert(`✅ Attendance successfully recorded for ${studentId}`);
+                    if (data.alreadyMarked) {
+                        alert(`ℹ️ Attendance for ${studentId} was already marked for this session.`);
+                    } else {
+                        const smsAlertText = data.smsDispatched
+                            ? `\n\n📲 SMS Alert Dispatched Successfully:\n• Recipient Mobile: +91-${data.recipientPhone || 'Student Phone'}\n• Faculty Name: ${currentFacultyName}\n• Subject: ${subjectName}\n• Status: PRESENT`
+                            : (data.recipientPhone ? `\n\n📲 SMS Queued for student mobile (+91-${data.recipientPhone})` : '');
+                        alert(`✅ Attendance successfully recorded for ${studentId}!${smsAlertText}`);
+                    }
                     if (document.getElementById('manualStudentUsn')) document.getElementById('manualStudentUsn').value = '';
                     loadAttendance();
                 } else {

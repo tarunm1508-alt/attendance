@@ -792,6 +792,7 @@
             const studentUsn = document.getElementById('overrideStudentUsn').value.trim().toUpperCase();
             const sessionCode = document.getElementById('overrideSessionCode').value.trim().toUpperCase();
             const subjectName = document.getElementById('overrideSubjectName').value.trim() || 'AI';
+            const hodName = (typeof userName !== 'undefined' && userName) ? userName : (localStorage.getItem('userName') || 'Head of Department (HOD)');
 
             if (!studentUsn || !sessionCode) {
                 alert("⚠️ Please provide both a Student USN and an Active Session Code.");
@@ -806,13 +807,17 @@
                         studentUsn,
                         sessionCode,
                         subjectName,
-                        institutionId
+                        institutionId,
+                        hodName
                     })
                 });
 
                 const data = await res.json();
                 if (res.ok && data.success) {
-                    showPopupNotification(`✅ ${data.message}`);
+                    const smsInfo = data.smsDispatched
+                        ? ` (📲 SMS alert sent to student +91-${data.recipientPhone || 'mobile'})`
+                        : '';
+                    showPopupNotification(`✅ ${data.message}${smsInfo}`);
                     document.getElementById('overrideStudentUsn').value = "";
                     document.getElementById('overrideSessionCode').value = "";
                 } else {
