@@ -3,6 +3,12 @@ const cors = require("cors");
 const path = require("path");
 const pool = require("./db");
 const { sendManualAttendanceSms, sendSlowLearnerRemedialSms } = require("./services/smsService");
+const {
+    profilePhotoUploadMiddleware,
+    validateImageMagicBytes,
+    uploadProfilePhoto,
+    deleteProfilePhoto
+} = require("./services/storageService");
 
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -315,7 +321,8 @@ app.get("/api/auth/student-attendance-ledger", async (req, res) => {
             SELECT TRIM(usn) AS usn,
                    TRIM(name) AS name,
                    TRIM(branch) AS branch,
-                   semester_number
+                   semester_number,
+                   profile_photo_url
             FROM users
             WHERE UPPER(TRIM(usn)) = $1
               AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
@@ -795,7 +802,7 @@ app.get("/api/auth/teacher-session-roster", async (req, res) => {
         }
 
         const studentsResult = await pool.query(`
-            SELECT TRIM(usn) AS usn, TRIM(name) AS name, phone_number
+            SELECT TRIM(usn) AS usn, TRIM(name) AS name, phone_number, profile_photo_url
             FROM users
             WHERE (LOWER(TRIM(role)) = 'student' OR LOWER(TRIM(role)) = 'students')
               AND UPPER(TRIM(branch)) = UPPER(TRIM($1))
@@ -828,13 +835,15 @@ app.get("/api/auth/teacher-session-roster", async (req, res) => {
                 presentStudents.push({
                     usn: st.usn,
                     name: st.name,
-                    distance: log.distance
+                    distance: log.distance,
+                    profile_photo_url: st.profile_photo_url || null
                 });
             } else {
                 absentStudents.push({
                     usn: st.usn,
                     name: st.name,
-                    phone: st.phone_number
+                    phone: st.phone_number,
+                    profile_photo_url: st.profile_photo_url || null
                 });
             }
         }
@@ -911,7 +920,8 @@ app.get("/api/teacher/attendance-register", async (req, res) => {
         const studentsResult = await pool.query(`
             SELECT
                 TRIM(usn) AS usn,
-                TRIM(name) AS name
+                TRIM(name) AS name,
+                profile_photo_url
             FROM users
             WHERE (LOWER(TRIM(role)) = 'student' OR LOWER(TRIM(role)) = 'students')
               AND UPPER(TRIM(branch)) = UPPER(TRIM($1))
@@ -1561,7 +1571,8 @@ const facultyProfileSelect = `
     google_scholar_url,
     orcid_id,
     vidwan_id,
-    irins_url
+    irins_url,
+    profile_photo_url
 `;
 
 async function getFacultyProfile(teacherId, tenant) {
@@ -2461,7 +2472,7 @@ app.get("/api/parent/profile", async (req, res) => {
 
     try {
         const result = await pool.query(`
-            SELECT name, child_usn
+            SELECT name, child_usn, email, phone_number, profile_photo_url
             FROM users
             WHERE (
                 UPPER(TRIM(usn)) = UPPER(TRIM($1))
@@ -2478,16 +2489,25 @@ app.get("/api/parent/profile", async (req, res) => {
                 success: true,
                 parentName: "Guardian",
                 childUsn: "N/A",
-                studentName: "Linked Ward"
+                studentName: "Linked Ward",
+                parentEmail: "",
+                parentPhone: "",
+                parentProfilePhotoUrl: null,
+                childProfilePhotoUrl: null
             });
         }
 
         const parent = result.rows[0];
         let studentName = "Linked Ward";
+        let childProfilePhotoUrl = null;
+        let childBranch = "AIML";
+        let childSemester = "3";
+        let childSection = "A";
+        let childAcademicYear = "2024-2028";
 
         if (parent.child_usn) {
             const student = await pool.query(`
-                SELECT name
+                SELECT name, profile_photo_url, branch, semester_number, section, academic_year
                 FROM users
                 WHERE UPPER(TRIM(usn)) = UPPER(TRIM($1))
                   AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
@@ -2496,18 +2516,253 @@ app.get("/api/parent/profile", async (req, res) => {
             `, [parent.child_usn, tenant]);
 
             studentName = student.rows[0]?.name || "Linked Ward";
+            childProfilePhotoUrl = student.rows[0]?.profile_photo_url || null;
+            if (student.rows[0]?.branch) childBranch = student.rows[0].branch;
+            if (student.rows[0]?.semester_number) childSemester = student.rows[0].semester_number;
+            if (student.rows[0]?.section) childSection = student.rows[0].section;
+            if (student.rows[0]?.academic_year) childAcademicYear = student.rows[0].academic_year;
         }
 
         res.json({
             success: true,
             parentName: parent.name || "Guardian",
+            parentEmail: parent.email || "",
+            parentPhone: parent.phone_number || "",
+            parentProfilePhotoUrl: parent.profile_photo_url || null,
             childUsn: parent.child_usn || "N/A",
-            studentName
+            studentName,
+            childProfilePhotoUrl,
+            childBranch,
+            childSemester,
+            childSection,
+            childAcademicYear
         });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
 });
+
+/* ==========================================================================
+   PARENT PROFILE UPDATE (NAME, EMAIL, PHONE)
+  ========================================================================== */
+app.post("/api/parent/update-profile", async (req, res) => {
+    const parentId = clean(req.body.parentId || req.body.usn);
+    const tenant = tenantOf(req.body.institutionId);
+    const name = clean(req.body.name);
+    const email = clean(req.body.email);
+    const phone = clean(req.body.phone || req.body.phoneNumber || req.body.phone_number);
+
+    if (!parentId) {
+        return res.status(400).json({ success: false, error: "Parent ID is required." });
+    }
+
+    try {
+        const result = await pool.query(`
+            UPDATE users
+            SET name = COALESCE(NULLIF($1, ''), name),
+                email = COALESCE(NULLIF($2, ''), email),
+                phone_number = COALESCE(NULLIF($3, ''), phone_number)
+            WHERE (
+                UPPER(TRIM(usn)) = UPPER(TRIM($4))
+                OR phone_number = $4
+                OR email ILIKE $4
+            )
+            AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($5))
+            AND LOWER(TRIM(role)) = 'parent'
+            RETURNING usn, name, email, phone_number, profile_photo_url
+        `, [name, email, phone, parentId, tenant]);
+
+        if (!result.rows.length) {
+            return res.status(404).json({ success: false, error: "Parent account not found." });
+        }
+
+        res.json({
+            success: true,
+            message: "Parent profile updated successfully.",
+            profile: result.rows[0]
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/* ==========================================================================
+   STUDENT PROFILE UPDATE (NAME, EMAIL)
+  ========================================================================== */
+app.post("/api/student/update-profile", async (req, res) => {
+    const studentId = upper(clean(req.body.studentId || req.body.usn));
+    const tenant = tenantOf(req.body.institutionId);
+    const name = clean(req.body.name);
+    const email = clean(req.body.email);
+
+    if (!studentId) {
+        return res.status(400).json({ success: false, error: "Student USN is required." });
+    }
+
+    try {
+        const result = await pool.query(`
+            UPDATE users
+            SET name = COALESCE(NULLIF($1, ''), name),
+                email = COALESCE(NULLIF($2, ''), email)
+            WHERE UPPER(TRIM(usn)) = UPPER(TRIM($3))
+              AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($4))
+              AND LOWER(TRIM(role)) = 'student'
+            RETURNING usn, name, email, branch, semester_number, section, academic_year, profile_photo_url
+        `, [name, email, studentId, tenant]);
+
+        if (!result.rows.length) {
+            return res.status(404).json({ success: false, error: "Student record not found." });
+        }
+
+        res.json({
+            success: true,
+            message: "Student profile updated successfully.",
+            profile: result.rows[0]
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
+/* ==========================================================================
+   UNIVERSAL PROFILE PHOTO UPLOAD (STUDENT, PARENT, TEACHER, HOD)
+  ========================================================================== */
+app.post(
+    [
+        "/api/user/upload-photo",
+        "/api/student/upload-photo",
+        "/api/teacher/upload-photo",
+        "/api/hod/upload-photo",
+        "/api/parent/upload-photo"
+    ],
+    profilePhotoUploadMiddleware,
+    async (req, res) => {
+        const tenant = tenantOf(req.body.institutionId || req.query.institutionId);
+        const target = clean(req.body.target || req.query.target || "self").toLowerCase();
+        const userId = clean(
+            req.body.userId ||
+            req.body.usn ||
+            req.body.teacherId ||
+            req.body.hodId ||
+            req.body.parentId ||
+            req.query.userId ||
+            req.query.usn
+        );
+        const childUsn = clean(req.body.childUsn || req.body.studentId || req.query.childUsn);
+
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                error: "User identifier (USN or ID) is required."
+            });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                error: "No photo file uploaded. Please select a JPEG, PNG, or WebP image."
+            });
+        }
+
+        const magicCheck = validateImageMagicBytes(req.file.buffer);
+        if (!magicCheck.valid) {
+            return res.status(400).json({
+                success: false,
+                error: magicCheck.error || "Invalid image content. Only real JPEG, PNG, or WebP files are allowed."
+            });
+        }
+
+        try {
+            let targetUsn = userId;
+
+            // If target is ward (parent uploading photo for their child)
+            if (target === "ward") {
+                if (!childUsn) {
+                    return res.status(400).json({
+                        success: false,
+                        error: "Child USN is required when uploading ward photo."
+                    });
+                }
+
+                // Verify parent-child relationship
+                const parentCheck = await pool.query(`
+                    SELECT child_usn
+                    FROM users
+                    WHERE (
+                        UPPER(TRIM(usn)) = UPPER(TRIM($1))
+                        OR phone_number = $1
+                        OR email ILIKE $1
+                    )
+                    AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($2))
+                    LIMIT 1
+                `, [userId, tenant]);
+
+                if (!parentCheck.rows.length || upper(parentCheck.rows[0].child_usn) !== upper(childUsn)) {
+                    return res.status(403).json({
+                        success: false,
+                        error: "Unauthorized: The specified child is not linked to this parent account."
+                    });
+                }
+
+                targetUsn = childUsn;
+            }
+
+            // Upload via storageService (Cloudinary or local fallback)
+            const uploadResult = await uploadProfilePhoto(
+                req.file.buffer,
+                req.file.mimetype,
+                targetUsn,
+                tenant
+            );
+
+            const photoUrl = uploadResult.secure_url;
+
+            // Update user record in PostgreSQL
+            const updateResult = await pool.query(`
+                UPDATE users
+                SET profile_photo_url = $1
+                WHERE UPPER(TRIM(usn)) = UPPER(TRIM($2))
+                  AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($3))
+                RETURNING usn, name, role, profile_photo_url
+            `, [photoUrl, targetUsn, tenant]);
+
+            if (!updateResult.rows.length) {
+                // If update didn't match USN directly, try phone/email fallback (common for parents)
+                const fallbackUpdate = await pool.query(`
+                    UPDATE users
+                    SET profile_photo_url = $1
+                    WHERE (
+                        UPPER(TRIM(usn)) = UPPER(TRIM($2))
+                        OR phone_number = $2
+                        OR email ILIKE $2
+                    )
+                    AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($3))
+                    RETURNING usn, name, role, profile_photo_url
+                `, [photoUrl, targetUsn, tenant]);
+
+                if (!fallbackUpdate.rows.length) {
+                    return res.status(404).json({
+                        success: false,
+                        error: "Target user account not found for this institution."
+                    });
+                }
+            }
+
+            res.json({
+                success: true,
+                message: "Profile photo updated successfully.",
+                photoUrl,
+                target
+            });
+        } catch (err) {
+            console.error("Profile photo upload error:", err);
+            res.status(500).json({
+                success: false,
+                error: err.message || "Failed to upload and update profile photo."
+            });
+        }
+    }
+);
 
 
 /* ==========================================================================

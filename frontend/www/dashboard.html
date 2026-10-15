@@ -579,13 +579,19 @@
                 <div class="bento-card" style="margin-bottom: 24px; text-align: left;">
                     <div class="faculty-profile-banner">
                         <div class="faculty-badge">
-                            <div class="faculty-avatar-circle">👨‍🏫</div>
+                            <div style="position:relative; width:54px; height:54px; flex-shrink:0;">
+                                <img id="facultyBannerPhotoDisplay" src="" alt="Faculty Photo" style="width:54px; height:54px; border-radius:50%; object-fit:cover; border:2px solid var(--primary-blue); display:none; background:#f1f5f9;" onerror="this.onerror=null;this.style.display='none';document.getElementById('facultyBannerAvatarPlaceholder').style.display='flex';">
+                                <div id="facultyBannerAvatarPlaceholder" class="faculty-avatar-circle" style="width:54px; height:54px; margin:0; display:flex;">👨‍🏫</div>
+                                <label for="facultyPhotoFileInput" style="position:absolute; bottom:-3px; right:-3px; background:var(--primary-blue); color:white; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; box-shadow:0 2px 5px rgba(0,0,0,0.25); border:2px solid white;" title="Upload or Change Photo">📷</label>
+                                <input type="file" id="facultyPhotoFileInput" accept="image/*,image/jpeg,image/png,image/webp" style="display:none;" onchange="handleFacultyPhotoUpload(event)">
+                            </div>
                             <div>
                                 <h3 class="faculty-name-title" id="facultyProfileHeaderName">Faculty Instructor</h3>
                                 <div class="faculty-dept-sub" id="facultyProfileHeaderRole">Faculty Management Portal Gateway | Dr. AIT Autonomous</div>
                             </div>
                         </div>
-                        <div style="display: flex; gap: 8px;">
+                        <div style="display: flex; gap: 8px; align-items:center;">
+                            <button type="button" onclick="document.getElementById('facultyPhotoFileInput').click()" class="btn btn-blue" style="padding: 8px 14px; font-size: 11px; display:inline-flex; align-items:center; gap:5px;">📷 Change Photo</button>
                             <button onclick="handleLogout()" class="btn btn-dark" style="padding: 9px 16px; font-size: 12px;">Logout ⬅️</button>
                         </div>
                     </div>
@@ -1359,6 +1365,20 @@
                     .slow-learners-responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
         @media (max-width: 520px) { .slow-learners-responsive-grid { grid-template-columns: 1fr; } }
         </style>
+                    <!-- 📷 FACULTY OFFICIAL PROFILE PHOTO CARD -->
+                    <div style="display:flex; align-items:center; gap:16px; background:#f8fafc; padding:16px; border-radius:14px; border:1px solid var(--bento-border); margin-bottom:16px; flex-wrap:wrap;">
+                        <div style="position:relative; width:64px; height:64px; flex-shrink:0;">
+                            <img id="facultyModulePhotoDisplay" src="" alt="Faculty Photo" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-blue); display:none; background:#fff;" onerror="this.onerror=null;this.style.display='none';document.getElementById('facultyModuleAvatarPlaceholder').style.display='flex';">
+                            <div id="facultyModuleAvatarPlaceholder" style="width:64px; height:64px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:30px; border:3px solid var(--bento-border);">👨‍🏫</div>
+                        </div>
+                        <div style="flex:1; min-width:200px;">
+                            <div style="font-size:13px; font-weight:800; color:var(--text-dark);">Official Faculty Identification Photo</div>
+                            <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Visible on institutional rosters, session logs, and accredited department profiles. (JPEG, PNG, WebP ≤ 2MB)</div>
+                        </div>
+                        <div>
+                            <button type="button" onclick="document.getElementById('facultyPhotoFileInput').click()" class="btn btn-blue" style="padding:9px 16px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">📷 Upload / Change Photo</button>
+                        </div>
+                    </div>
 
                     <div id="teacherProfileViewMode" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid var(--bento-border);"></div>
 
@@ -1435,12 +1455,116 @@
                 ========================================================================== -->
             <div id="studentSectionLayout" style="display: none;">
 
-                                <!-- DATABASE-BACKED STUDENT PROFILE -->
+                <!-- 🎓 STUDENT EXECUTIVE PROFILE BANNER & BENTO CARDS -->
                 <section id="studentIdentityProfileCard" class="bento-card" style="margin-bottom:24px;text-align:left;">
-                    <h3 style="font-size:16px;font-weight:800;color:var(--primary-blue);margin-bottom:14px;">🎓 My Academic Profile</h3>
-                    <div id="studentIdentityProfileFields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
-                        <div style="color:var(--text-muted);font-size:12px;">Loading profile from database...</div>
+                    <div class="faculty-profile-banner" style="margin-bottom:20px;">
+                        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                            <div style="position:relative; width:72px; height:72px; flex-shrink:0;">
+                                <img id="studentProfileImgDisplay" src="" alt="Student Photo" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--primary-blue);display:none;background:#f1f5f9;" onerror="this.onerror=null;this.style.display='none';document.getElementById('studentProfileAvatarPlaceholder').style.display='flex';">
+                                <div id="studentProfileAvatarPlaceholder" style="width:72px;height:72px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:32px;border:3px solid var(--primary-blue);">🎓</div>
+                                <label for="studentPhotoFileInput" style="position:absolute; bottom:-4px; right:-4px; background:var(--primary-blue); color:white; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:13px; box-shadow:0 2px 6px rgba(0,0,0,0.25); border:2px solid white;" title="Upload or Change Photo">📷</label>
+                                <input type="file" id="studentPhotoFileInput" accept="image/*,image/jpeg,image/png,image/webp" style="display:none;" onchange="handleStudentPhotoUpload(event)">
+                            </div>
+                            <div>
+                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                    <h3 class="faculty-name-title" id="studentProfileHeaderName" style="margin:0;">Student Scholar</h3>
+                                    <span style="font-size:11px; font-weight:800; background:#eff6ff; color:var(--primary-blue); padding:3px 10px; border-radius:999px; border:1px solid #bfdbfe;">Active Scholar</span>
+                                </div>
+                                <div class="faculty-dept-sub" id="studentProfileHeaderSub" style="margin-top:4px;">Academic Identity Hub | Dr. AIT Autonomous</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <button type="button" onclick="document.getElementById('studentPhotoFileInput').click()" class="btn btn-blue" style="padding:8px 14px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">📷 Change Photo</button>
+                            <button type="button" onclick="openStudentProfileEditModal()" class="btn btn-dark" style="padding:8px 14px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">✏️ Edit Details</button>
+                            <button type="button" onclick="refreshStudentDatabaseProfile()" class="btn btn-dark" style="padding:8px 12px; font-size:12px;" title="Refresh Profile">🔄</button>
+                        </div>
                     </div>
+
+                    <!-- 4-BENTO METRIC CARDS -->
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px;">
+                        <!-- Bento 1: Academic Identity -->
+                        <div style="background:#fff; border:1px solid var(--bento-border); border-radius:14px; padding:16px;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                                <span style="font-size:18px;">🎓</span>
+                                <h4 style="font-size:13px; font-weight:800; color:var(--primary-blue); margin:0;">Academic Record</h4>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">USN</h4>
+                                    <div class="val" id="studentCardUsn" style="font-size:13px;">Loading...</div>
+                                </div>
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Department</h4>
+                                    <div class="val" id="studentCardBranch" style="font-size:13px;">AIML</div>
+                                </div>
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Semester & Sec</h4>
+                                    <div class="val" id="studentCardSemSec" style="font-size:13px;">Sem 3 - A</div>
+                                </div>
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Academic Batch</h4>
+                                    <div class="val" id="studentCardBatch" style="font-size:13px;">2024-2028</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bento 2: Contact & Identity -->
+                        <div style="background:#fff; border:1px solid var(--bento-border); border-radius:14px; padding:16px;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                                <span style="font-size:18px;">👤</span>
+                                <h4 style="font-size:13px; font-weight:800; color:var(--primary-blue); margin:0;">Personal Details</h4>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Full Name</h4>
+                                    <div class="val" id="studentCardName" style="font-size:13px;">Loading...</div>
+                                </div>
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Registered Email</h4>
+                                    <div class="val" id="studentCardEmail" style="font-size:12px; word-break:break-all;">Loading...</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bento 3: Linked Guardian -->
+                        <div style="background:#fff; border:1px solid var(--bento-border); border-radius:14px; padding:16px;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                                <span style="font-size:18px;">👪</span>
+                                <h4 style="font-size:13px; font-weight:800; color:var(--primary-blue); margin:0;">Linked Guardian</h4>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Guardian Name</h4>
+                                    <div class="val" id="studentCardParentName" style="font-size:13px;">Not Linked</div>
+                                </div>
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Contact Phone</h4>
+                                    <div class="val" id="studentCardParentPhone" style="font-size:13px;">--</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bento 4: Biometrics & Security -->
+                        <div style="background:#fff; border:1px solid var(--bento-border); border-radius:14px; padding:16px;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                                <span style="font-size:18px;">🛡️</span>
+                                <h4 style="font-size:13px; font-weight:800; color:var(--accent-green); margin:0;">Biometrics & Security</h4>
+                            </div>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <div class="faculty-info-box" style="padding:8px 10px; border-left:3px solid var(--accent-green);">
+                                    <h4 style="font-size:10px;">Biometric Status</h4>
+                                    <div class="val" style="color:var(--accent-green); font-size:12px; font-weight:800;">✅ Hardware Bound</div>
+                                </div>
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Institution Tenant</h4>
+                                    <div class="val" style="font-size:12px;">Dr. AIT (Autonomous)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Legacy container preserved for backward compatibility -->
+                    <div id="studentIdentityProfileFields" style="display:none;"></div>
                 </section>
 
 <!-- 📢 STUDENT CIRCULARS + 🗓️ HOD TIMETABLE -->
@@ -1645,10 +1769,80 @@
                 👪 GUARDIAN / PARENT INTERFACE HUB
                 ========================================================================== -->
             <div id="parentSectionLayout" style="display: none;">
-                                <section id="parentWardProfileCard" class="bento-card" style="margin-bottom:24px;text-align:left;">
-                    <h3 style="font-size:16px;font-weight:800;color:var(--primary-blue);margin-bottom:14px;">🎓 Ward Academic Profile</h3>
-                    <div id="parentWardProfileFields" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
-                        <div style="color:var(--text-muted);font-size:12px;">Loading ward profile from database...</div>
+                <!-- 👪 PARENT EXECUTIVE PROFILE BANNER & WARD BENTO CARDS -->
+                <section id="parentWardProfileCard" class="bento-card" style="margin-bottom:24px;text-align:left;">
+                    <div class="faculty-profile-banner" style="margin-bottom:20px;">
+                        <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                            <div style="position:relative; width:64px; height:64px; flex-shrink:0;">
+                                <img id="parentProfileImgDisplay" src="" alt="Parent Photo" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:3px solid var(--primary-blue);display:none;background:#f1f5f9;" onerror="this.onerror=null;this.style.display='none';document.getElementById('parentProfileAvatarPlaceholder').style.display='flex';">
+                                <div id="parentProfileAvatarPlaceholder" style="width:64px;height:64px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:28px;border:3px solid var(--primary-blue);">👪</div>
+                                <label for="parentPhotoFileInput" style="position:absolute; bottom:-3px; right:-3px; background:var(--primary-blue); color:white; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:12px; box-shadow:0 2px 4px rgba(0,0,0,0.25); border:2px solid white;" title="Upload Parent Photo">📷</label>
+                                <input type="file" id="parentPhotoFileInput" accept="image/*,image/jpeg,image/png,image/webp" style="display:none;" onchange="handleParentPhotoUpload(event, 'self')">
+                            </div>
+                            <div>
+                                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                                    <h3 class="faculty-name-title" id="parentDisplayNameTitle" style="margin:0;">Parent Guardian</h3>
+                                    <span style="font-size:11px; font-weight:800; background:#eff6ff; color:var(--primary-blue); padding:3px 10px; border-radius:999px; border:1px solid #bfdbfe;">Verified Guardian</span>
+                                </div>
+                                <div class="faculty-dept-sub" id="parentDisplaySubTitle" style="margin-top:4px;">Parent / Guardian Portal Gateway | Dr. AIT Autonomous</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                            <button type="button" onclick="document.getElementById('parentPhotoFileInput').click()" class="btn btn-blue" style="padding:8px 14px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">📷 Change Parent Photo</button>
+                            <button type="button" onclick="openParentProfileEditModal()" class="btn btn-dark" style="padding:8px 14px; font-size:12px; display:inline-flex; align-items:center; gap:6px;">✏️ Edit Details</button>
+                        </div>
+                    </div>
+
+                    <!-- Bento Grid for Parent & Linked Ward -->
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px;">
+                        <!-- Parent Records Box -->
+                        <div style="background:#fff; border:1px solid var(--bento-border); border-radius:14px; padding:16px;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+                                <span style="font-size:18px;">👪</span>
+                                <h4 style="font-size:13px; font-weight:800; color:var(--primary-blue); margin:0;">Parent / Guardian Records</h4>
+                            </div>
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Parent Name</h4>
+                                    <div class="val" id="parentCardName" style="font-size:13px;">Guardian</div>
+                                </div>
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Linked Ward USN</h4>
+                                    <div class="val" id="parentCardChildUsn" style="font-size:13px;">--</div>
+                                </div>
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Phone Number</h4>
+                                    <div class="val" id="parentCardPhone" style="font-size:13px;">--</div>
+                                </div>
+                                <div class="faculty-info-box" style="padding:8px 10px;">
+                                    <h4 style="font-size:10px;">Email</h4>
+                                    <div class="val" id="parentCardEmail" style="font-size:11px; word-break:break-all;">--</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Linked Ward Box -->
+                        <div style="background:#fff; border:1px solid var(--bento-border); border-radius:14px; padding:16px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
+                                <div style="display:flex; align-items:center; gap:8px;">
+                                    <span style="font-size:18px;">🎓</span>
+                                    <h4 style="font-size:13px; font-weight:800; color:var(--primary-blue); margin:0;">Linked Ward Profile</h4>
+                                </div>
+                                <button type="button" onclick="document.getElementById('wardPhotoFileInput').click()" class="btn btn-blue" style="padding:6px 12px; font-size:11px; display:inline-flex; align-items:center; gap:5px;">📷 Change Ward Photo</button>
+                                <input type="file" id="wardPhotoFileInput" accept="image/*,image/jpeg,image/png,image/webp" style="display:none;" onchange="handleParentPhotoUpload(event, 'ward')">
+                            </div>
+                            <div style="display:flex; align-items:center; gap:14px; margin-bottom:12px;">
+                                <div style="position:relative; width:52px; height:52px; flex-shrink:0;">
+                                    <img id="parentWardImgDisplay" src="" alt="Ward Photo" style="width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid var(--primary-blue);display:none;background:#f1f5f9;" onerror="this.onerror=null;this.style.display='none';document.getElementById('parentWardAvatarPlaceholder').style.display='flex';">
+                                    <div id="parentWardAvatarPlaceholder" style="width:52px;height:52px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid var(--bento-border);">🎓</div>
+                                </div>
+                                <div>
+                                    <div id="wardDisplayName" style="font-size:14px; font-weight:800; color:var(--text-dark);">Linked Ward</div>
+                                    <div id="wardDisplaySub" style="font-size:11px; color:var(--text-muted);">Semester 3 • AIML Department</div>
+                                </div>
+                            </div>
+                            <div id="parentWardProfileFields" style="display:none;"></div>
+                        </div>
                     </div>
                 </section>
 <div class="stats-grid">
@@ -1916,6 +2110,17 @@
                     if (document.getElementById('profOrcid')) document.getElementById('profOrcid').value = p.orcid_id || '';
                     if (document.getElementById('profVidwan')) document.getElementById('profVidwan').value = p.vidwan_id || '';
                     if (document.getElementById('profIrins')) document.getElementById('profIrins').value = p.irins_url || '';
+                    if (p.profile_photo_url) {
+                        const bImg = document.getElementById('facultyBannerPhotoDisplay');
+                        const bPl = document.getElementById('facultyBannerAvatarPlaceholder');
+                        if (bImg) { bImg.src = p.profile_photo_url; bImg.style.display = 'block'; }
+                        if (bPl) bPl.style.display = 'none';
+
+                        const mImg = document.getElementById('facultyModulePhotoDisplay');
+                        const mPl = document.getElementById('facultyModuleAvatarPlaceholder');
+                        if (mImg) { mImg.src = p.profile_photo_url; mImg.style.display = 'block'; }
+                        if (mPl) mPl.style.display = 'none';
+                    }
                 }
                 cancelTeacherProfileEdit();
             } catch (err) {
@@ -2618,8 +2823,42 @@
                     branch: data.branch,
                     semester: data.semester_number ?? data.current_class,
                     section: data.section,
-                    academicYear: data.academic_year ?? data.academicYear
+                    academicYear: data.academic_year ?? data.academicYear,
+                    photoUrl: data.profile_photo_url || data.student?.profile_photo_url || null
                 };
+
+                const isStudentTarget = targetId === 'studentIdentityProfileFields';
+                const imgEl = document.getElementById(isStudentTarget ? 'studentProfileImgDisplay' : 'parentWardImgDisplay');
+                const placeholderEl = document.getElementById(isStudentTarget ? 'studentProfileAvatarPlaceholder' : 'parentWardAvatarPlaceholder');
+
+                if (profile.photoUrl && imgEl) {
+                    imgEl.src = profile.photoUrl;
+                    imgEl.style.display = 'block';
+                    if (placeholderEl) placeholderEl.style.display = 'none';
+                } else {
+                    if (imgEl) imgEl.style.display = 'none';
+                    if (placeholderEl) placeholderEl.style.display = 'flex';
+                }
+
+                // Populate Student Bento Cards
+                if (isStudentTarget) {
+                    if (document.getElementById('studentProfileHeaderName')) document.getElementById('studentProfileHeaderName').innerText = profile.name || 'Student Scholar';
+                    if (document.getElementById('studentProfileHeaderSub')) document.getElementById('studentProfileHeaderSub').innerText = `${profile.branch || 'Engineering'} • Semester ${profile.semester || '3'} (${profile.section || 'A'})`;
+                    if (document.getElementById('studentCardUsn')) document.getElementById('studentCardUsn').innerText = profile.usn || studentId;
+                    if (document.getElementById('studentCardBranch')) document.getElementById('studentCardBranch').innerText = profile.branch || 'AIML';
+                    if (document.getElementById('studentCardSemSec')) document.getElementById('studentCardSemSec').innerText = `Sem ${profile.semester || '3'} - ${profile.section || 'A'}`;
+                    if (document.getElementById('studentCardBatch')) document.getElementById('studentCardBatch').innerText = profile.academicYear || '2024-2028';
+                    if (document.getElementById('studentCardName')) document.getElementById('studentCardName').innerText = profile.name || 'Scholar';
+                    if (document.getElementById('studentCardEmail')) document.getElementById('studentCardEmail').innerText = data.email || 'student@drait.edu.in';
+                    if (data.parent) {
+                        if (document.getElementById('studentCardParentName')) document.getElementById('studentCardParentName').innerText = data.parent.name || 'Linked Guardian';
+                        if (document.getElementById('studentCardParentPhone')) document.getElementById('studentCardParentPhone').innerText = data.parent.phone_number || 'Registered';
+                    }
+                } else {
+                    // Ward target for parent portal
+                    if (document.getElementById('wardDisplayName')) document.getElementById('wardDisplayName').innerText = profile.name || 'Linked Ward';
+                    if (document.getElementById('wardDisplaySub')) document.getElementById('wardDisplaySub').innerText = `${profile.branch || 'AIML'} Department • Semester ${profile.semester || '3'} - ${profile.section || 'A'}`;
+                }
 
                 target.innerHTML = [
                     profileField('Student Name', profile.name),
@@ -2723,11 +2962,39 @@
             try {
                 const queryId = userUsn || childUsn;
                 if (!queryId) return;
-                const res = await fetch(`${API_BASE}/api/parent/profile?parentId=${queryId}&institutionId=${institutionId}`);
+                const res = await fetch(`${API_BASE}/api/parent/profile?parentId=${encodeURIComponent(queryId)}&institutionId=${encodeURIComponent(institutionId)}`);
                 const data = await res.json();
                 if (data && data.success) {
                     childUsn = data.childUsn || childUsn;
                     if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 GUARDIAN ➔ WARD: ${data.studentName} [${childUsn}]`;
+                    if (document.getElementById('parentDisplayNameTitle')) document.getElementById('parentDisplayNameTitle').innerText = data.parentName || 'Parent Guardian';
+                    if (document.getElementById('parentCardName')) document.getElementById('parentCardName').innerText = data.parentName || 'Guardian';
+                    if (document.getElementById('parentCardChildUsn')) document.getElementById('parentCardChildUsn').innerText = childUsn || 'N/A';
+                    if (document.getElementById('parentCardPhone')) document.getElementById('parentCardPhone').innerText = data.parentPhone || 'Not Registered';
+                    if (document.getElementById('parentCardEmail')) document.getElementById('parentCardEmail').innerText = data.parentEmail || 'Not Registered';
+
+                    // Parent photo
+                    const pImg = document.getElementById('parentProfileImgDisplay');
+                    const pPl = document.getElementById('parentProfileAvatarPlaceholder');
+                    if (data.parentProfilePhotoUrl && pImg) {
+                        pImg.src = data.parentProfilePhotoUrl;
+                        pImg.style.display = 'block';
+                        if (pPl) pPl.style.display = 'none';
+                    } else {
+                        if (pImg) pImg.style.display = 'none';
+                        if (pPl) pPl.style.display = 'flex';
+                    }
+
+                    // Ward photo if returned
+                    if (data.childProfilePhotoUrl) {
+                        const wImg = document.getElementById('parentWardImgDisplay');
+                        const wPl = document.getElementById('parentWardAvatarPlaceholder');
+                        if (wImg) {
+                            wImg.src = data.childProfilePhotoUrl;
+                            wImg.style.display = 'block';
+                            if (wPl) wPl.style.display = 'none';
+                        }
+                    }
                 }
             } catch (err) { console.error(err); }
         }
@@ -3641,7 +3908,10 @@
                 }
 
                 students.forEach(st => {
-                    let rowHTML = `<tr><td style="position:sticky; left:0; background:#ffffff; font-weight:700;"><code>${st.usn}</code></td><td style="position:sticky; left:130px; background:#ffffff; font-weight:700;">${st.name}</td>`;
+                    const stPhoto = st.profile_photo_url 
+                        ? `<img src="${st.profile_photo_url}" alt="Photo" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1.5px solid #cbd5e1;" onerror="this.onerror=null;this.outerHTML='<span style=\\'display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#e2e8f0;font-size:12px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;\\'>👤</span>';">` 
+                        : `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#e2e8f0;font-size:12px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;">👤</span>`;
+                    let rowHTML = `<tr><td style="position:sticky; left:0; background:#ffffff; font-weight:700;"><code>${st.usn}</code></td><td style="position:sticky; left:130px; background:#ffffff; font-weight:700; white-space:nowrap;">${stPhoto}${escapeStudentUpdateHtml(st.name)}</td>`;
                      
                     if (!dates || dates.length === 0) {
                         rowHTML += `<td style="text-align:center; color:var(--text-muted);">-</td>`;
@@ -4328,7 +4598,10 @@
                         presentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">None checked in yet.</td></tr>`;
                     } else {
                         data.presentStudents.forEach(st => {
-                            presentBody.innerHTML += `<tr><td><strong>${st.name}</strong></td><td><code>${st.usn}</code></td><td>${st.distance}</td></tr>`;
+                            const photoHtml = st.profile_photo_url 
+                                ? `<img src="${st.profile_photo_url}" alt="Photo" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1.5px solid #bfdbfe;" onerror="this.onerror=null;this.outerHTML='<span style=\\'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e2e8f0;font-size:13px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;\\'>👤</span>';">` 
+                                : `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e2e8f0;font-size:13px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;">👤</span>`;
+                            presentBody.innerHTML += `<tr><td>${photoHtml}<strong>${escapeStudentUpdateHtml(st.name)}</strong></td><td><code>${st.usn}</code></td><td>${st.distance}</td></tr>`;
                         });
                     }
 
@@ -4336,7 +4609,10 @@
                         absentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No absences recorded!</td></tr>`;
                     } else {
                         data.absentStudents.forEach(st => {
-                            absentBody.innerHTML += `<tr><td>${st.name}</td><td><code>${st.usn}</code></td><td><a href="tel:${st.phone || ''}">📞 ${st.phone || 'N/A'}</a></td></tr>`;
+                            const photoHtml = st.profile_photo_url 
+                                ? `<img src="${st.profile_photo_url}" alt="Photo" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1.5px solid #cbd5e1;" onerror="this.onerror=null;this.outerHTML='<span style=\\'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e2e8f0;font-size:13px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;\\'>👤</span>';">` 
+                                : `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e2e8f0;font-size:13px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;">👤</span>`;
+                            absentBody.innerHTML += `<tr><td>${photoHtml}${escapeStudentUpdateHtml(st.name)}</td><td><code>${st.usn}</code></td><td><a href="tel:${st.phone || ''}">📞 ${st.phone || 'N/A'}</a></td></tr>`;
                         });
                     }
 
@@ -4480,7 +4756,10 @@
                     presentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No attendance recorded.</td></tr>`;
                 } else {
                     data.presentStudents.forEach(st => {
-                        presentBody.innerHTML += `<tr><td><strong>${st.name}</strong></td><td><code>${st.usn}</code></td><td>${st.distance}</td></tr>`;
+                        const photoHtml = st.profile_photo_url 
+                            ? `<img src="${st.profile_photo_url}" alt="Photo" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1.5px solid #bfdbfe;" onerror="this.onerror=null;this.outerHTML='<span style=\\'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e2e8f0;font-size:13px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;\\'>👤</span>';">` 
+                            : `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e2e8f0;font-size:13px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;">👤</span>`;
+                        presentBody.innerHTML += `<tr><td>${photoHtml}<strong>${escapeStudentUpdateHtml(st.name)}</strong></td><td><code>${st.usn}</code></td><td>${st.distance}</td></tr>`;
                     });
                 }
 
@@ -4488,7 +4767,10 @@
                     absentBody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">No absences recorded!</td></tr>`;
                 } else {
                     data.absentStudents.forEach(st => {
-                        absentBody.innerHTML += `<tr><td>${st.name}</td><td><code>${st.usn}</code></td><td><a href="tel:${st.phone || ''}">📞 ${st.phone || 'N/A'}</a></td></tr>`;
+                        const photoHtml = st.profile_photo_url 
+                            ? `<img src="${st.profile_photo_url}" alt="Photo" style="width:28px;height:28px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1.5px solid #cbd5e1;" onerror="this.onerror=null;this.outerHTML='<span style=\\'display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e2e8f0;font-size:13px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;\\'>👤</span>';">` 
+                            : `<span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#e2e8f0;font-size:13px;vertical-align:middle;margin-right:8px;border:1px solid #cbd5e1;">👤</span>`;
+                        absentBody.innerHTML += `<tr><td>${photoHtml}${escapeStudentUpdateHtml(st.name)}</td><td><code>${st.usn}</code></td><td><a href="tel:${st.phone || ''}">📞 ${st.phone || 'N/A'}</a></td></tr>`;
                     });
                 }
 
@@ -5094,6 +5376,285 @@
             setTimeout(() => { toast.style.display = 'none'; }, 4000);
         }
 
+        /* ==========================================================================
+           UNIVERSAL PROFILE PHOTO UPLOAD HANDLERS & MODAL MANAGEMENT
+          ========================================================================== */
+        async function handleStudentPhotoUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                firePremiumToastAlert('❌ Invalid format. Only JPEG, PNG, and WebP are allowed.', 'var(--accent-red)');
+                event.target.value = '';
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                firePremiumToastAlert('❌ Image size exceeds 2MB limit. Please choose a smaller photo.', 'var(--accent-red)');
+                event.target.value = '';
+                return;
+            }
+
+            firePremiumToastAlert('⏳ Uploading student profile photo...');
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('userId', userUsn);
+            formData.append('institutionId', institutionId);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/student/upload-photo`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok && result.success && result.photoUrl) {
+                    const img = document.getElementById('studentProfileImgDisplay');
+                    const pl = document.getElementById('studentProfileAvatarPlaceholder');
+                    if (img) {
+                        img.src = result.photoUrl;
+                        img.style.display = 'block';
+                    }
+                    if (pl) pl.style.display = 'none';
+                    firePremiumToastAlert('✅ Profile photo updated successfully!');
+                } else {
+                    firePremiumToastAlert(`❌ ${result.error || 'Failed to upload photo.'}`, 'var(--accent-red)');
+                }
+            } catch (err) {
+                console.error('Photo upload error:', err);
+                firePremiumToastAlert('❌ Network error during photo upload.', 'var(--accent-red)');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        async function handleParentPhotoUpload(event, target) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                firePremiumToastAlert('❌ Invalid format. Only JPEG, PNG, and WebP are allowed.', 'var(--accent-red)');
+                event.target.value = '';
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                firePremiumToastAlert('❌ Image size exceeds 2MB limit.', 'var(--accent-red)');
+                event.target.value = '';
+                return;
+            }
+
+            const isWard = target === 'ward';
+            firePremiumToastAlert(`⏳ Uploading ${isWard ? 'ward' : 'parent'} photo...`);
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('userId', userUsn || childUsn);
+            formData.append('institutionId', institutionId);
+            formData.append('target', isWard ? 'ward' : 'self');
+            if (isWard && childUsn) formData.append('childUsn', childUsn);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/parent/upload-photo`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok && result.success && result.photoUrl) {
+                    if (isWard) {
+                        const img = document.getElementById('parentWardImgDisplay');
+                        const pl = document.getElementById('parentWardAvatarPlaceholder');
+                        if (img) { img.src = result.photoUrl; img.style.display = 'block'; }
+                        if (pl) pl.style.display = 'none';
+                        firePremiumToastAlert('✅ Ward photo updated successfully!');
+                    } else {
+                        const img = document.getElementById('parentProfileImgDisplay');
+                        const pl = document.getElementById('parentProfileAvatarPlaceholder');
+                        if (img) { img.src = result.photoUrl; img.style.display = 'block'; }
+                        if (pl) pl.style.display = 'none';
+                        firePremiumToastAlert('✅ Parent photo updated successfully!');
+                    }
+                } else {
+                    firePremiumToastAlert(`❌ ${result.error || 'Failed to upload photo.'}`, 'var(--accent-red)');
+                }
+            } catch (err) {
+                console.error('Parent photo upload error:', err);
+                firePremiumToastAlert('❌ Network error during upload.', 'var(--accent-red)');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        async function handleFacultyPhotoUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                firePremiumToastAlert('❌ Invalid format. Only JPEG, PNG, and WebP are allowed.', 'var(--accent-red)');
+                event.target.value = '';
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                firePremiumToastAlert('❌ Image size exceeds 2MB limit.', 'var(--accent-red)');
+                event.target.value = '';
+                return;
+            }
+
+            firePremiumToastAlert('⏳ Uploading faculty photo...');
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('userId', userUsn);
+            formData.append('institutionId', institutionId);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/teacher/upload-photo`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok && result.success && result.photoUrl) {
+                    const bImg = document.getElementById('facultyBannerPhotoDisplay');
+                    const bPl = document.getElementById('facultyBannerAvatarPlaceholder');
+                    if (bImg) { bImg.src = result.photoUrl; bImg.style.display = 'block'; }
+                    if (bPl) bPl.style.display = 'none';
+
+                    const mImg = document.getElementById('facultyModulePhotoDisplay');
+                    const mPl = document.getElementById('facultyModuleAvatarPlaceholder');
+                    if (mImg) { mImg.src = result.photoUrl; mImg.style.display = 'block'; }
+                    if (mPl) mPl.style.display = 'none';
+
+                    firePremiumToastAlert('✅ Faculty profile photo updated successfully!');
+                } else {
+                    firePremiumToastAlert(`❌ ${result.error || 'Failed to upload photo.'}`, 'var(--accent-red)');
+                }
+            } catch (err) {
+                console.error('Faculty photo upload error:', err);
+                firePremiumToastAlert('❌ Network error during photo upload.', 'var(--accent-red)');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        function refreshStudentDatabaseProfile() {
+            firePremiumToastAlert('🔄 Refreshing profile...');
+            loadDatabaseStudentProfile(userUsn, 'studentIdentityProfileFields');
+        }
+
+        function openStudentProfileEditModal() {
+            const nameEl = document.getElementById('studentProfileHeaderName');
+            const emailEl = document.getElementById('studentCardEmail');
+            if (document.getElementById('editStudentNameInput')) {
+                document.getElementById('editStudentNameInput').value = (nameEl && nameEl.innerText !== 'Student Scholar') ? nameEl.innerText : (userName || '');
+            }
+            if (document.getElementById('editStudentEmailInput')) {
+                document.getElementById('editStudentEmailInput').value = (emailEl && !emailEl.innerText.includes('Loading')) ? emailEl.innerText : '';
+            }
+            const modal = document.getElementById('studentEditProfileModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeStudentProfileEditModal() {
+            const modal = document.getElementById('studentEditProfileModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function saveStudentProfileChanges() {
+            const name = document.getElementById('editStudentNameInput')?.value.trim();
+            const email = document.getElementById('editStudentEmailInput')?.value.trim();
+            if (!name) {
+                firePremiumToastAlert('❌ Name cannot be empty.', 'var(--accent-red)');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/student/update-profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: userUsn,
+                        name,
+                        email,
+                        institutionId
+                    })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    userName = name;
+                    localStorage.setItem('userName', name);
+                    if (document.getElementById('studentProfileHeaderName')) document.getElementById('studentProfileHeaderName').innerText = name;
+                    if (document.getElementById('studentCardName')) document.getElementById('studentCardName').innerText = name;
+                    if (document.getElementById('studentCardEmail')) document.getElementById('studentCardEmail').innerText = email;
+                    if (document.getElementById('welcomeBadge')) document.getElementById('welcomeBadge').innerText = `👤 Identity Profile: ${userName} | USN: ${userUsn}`;
+                    closeStudentProfileEditModal();
+                    firePremiumToastAlert('✅ Student profile details updated successfully!');
+                } else {
+                    firePremiumToastAlert(`❌ ${result.error || 'Failed to update profile.'}`, 'var(--accent-red)');
+                }
+            } catch (err) {
+                console.error('Update student error:', err);
+                firePremiumToastAlert('❌ Network error updating profile.', 'var(--accent-red)');
+            }
+        }
+
+        function openParentProfileEditModal() {
+            const nameEl = document.getElementById('parentCardName');
+            const phoneEl = document.getElementById('parentCardPhone');
+            const emailEl = document.getElementById('parentCardEmail');
+            if (document.getElementById('editParentNameInput')) {
+                document.getElementById('editParentNameInput').value = (nameEl && nameEl.innerText !== 'Guardian') ? nameEl.innerText : (userName || '');
+            }
+            if (document.getElementById('editParentPhoneInput')) {
+                document.getElementById('editParentPhoneInput').value = (phoneEl && phoneEl.innerText !== '--') ? phoneEl.innerText : '';
+            }
+            if (document.getElementById('editParentEmailInput')) {
+                document.getElementById('editParentEmailInput').value = (emailEl && emailEl.innerText !== '--') ? emailEl.innerText : '';
+            }
+            const modal = document.getElementById('parentEditProfileModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeParentProfileEditModal() {
+            const modal = document.getElementById('parentEditProfileModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function saveParentProfileChanges() {
+            const name = document.getElementById('editParentNameInput')?.value.trim();
+            const phone = document.getElementById('editParentPhoneInput')?.value.trim();
+            const email = document.getElementById('editParentEmailInput')?.value.trim();
+            if (!name) {
+                firePremiumToastAlert('❌ Name cannot be empty.', 'var(--accent-red)');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/parent/update-profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        parentId: userUsn || childUsn,
+                        name,
+                        phone,
+                        email,
+                        institutionId
+                    })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    if (document.getElementById('parentDisplayNameTitle')) document.getElementById('parentDisplayNameTitle').innerText = name;
+                    if (document.getElementById('parentCardName')) document.getElementById('parentCardName').innerText = name;
+                    if (phone && document.getElementById('parentCardPhone')) document.getElementById('parentCardPhone').innerText = phone;
+                    if (email && document.getElementById('parentCardEmail')) document.getElementById('parentCardEmail').innerText = email;
+                    closeParentProfileEditModal();
+                    firePremiumToastAlert('✅ Parent profile details updated successfully!');
+                } else {
+                    firePremiumToastAlert(`❌ ${result.error || 'Failed to update parent profile.'}`, 'var(--accent-red)');
+                }
+            } catch (err) {
+                console.error('Update parent error:', err);
+                firePremiumToastAlert('❌ Network error updating parent profile.', 'var(--accent-red)');
+            }
+        }
+
         function handleLogout() { 
             localStorage.clear(); 
             sessionStorage.clear();
@@ -5104,5 +5665,59 @@
             triggerBiometricDeviceHandshake();
         });
     </script>
+
+    <!-- ✏️ STUDENT PROFILE EDIT MODAL -->
+    <div id="studentEditProfileModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#fff; border-radius:20px; max-width:480px; width:100%; padding:24px; box-shadow:0 20px 40px rgba(0,0,0,0.25); text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--text-dark);">✏️ Edit Student Profile</h3>
+                <button type="button" onclick="closeStudentProfileEditModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-muted);">&times;</button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Update your displayed scholar name and email address.</p>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:5px;">FULL NAME</label>
+                    <input type="text" id="editStudentNameInput" style="width:100%; padding:10px; border:1px solid var(--bento-border); border-radius:10px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:5px;">REGISTERED EMAIL</label>
+                    <input type="email" id="editStudentEmailInput" style="width:100%; padding:10px; border:1px solid var(--bento-border); border-radius:10px; font-size:13px;">
+                </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button type="button" onclick="closeStudentProfileEditModal()" class="btn btn-dark" style="padding:9px 16px;">Cancel</button>
+                <button type="button" onclick="saveStudentProfileChanges()" class="btn btn-blue" style="padding:9px 18px;">💾 Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ✏️ PARENT PROFILE EDIT MODAL -->
+    <div id="parentEditProfileModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#fff; border-radius:20px; max-width:480px; width:100%; padding:24px; box-shadow:0 20px 40px rgba(0,0,0,0.25); text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--text-dark);">✏️ Edit Parent / Guardian Profile</h3>
+                <button type="button" onclick="closeParentProfileEditModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-muted);">&times;</button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Update your name, primary phone number, and email address for institutional notifications.</p>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:5px;">PARENT / GUARDIAN NAME</label>
+                    <input type="text" id="editParentNameInput" style="width:100%; padding:10px; border:1px solid var(--bento-border); border-radius:10px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:5px;">PHONE NUMBER (FOR SMS ALERTS)</label>
+                    <input type="tel" id="editParentPhoneInput" style="width:100%; padding:10px; border:1px solid var(--bento-border); border-radius:10px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:5px;">REGISTERED EMAIL</label>
+                    <input type="email" id="editParentEmailInput" style="width:100%; padding:10px; border:1px solid var(--bento-border); border-radius:10px; font-size:13px;">
+                </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button type="button" onclick="closeParentProfileEditModal()" class="btn btn-dark" style="padding:9px 16px;">Cancel</button>
+                <button type="button" onclick="saveParentProfileChanges()" class="btn btn-blue" style="padding:9px 18px;">💾 Save Changes</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

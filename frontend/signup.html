@@ -285,6 +285,31 @@
                         Type your academic year (e.g., 2026-2027).
                     </small>
                 </div>
+
+                <!-- STUDENT PROFILE PHOTO (OPTIONAL) -->
+                <div class="form-group" id="studentPhotoGroup">
+                    <label for="profilePhoto" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Profile Photo (Optional)</span>
+                        <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: none;">Max 2 MB (JPG, PNG, WebP)</span>
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 14px; margin-top: 8px; background: #f8fafc; border: 1.5px dashed var(--border-clean); border-radius: 14px; padding: 12px 14px;">
+                        <div id="photoPreviewBox" style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; background: #e2e8f0; border: 2px solid var(--border-clean); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <img id="photoPreviewImg" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                            <span id="photoPreviewPlaceholder" style="font-size: 24px;">👤</span>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <input type="file" id="profilePhoto" accept="image/*,.jpg,.jpeg,.png,.webp" style="display: none;" onchange="handlePhotoSelect(event)">
+                            <button type="button" onclick="document.getElementById('profilePhoto').click()" style="padding: 7px 12px; font-size: 12px; font-weight: 700; color: var(--primary-blue); background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; cursor: pointer;">
+                                📁 Choose Photo
+                            </button>
+                            <button type="button" id="btnRemovePhoto" onclick="removeSelectedPhoto()" style="display: none; margin-left: 6px; padding: 7px 10px; font-size: 12px; font-weight: 700; color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; cursor: pointer;">
+                                ✕ Remove
+                            </button>
+                            <div id="photoFileName" style="font-size: 11px; color: var(--text-muted); margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">No photo selected</div>
+                        </div>
+                    </div>
+                    <div id="photoValidationError" style="display: none; color: #ef4444; font-size: 12px; font-weight: 600; margin-top: 6px;"></div>
+                </div>
             </div>
 
             <!-- Branch Selection Group (For HOD & Teachers) -->
@@ -546,6 +571,7 @@
                 sectionInput.innerHTML = '<option value="">Select branch first</option>';
                 sectionInput.disabled = true;
                 academicYearInput.value = '2026-2027';
+                if (typeof removeSelectedPhoto === 'function') removeSelectedPhoto();
             }
 
             if (role === 'parent') {
@@ -667,6 +693,84 @@
                 });
                 sectionSelect.disabled = false;
             });
+        }
+
+        let selectedPhotoFile = null;
+
+        function handlePhotoSelect(event) {
+            const file = event.target.files && event.target.files[0];
+            const errorBox = document.getElementById('photoValidationError');
+            const previewImg = document.getElementById('photoPreviewImg');
+            const placeholder = document.getElementById('photoPreviewPlaceholder');
+            const fileNameSpan = document.getElementById('photoFileName');
+            const btnRemove = document.getElementById('btnRemovePhoto');
+
+            if (errorBox) {
+                errorBox.style.display = 'none';
+                errorBox.innerText = '';
+            }
+
+            if (!file) {
+                removeSelectedPhoto();
+                return;
+            }
+
+            // 1. Enforce 2 MB size limit
+            const MAX_BYTES = 2 * 1024 * 1024;
+            if (file.size > MAX_BYTES) {
+                if (errorBox) {
+                    errorBox.innerText = '⚠️ Selected photo exceeds 2 MB. Please choose a smaller photo.';
+                    errorBox.style.display = 'block';
+                }
+                removeSelectedPhoto();
+                return;
+            }
+
+            // 2. Validate MIME type & file extension (JPEG, PNG, WebP)
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            const validExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if (!validTypes.includes(file.type) || !validExts.includes(ext)) {
+                if (errorBox) {
+                    errorBox.innerText = '⚠️ Unsupported format. Please upload a JPEG, PNG, or WebP image.';
+                    errorBox.style.display = 'block';
+                }
+                removeSelectedPhoto();
+                return;
+            }
+
+            selectedPhotoFile = file;
+            if (fileNameSpan) fileNameSpan.innerText = file.name;
+            if (btnRemove) btnRemove.style.display = 'inline-block';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (previewImg) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                }
+                if (placeholder) placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeSelectedPhoto() {
+            selectedPhotoFile = null;
+            const input = document.getElementById('profilePhoto');
+            if (input) input.value = '';
+            const previewImg = document.getElementById('photoPreviewImg');
+            const placeholder = document.getElementById('photoPreviewPlaceholder');
+            const fileNameSpan = document.getElementById('photoFileName');
+            const btnRemove = document.getElementById('btnRemovePhoto');
+
+            if (previewImg) {
+                previewImg.style.display = 'none';
+                previewImg.src = '';
+            }
+            if (placeholder) placeholder.style.display = 'block';
+            if (fileNameSpan) fileNameSpan.innerText = 'No photo selected';
+            if (btnRemove) btnRemove.style.display = 'none';
         }
 
         async function registerHardwareFingerprint() {
@@ -795,25 +899,49 @@
             document.getElementById('biometricAuthModal').style.display = 'flex';
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/signup`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        usn, 
-                        email, 
-                        password, 
-                        role, 
-                        name, 
-                        childUsn,
-                        // Branch field for student, principal, dean, and teacher/HOD
-                        branch: role === 'student' ? studentBranch : (role === 'principal' ? 'ADMIN' : (role === 'dean' ? 'ACADEMIC' : (role === 'dean_pd' ? 'PLANNING' : branch))),
-                        section: role === 'student' ? section : '',
-                        academicYear: role === 'student' ? academicYear : '',
-                        phoneNumber,
-                        institutionId: 'DR_AIT',
-                        deviceFingerprint: deviceFingerprint
-                    })
-                });
+                let response;
+                const branchValue = role === 'student' ? studentBranch : (role === 'principal' ? 'ADMIN' : (role === 'dean' ? 'ACADEMIC' : (role === 'dean_pd' ? 'PLANNING' : branch)));
+
+                if (role === 'student' && selectedPhotoFile) {
+                    const formData = new FormData();
+                    formData.append('usn', usn);
+                    formData.append('email', email);
+                    formData.append('password', password);
+                    formData.append('role', role);
+                    formData.append('name', name);
+                    formData.append('childUsn', childUsn || '');
+                    formData.append('branch', branchValue || '');
+                    formData.append('section', section || '');
+                    formData.append('academicYear', academicYear || '');
+                    formData.append('phoneNumber', phoneNumber || '');
+                    formData.append('institutionId', 'DR_AIT');
+                    formData.append('deviceFingerprint', deviceFingerprint || '');
+                    formData.append('profilePhoto', selectedPhotoFile);
+
+                    response = await fetch(`${API_BASE}/api/auth/signup`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    response = await fetch(`${API_BASE}/api/auth/signup`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            usn, 
+                            email, 
+                            password, 
+                            role, 
+                            name, 
+                            childUsn,
+                            branch: branchValue,
+                            section: role === 'student' ? section : '',
+                            academicYear: role === 'student' ? academicYear : '',
+                            phoneNumber,
+                            institutionId: 'DR_AIT',
+                            deviceFingerprint: deviceFingerprint
+                        })
+                    });
+                }
 
                 const data = await response.json();
                 if (!response.ok || !data.success) {

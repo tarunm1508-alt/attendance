@@ -84,19 +84,39 @@
         <!-- Profile Header -->
         <div class="bento-card">
             <div class="profile-banner">
-                <div class="parent-badge">
-                    <div class="avatar-circle">👪</div>
+                <div class="parent-badge" style="display:flex; align-items:center; gap:16px;">
+                    <div style="position:relative; width:58px; height:58px; flex-shrink:0;">
+                        <img id="parentProfilePhoto" src="" alt="Parent Photo" style="width:58px; height:58px; border-radius:50%; object-fit:cover; border:2px solid var(--primary-blue); display:none; background:#f1f5f9;" onerror="this.onerror=null;this.style.display='none';document.getElementById('parentAvatarPlaceholder').style.display='flex';">
+                        <div id="parentAvatarPlaceholder" class="avatar-circle" style="width:58px; height:58px; margin:0; display:flex;">👪</div>
+                        <label for="parentSelfPhotoInput" style="position:absolute; bottom:-3px; right:-3px; background:var(--primary-blue); color:white; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; box-shadow:0 2px 4px rgba(0,0,0,0.25); border:2px solid white;" title="Upload or Change Parent Photo">📷</label>
+                        <input type="file" id="parentSelfPhotoInput" accept="image/*,image/jpeg,image/png,image/webp" style="display:none;" onchange="handleParentPhotoUpload(event, 'self')">
+                    </div>
                     <div>
                         <div class="parent-name" id="parentName">Parent Guardian</div>
-                        <div class="parent-dept">Parent Portal Gateway | Dr. AIT</div>
+                        <div class="parent-dept" id="parentSubtitle">Parent / Guardian Portal Gateway | Dr. AIT Autonomous</div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:3px;" id="parentContactMeta">Phone: <span id="displayParentPhone">--</span> • Email: <span id="displayParentEmail">--</span></div>
                     </div>
                 </div>
-                <button onclick="logout()" style="padding: 10px 18px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">Logout ⬅️</button>
+                <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <button type="button" onclick="document.getElementById('parentSelfPhotoInput').click()" style="padding: 9px 14px; background: #eff6ff; color: var(--primary-blue); border: 1px solid #bfdbfe; border-radius: 10px; font-weight: 700; cursor: pointer; font-size:12px;">📷 Change Photo</button>
+                    <button type="button" onclick="openParentEditModal()" style="padding: 9px 14px; background: #f8fafc; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer; font-size:12px;">✏️ Edit Details</button>
+                    <button onclick="logout()" style="padding: 9px 16px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer; font-size:12px;">Logout ⬅️</button>
+                </div>
             </div>
             <div class="info-grid">
-                <div class="info-box">
-                    <h4>Linked Student Name</h4>
-                    <div class="val" id="childName">Loading...</div>
+                <div class="info-box" style="display:flex; align-items:center; gap:12px;">
+                    <div style="position:relative; width:50px; height:50px; border-radius:50%; overflow:hidden; background:#e2e8f0; border:2px solid var(--primary-blue); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                        <img id="childProfilePhoto" src="" alt="Student Photo" style="width:100%; height:100%; object-fit:cover; display:none;" onerror="this.onerror=null;this.style.display='none';document.getElementById('childAvatarPlaceholder').style.display='flex';">
+                        <span id="childAvatarPlaceholder" style="font-size:22px; display:flex;">🎓</span>
+                    </div>
+                    <div style="min-width:0; flex:1;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                            <h4>Linked Student Name</h4>
+                            <button type="button" onclick="document.getElementById('childPhotoInput').click()" style="background:none; border:none; color:var(--primary-blue); font-size:11px; font-weight:800; cursor:pointer; padding:0;" title="Change Child Photo">📷 Change</button>
+                            <input type="file" id="childPhotoInput" accept="image/*,image/jpeg,image/png,image/webp" style="display:none;" onchange="handleParentPhotoUpload(event, 'ward')">
+                        </div>
+                        <div class="val" id="childName">Loading...</div>
+                    </div>
                 </div>
                 <div class="info-box">
                     <h4>Student USN / ID</h4>
@@ -437,6 +457,12 @@
                     if (data.parentName && data.parentName !== "Guardian") {
                         document.getElementById("parentName").innerText = data.parentName;
                     }
+                    if (document.getElementById("displayParentPhone")) {
+                        document.getElementById("displayParentPhone").innerText = data.parentPhone || "Not set";
+                    }
+                    if (document.getElementById("displayParentEmail")) {
+                        document.getElementById("displayParentEmail").innerText = data.parentEmail || "Not set";
+                    }
                     if (data.childUsn && data.childUsn !== "N/A") {
                         childSRN = data.childUsn;
                         localStorage.setItem("student_id", childSRN);
@@ -444,7 +470,22 @@
                     }
                     document.getElementById("childName").innerText = data.studentName || "Linked Ward";
                     document.getElementById("displaySRN").innerText = childSRN || "Not Linked";
+
+                    // Parent photo
+                    const parentImg = document.getElementById("parentProfilePhoto");
+                    const parentPl = document.getElementById("parentAvatarPlaceholder");
+                    if (data.parentProfilePhotoUrl && parentImg) {
+                        parentImg.src = data.parentProfilePhotoUrl;
+                        parentImg.style.display = "block";
+                        if (parentPl) parentPl.style.display = "none";
+                    } else if (parentImg && parentPl) {
+                        parentImg.style.display = "none";
+                        parentPl.style.display = "flex";
+                    }
                 }
+
+                let childPhotoUrl = (data && data.childProfilePhotoUrl) ? data.childProfilePhotoUrl : null;
+
                 if (childSRN) {
                     const fallbackRes = await fetch(`${BACKEND_URL}/api/marks/student-profile/${encodeURIComponent(childSRN)}?institutionId=${institutionId}`);
                     const fallbackData = await fallbackRes.json();
@@ -452,10 +493,24 @@
                         if (fallbackData.student_name) {
                             document.getElementById("childName").innerText = fallbackData.student_name;
                         }
+                        if (fallbackData.profile_photo_url && !childPhotoUrl) {
+                            childPhotoUrl = fallbackData.profile_photo_url;
+                        }
                         document.getElementById("displaySRN").innerText = childSRN;
                         document.getElementById("childBranch").innerText = fallbackData.branch || "AIML";
                         document.getElementById("childClassSec").innerText = `Sem ${fallbackData.current_class || '3'} - ${fallbackData.section || 'A'}`;
                     }
+                }
+
+                const photoImg = document.getElementById("childProfilePhoto");
+                const avatarPl = document.getElementById("childAvatarPlaceholder");
+                if (childPhotoUrl && photoImg) {
+                    photoImg.src = childPhotoUrl;
+                    photoImg.style.display = "block";
+                    if (avatarPl) avatarPl.style.display = "none";
+                } else if (photoImg && avatarPl) {
+                    photoImg.style.display = "none";
+                    avatarPl.style.display = "flex";
                 }
             } catch (e) {
                 console.error("Error loading profile details:", e);
@@ -631,6 +686,124 @@
             toast.classList.add('show');
             setTimeout(() => { toast.classList.remove('show'); }, 2500);
         }
+        /* ==========================================================================
+           PARENT & WARD PHOTO UPLOAD & PROFILE EDIT HANDLERS
+          ========================================================================== */
+        async function handleParentPhotoUpload(event, target) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                showPopupNotification('❌ Invalid format. Only JPEG, PNG, and WebP are allowed.', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                showPopupNotification('❌ Image size exceeds 2MB limit.', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            const isWard = target === 'ward';
+            showPopupNotification(`⏳ Uploading ${isWard ? 'ward' : 'parent'} photo...`);
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('userId', parentUsn || childSRN);
+            formData.append('institutionId', institutionId);
+            formData.append('target', isWard ? 'ward' : 'self');
+            if (isWard && childSRN) formData.append('childUsn', childSRN);
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/parent/upload-photo`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok && result.success && result.photoUrl) {
+                    if (isWard) {
+                        const img = document.getElementById('childProfilePhoto');
+                        const pl = document.getElementById('childAvatarPlaceholder');
+                        if (img) { img.src = result.photoUrl; img.style.display = 'block'; }
+                        if (pl) pl.style.display = 'none';
+                        showPopupNotification('✅ Ward photo updated successfully!');
+                    } else {
+                        const img = document.getElementById('parentProfilePhoto');
+                        const pl = document.getElementById('parentAvatarPlaceholder');
+                        if (img) { img.src = result.photoUrl; img.style.display = 'block'; }
+                        if (pl) pl.style.display = 'none';
+                        showPopupNotification('✅ Parent photo updated successfully!');
+                    }
+                } else {
+                    showPopupNotification(`❌ ${result.error || 'Failed to upload photo.'}`, 'error');
+                }
+            } catch (err) {
+                console.error('Parent photo upload error:', err);
+                showPopupNotification('❌ Network error during upload.', 'error');
+            } finally {
+                event.target.value = '';
+            }
+        }
+
+        function openParentEditModal() {
+            const nameEl = document.getElementById('parentName');
+            const phoneEl = document.getElementById('displayParentPhone');
+            const emailEl = document.getElementById('displayParentEmail');
+            if (document.getElementById('editParentNameInput')) {
+                document.getElementById('editParentNameInput').value = (nameEl && nameEl.innerText !== 'Parent Guardian') ? nameEl.innerText : '';
+            }
+            if (document.getElementById('editParentPhoneInput')) {
+                document.getElementById('editParentPhoneInput').value = (phoneEl && phoneEl.innerText !== '--' && phoneEl.innerText !== 'Not set') ? phoneEl.innerText : '';
+            }
+            if (document.getElementById('editParentEmailInput')) {
+                document.getElementById('editParentEmailInput').value = (emailEl && emailEl.innerText !== '--' && emailEl.innerText !== 'Not set') ? emailEl.innerText : '';
+            }
+            const modal = document.getElementById('parentEditProfileModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeParentEditModal() {
+            const modal = document.getElementById('parentEditProfileModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function saveParentProfileChanges() {
+            const name = document.getElementById('editParentNameInput')?.value.trim();
+            const phone = document.getElementById('editParentPhoneInput')?.value.trim();
+            const email = document.getElementById('editParentEmailInput')?.value.trim();
+            if (!name) {
+                showPopupNotification('❌ Name cannot be empty.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/parent/update-profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        parentId: parentUsn || childSRN,
+                        name,
+                        phone,
+                        email,
+                        institutionId
+                    })
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    if (document.getElementById('parentName')) document.getElementById('parentName').innerText = name;
+                    if (phone && document.getElementById('displayParentPhone')) document.getElementById('displayParentPhone').innerText = phone;
+                    if (email && document.getElementById('displayParentEmail')) document.getElementById('displayParentEmail').innerText = email;
+                    closeParentEditModal();
+                    showPopupNotification('✅ Parent details updated successfully!');
+                } else {
+                    showPopupNotification(`❌ ${result.error || 'Failed to update details.'}`, 'error');
+                }
+            } catch (err) {
+                console.error('Update parent error:', err);
+                showPopupNotification('❌ Network error updating profile.', 'error');
+            }
+        }
+
         window.onload = function() {
             document.querySelectorAll('.sem-content').forEach(c => c.style.display = 'none');
             loadParentDashboardData();
@@ -639,5 +812,34 @@
             openParentModule('attendance');
         };
     </script>
+
+    <!-- ✏️ PARENT PROFILE EDIT MODAL -->
+    <div id="parentEditProfileModal" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#fff; border-radius:20px; max-width:480px; width:100%; padding:24px; box-shadow:0 20px 40px rgba(0,0,0,0.25); text-align:left;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                <h3 style="margin:0; font-size:18px; font-weight:800; color:var(--text-dark);">✏️ Edit Parent / Guardian Profile</h3>
+                <button type="button" onclick="closeParentEditModal()" style="background:none; border:none; font-size:22px; cursor:pointer; color:var(--text-muted);">&times;</button>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin-bottom:16px;">Update your name, primary phone number, and email address for institutional notifications.</p>
+            <div style="display:flex; flex-direction:column; gap:14px;">
+                <div>
+                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:5px;">PARENT / GUARDIAN NAME</label>
+                    <input type="text" id="editParentNameInput" style="width:100%; padding:10px; border:1px solid var(--border-clean); border-radius:10px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:5px;">PHONE NUMBER (FOR SMS ALERTS)</label>
+                    <input type="tel" id="editParentPhoneInput" style="width:100%; padding:10px; border:1px solid var(--border-clean); border-radius:10px; font-size:13px;">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:5px;">REGISTERED EMAIL</label>
+                    <input type="email" id="editParentEmailInput" style="width:100%; padding:10px; border:1px solid var(--border-clean); border-radius:10px; font-size:13px;">
+                </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button type="button" onclick="closeParentEditModal()" style="padding:9px 16px; background:#f1f5f9; border:1px solid var(--border-clean); border-radius:10px; font-weight:700; cursor:pointer;">Cancel</button>
+                <button type="button" onclick="saveParentProfileChanges()" style="padding:9px 18px; background:var(--primary-blue); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">💾 Save Changes</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

@@ -183,13 +183,19 @@
         <div class="bento-card" id="hodProfileHeaderCard">
             <div class="hod-profile-banner">
                 <div class="hod-badge">
-                    <div class="hod-avatar-circle">👔</div>
+                    <div style="position:relative; width:54px; height:54px; flex-shrink:0;">
+                        <img id="hodBannerPhotoDisplay" src="" alt="HOD Photo" style="width:54px; height:54px; border-radius:50%; object-fit:cover; border:2px solid var(--primary-blue); display:none; background:#f1f5f9;" onerror="this.onerror=null;this.style.display='none';document.getElementById('hodBannerAvatarPlaceholder').style.display='flex';">
+                        <div id="hodBannerAvatarPlaceholder" class="hod-avatar-circle" style="width:54px; height:54px; margin:0; display:flex;">👔</div>
+                        <label for="hodPhotoFileInput" style="position:absolute; bottom:-3px; right:-3px; background:var(--primary-blue); color:white; width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:11px; box-shadow:0 2px 5px rgba(0,0,0,0.25); border:2px solid white;" title="Upload or Change Photo">📷</label>
+                        <input type="file" id="hodPhotoFileInput" accept="image/*,image/jpeg,image/png,image/webp" style="display:none;" onchange="handleHodPhotoUpload(event)">
+                    </div>
                     <div>
                         <h3 class="hod-name-title" id="displayHodName">Prof. HOD Leader</h3>
                         <div class="hod-dept-sub" id="displayHodDept">Department Head | Dr. AIT Autonomous</div>
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
+                <div style="display: flex; gap: 8px; align-items:center;">
+                    <button type="button" onclick="document.getElementById('hodPhotoFileInput').click()" style="padding: 9px 14px; background: #eff6ff; color: var(--primary-blue); border: 1px solid #bfdbfe; border-radius: 10px; font-weight: 700; cursor: pointer; font-size:12px; display:inline-flex; align-items:center; gap:5px;">📷 Change Photo</button>
                     <button onclick="handleLogout()" style="padding: 10px 18px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">Logout ⬅️</button>
                 </div>
             </div>
@@ -906,6 +912,21 @@
                     </div>
                 </div>
 
+                <!-- 📷 HOD OFFICIAL PROFILE PHOTO CARD -->
+                <div style="display:flex; align-items:center; gap:16px; background:#f8fafc; padding:16px; border-radius:14px; border:1px solid var(--border-clean); margin-bottom:16px; flex-wrap:wrap;">
+                    <div style="position:relative; width:64px; height:64px; flex-shrink:0;">
+                        <img id="hodModulePhotoDisplay" src="" alt="HOD Photo" style="width:64px; height:64px; border-radius:50%; object-fit:cover; border:3px solid var(--primary-blue); display:none; background:#fff;" onerror="this.onerror=null;this.style.display='none';document.getElementById('hodModuleAvatarPlaceholder').style.display='flex';">
+                        <div id="hodModuleAvatarPlaceholder" style="width:64px; height:64px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:30px; border:3px solid var(--border-clean);">👔</div>
+                    </div>
+                    <div style="flex:1; min-width:200px;">
+                        <div style="font-size:13px; font-weight:800; color:var(--text-dark);">Official Department Leadership Photo</div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">Visible on accredited department portals, academic circulars, and institutional rosters. (JPEG, PNG, WebP ≤ 2MB)</div>
+                    </div>
+                    <div>
+                        <button type="button" onclick="document.getElementById('hodPhotoFileInput').click()" style="background:var(--primary-blue); color:white; border:none; padding:9px 16px; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">📷 Upload / Change Photo</button>
+                    </div>
+                </div>
+
                 <!-- VIEW MODE -->
                 <div id="hodProfileViewMode" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid var(--border-clean);"></div>
 
@@ -1244,6 +1265,17 @@
                     if (p.pan_number || p.aadhar_number || p.dob || p.joining_date || p.highest_qualification) {
                         hasData = true;
                     }
+                    if (p.profile_photo_url) {
+                        const bImg = document.getElementById('hodBannerPhotoDisplay');
+                        const bPl = document.getElementById('hodBannerAvatarPlaceholder');
+                        if (bImg) { bImg.src = p.profile_photo_url; bImg.style.display = 'block'; }
+                        if (bPl) bPl.style.display = 'none';
+
+                        const mImg = document.getElementById('hodModulePhotoDisplay');
+                        const mPl = document.getElementById('hodModuleAvatarPlaceholder');
+                        if (mImg) { mImg.src = p.profile_photo_url; mImg.style.display = 'block'; }
+                        if (mPl) mPl.style.display = 'none';
+                    }
                 }
                 updateHodProfileView();
                 if (!hasData) {
@@ -1294,6 +1326,57 @@
             } catch (err) {
                 console.error("Save HOD profile error:", err);
                 showPopupNotification("❌ Network error saving profile credentials.", 'error');
+            }
+        }
+
+        async function handleHodPhotoUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+                showPopupNotification('❌ Invalid format. Only JPEG, PNG, and WebP are allowed.', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                showPopupNotification('❌ Image size exceeds 2MB limit.', 'error');
+                event.target.value = '';
+                return;
+            }
+
+            showPopupNotification('⏳ Uploading HOD profile photo...');
+            const formData = new FormData();
+            formData.append('photo', file);
+            formData.append('userId', userUsn);
+            formData.append('institutionId', institutionId);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/hod/upload-photo`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok && result.success && result.photoUrl) {
+                    const bImg = document.getElementById('hodBannerPhotoDisplay');
+                    const bPl = document.getElementById('hodBannerAvatarPlaceholder');
+                    if (bImg) { bImg.src = result.photoUrl; bImg.style.display = 'block'; }
+                    if (bPl) bPl.style.display = 'none';
+
+                    const mImg = document.getElementById('hodModulePhotoDisplay');
+                    const mPl = document.getElementById('hodModuleAvatarPlaceholder');
+                    if (mImg) { mImg.src = result.photoUrl; mImg.style.display = 'block'; }
+                    if (mPl) mPl.style.display = 'none';
+
+                    showPopupNotification('✅ HOD profile photo updated successfully!');
+                } else {
+                    showPopupNotification(`❌ ${result.error || 'Failed to upload photo.'}`, 'error');
+                }
+            } catch (err) {
+                console.error('HOD photo upload error:', err);
+                showPopupNotification('❌ Network error during photo upload.', 'error');
+            } finally {
+                event.target.value = '';
             }
         }
 

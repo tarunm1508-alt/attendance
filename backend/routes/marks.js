@@ -40,7 +40,8 @@ router.get("/student-profile/:studentId", async (req, res) => {
                 semester_number,
                 section,
                 academic_year,
-                institution_id
+                institution_id,
+                profile_photo_url
             FROM users
             WHERE UPPER(TRIM(usn)) = $1
               AND LOWER(TRIM(role)) = 'student'
@@ -110,6 +111,7 @@ router.get("/student-profile/:studentId", async (req, res) => {
             semester_number: studentProfile.semester_number,
             section: studentProfile.section,
             academic_year: studentProfile.academic_year,
+            profile_photo_url: studentProfile.profile_photo_url || null,
             institutionId: studentProfile.institution_id || institutionId,
             parent: parentResult.rows[0] || null,
             academic: academicResult.rows

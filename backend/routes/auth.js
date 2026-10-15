@@ -6,6 +6,12 @@ const pool = require('../db');
 
 const crypto = require('crypto');
 const { sendManualAttendanceSms } = require('../services/smsService');
+const {
+    profilePhotoUploadMiddleware,
+    validateImageMagicBytes,
+    uploadProfilePhoto,
+    deleteProfilePhoto
+} = require('../services/storageService');
 
 
 
@@ -568,7 +574,7 @@ router.post('/combined-login', async (req, res) => {
 
 
 
-router.post('/signup', async (req, res) => {
+router.post('/signup', profilePhotoUploadMiddleware, async (req, res) => {
     const {
         usn,
         email,
@@ -621,6 +627,22 @@ router.post('/signup', async (req, res) => {
         });
     }
 
+    // 🛡️ VALIDATE PROFILE PHOTO (If uploaded)
+    let validatedImage = null;
+    if (req.file && req.file.buffer) {
+        const validation = validateImageMagicBytes(req.file.buffer);
+        if (!validation.valid) {
+            return res.status(400).json({
+                success: false,
+                message: validation.error || 'Invalid image file. Please upload a valid JPEG, PNG, or WebP photo.'
+            });
+        }
+        validatedImage = validation;
+    }
+
+    let uploadedPhotoResult = null;
+    let profilePhotoUrl = null;
+
     try {
         const userExists = await pool.query(
             `SELECT 1
@@ -638,6 +660,24 @@ router.post('/signup', async (req, res) => {
             });
         }
 
+        // Upload photo securely if present
+        if (req.file && req.file.buffer && validatedImage) {
+            try {
+                uploadedPhotoResult = await uploadProfilePhoto(req.file.buffer, {
+                    tenant,
+                    usn: cleanSignupUsn,
+                    format: validatedImage.format
+                });
+                profilePhotoUrl = uploadedPhotoResult.url;
+            } catch (uploadErr) {
+                console.error('💥 Profile photo storage failure:', uploadErr);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Photo upload failed. Please try again or sign up without a photo.'
+                });
+            }
+        }
+
         await pool.query(
             `INSERT INTO users (
                 usn,
@@ -653,9 +693,10 @@ router.post('/signup', async (req, res) => {
                 institution_id,
                 phone_number,
                 device_fingerprint,
-                biometric_enabled
+                biometric_enabled,
+                profile_photo_url
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
             [
                 cleanSignupUsn,
                 cleanText(email) || `${cleanSignupUsn}@drait.edu.in`,
@@ -672,16 +713,23 @@ router.post('/signup', async (req, res) => {
                 tenant,
                 cleanText(phoneNumber) || '+919876543210',
                 deviceFingerprint ? cleanText(deviceFingerprint) : null,
-                isStudent
+                isStudent,
+                profilePhotoUrl || null
             ]
         );
 
         return res.status(201).json({
             success: true,
-            message: 'Account and device bound successfully!'
+            message: 'Account and device bound successfully!',
+            profilePhotoUrl: profilePhotoUrl || null
         });
     } catch (err) {
         console.error('💥 SIGNUP ERROR:', err);
+
+        // 🛡️ CLEANUP: If database insertion failed after photo upload, delete orphan image
+        if (uploadedPhotoResult) {
+            await deleteProfilePhoto(uploadedPhotoResult);
+        }
 
         return res.status(500).json({
             success: false,
