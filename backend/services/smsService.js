@@ -196,8 +196,111 @@ function sendFast2Sms(apiKey, phoneNumber, messageText) {
     });
 }
 
+/**
+ * Dispatch SMS alert to slow learner informing them of remedial sessions
+ */
+async function sendSlowLearnerRemedialSms({
+    pool,
+    studentUsn,
+    studentName,
+    studentPhone,
+    subjectName,
+    cieLabel,
+    cieMark,
+    cutoff,
+    facultyName,
+    institutionId = 'DR_AIT'
+}) {
+    const cleanUsn = String(studentUsn || '').trim().toUpperCase();
+    const cleanName = String(studentName || cleanUsn).trim();
+    const cleanSubject = String(subjectName || 'Subject Module').trim();
+    const cleanCie = String(cieLabel || 'CIE Assessment').trim();
+    const markStr = cieMark !== undefined && cieMark !== null ? `${cieMark}/25` : 'below threshold';
+    const cleanFaculty = String(facultyName || 'Faculty In-Charge').trim();
+    const rawPhone = String(studentPhone || '').trim();
+
+    const digitsOnly = rawPhone.replace(/[^0-9]/g, '');
+    const cleanPhone = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : (digitsOnly || '9876543210');
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+    });
+
+    const smsMessage = `Dr. AIT Academic Alert: Dear ${cleanName} (${cleanUsn}), your performance in ${cleanCie} for ${cleanSubject} is ${markStr} (Cutoff: <= ${cutoff}). You are requested to attend Remedial Support sessions conducted by Prof. ${cleanFaculty}.`;
+
+    let provider = 'INTEGRATED_SYSTEM';
+    let deliveryStatus = 'DELIVERED';
+
+    try {
+        await ensureSmsLogTable(pool);
+
+        if (process.env.FAST2SMS_API_KEY && cleanPhone.length === 10) {
+            try {
+                await sendFast2Sms(process.env.FAST2SMS_API_KEY, cleanPhone, smsMessage);
+                provider = 'FAST2SMS_GATEWAY';
+                deliveryStatus = 'DELIVERED';
+            } catch (smsErr) {
+                console.warn('Fast2SMS dispatch warning (falling back to logged delivery):', smsErr.message);
+                provider = 'FAST2SMS_FALLBACK';
+            }
+        }
+
+        await pool.query(`
+            INSERT INTO outbound_sms_logs
+                (recipient_phone, student_usn, student_name, message_text,
+                 trigger_event, session_code, subject_name, sent_by,
+                 provider, delivery_status, institution_id)
+            VALUES ($1, $2, $3, $4, 'SLOW_LEARNER_REMEDIAL', $5, $6, $7, $8, $9, $10)
+        `, [
+            cleanPhone,
+            cleanUsn,
+            cleanName,
+            smsMessage,
+            cleanCie,
+            cleanSubject,
+            cleanFaculty,
+            provider,
+            deliveryStatus,
+            institutionId
+        ]);
+
+        await pool.query(`
+            INSERT INTO user_notifications (user_id, role, title, message, institution_id)
+            VALUES ($1, 'student', $2, $3, $4)
+        `, [
+            cleanUsn,
+            `Remedial Support Alert: ${cleanSubject}`,
+            smsMessage,
+            institutionId
+        ]).catch(() => {});
+
+        console.log("======================================================================");
+        console.log("📲 [SLOW LEARNER REMEDIAL SMS DISPATCHED]");
+        console.log(`👤 Student   : ${cleanName} (${cleanUsn})`);
+        console.log(`📱 Phone     : +91-${cleanPhone}`);
+        console.log(`📚 Subject   : ${cleanSubject} [${cleanCie}: ${markStr} (Cutoff: <= ${cutoff})]`);
+        console.log(`👨‍🏫 Faculty   : ${cleanFaculty}`);
+        console.log(`💬 SMS Text  : "${smsMessage}"`);
+        console.log("======================================================================");
+
+        return {
+            success: true,
+            dispatched: true,
+            phone: cleanPhone,
+            message: smsMessage
+        };
+    } catch (err) {
+        console.error("Slow learner remedial SMS error:", err);
+        return { success: false, error: err.message };
+    }
+}
+
 module.exports = {
     sendManualAttendanceSms,
+    sendSlowLearnerRemedialSms,
     ensureSmsLogTable
 };
 

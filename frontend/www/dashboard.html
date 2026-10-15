@@ -616,12 +616,30 @@
                     </div>
                 </div>
 
+                <!-- 📚 SLOW LEARNERS QUICK ACCESS CARD -->
+                <div id="slowLearnersQuickCard" style="background: linear-gradient(135deg, #fff7ed, #ffffff); border: 2px solid #fed7aa; border-radius: 18px; padding: 20px 22px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(194,65,12,0.08);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:14px; min-width:0;">
+                            <div style="width:48px; height:48px; border-radius:14px; background:#ffedd5; display:flex; align-items:center; justify-content:center; font-size:25px; flex-shrink:0;">📚</div>
+                            <div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <h3 style="font-size:16px; font-weight:900; color:#9a3412; margin:0;">Slow Learners Identification</h3>
+                                    <span id="quickCardBadge" style="background:#ea580c; color:#fff; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px;">🎯 Scale Benchmark</span>
+                                </div>
+                                <p id="quickCardText" style="font-size:12px; color:#7c2d12; margin:4px 0 0; line-height:1.45;">Set custom cutoff marks on a scale for CIE 1, 2, or 3. Students scoring ≤ cutoff are flagged automatically for remedial attention.</p>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="switchTeacherView('slowLearners')" style="background:#c2410c; color:#fff; border-color:#c2410c; padding:10px 18px; white-space:nowrap; font-weight:800; cursor:pointer;">📚 Open Slow Learners Desk</button>
+                    </div>
+                </div>
+
                 <!-- 🎛️ TEACHER TAB SWITCHER -->
                 <div class="view-toggle-bar">
                     <button class="toggle-tab-btn active" id="btn_viewLive" onclick="switchTeacherView('live')">📋 Active Class Stream</button>
                     <button class="toggle-tab-btn" id="btn_viewHistory" onclick="switchTeacherView('history')">🕒 Past Sessions Log</button>
                     <button class="toggle-tab-btn" id="btn_viewMarks" onclick="switchTeacherView('marks')">📝 Subject Marks Roster</button>
                     <button class="toggle-tab-btn" id="btn_viewMentorship" onclick="switchTeacherView('mentorship')">🎓 Faculty Mentorship</button>
+                    <button class="toggle-tab-btn" id="btn_viewSlowLearners" onclick="switchTeacherView('slowLearners')" style="font-weight:900; color:#c2410c;">📚 Slow Learners</button>
                     <button class="toggle-tab-btn" id="btn_viewRegister" onclick="switchTeacherView('register')">📊 Attendance Register PDF</button>
                 </div>
 
@@ -833,6 +851,170 @@
 
                     <div class="mentee-grid" id="menteesCardsContainer">
                         <div style="text-align: center; color: var(--text-muted); padding: 20px; grid-column: 1 / -1;">Loading assigned mentees...</div>
+                    </div>
+                </div>
+
+                <!-- 📚 TAB 5: SLOW LEARNERS WORKSPACE WITH TEACHER-CONFIGURABLE SCALE BENCHMARK & PARTICULAR CIE -->
+                <div id="wrapper_slowLearners" style="display: none; text-align: left;">
+                    <div style="background: #ffffff; border: 1px solid var(--bento-border); border-radius: 18px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span style="font-size: 24px;">📚</span>
+                                    <h3 style="font-size: 18px; font-weight: 900; color: #9a3412; margin: 0;">Slow Learners Identification & Remedial Desk</h3>
+                                </div>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">Set minimum cutoff benchmark marks using the interactive scale slider for any specific CIE exam. Students with marks equal to or below the cutoff are automatically identified as slow learners.</p>
+                            </div>
+                            <span id="slowLearnerDeptBadge" style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 800;">🎯 TEACHER SCALE BENCHMARK</span>
+                        </div>
+
+                        <!-- 🎛️ BENCHMARK CONTROLS CARD (SCALE MANNER) -->
+                        <div style="background: linear-gradient(135deg, #fff7ed 0%, #fffbf5 100%); border: 2px solid #fed7aa; border-radius: 16px; padding: 20px 22px; margin-bottom: 22px;">
+                            <!-- ROW 1: CIE SELECTION & ACADEMIC FILTERS -->
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 18px;">
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #9a3412; text-transform: uppercase; margin-bottom: 6px;">📝 Select Particular CIE:</label>
+                                    <select id="slowLearnerCieSelect" onchange="onSlowLearnerFilterChange()" style="width: 100%; padding: 10px 12px; font-weight: 800; font-size: 13px; border: 1.5px solid #fed7aa; border-radius: 10px; background: white; color: #9a3412; cursor: pointer;">
+                                        <option value="latest">🎯 Latest Recorded CIE (Default)</option>
+                                        <option value="cie1">📝 CIE 1 (Max 25 Marks)</option>
+                                        <option value="cie2">📝 CIE 2 (Max 25 Marks)</option>
+                                        <option value="cie3">📝 CIE 3 (Max 25 Marks)</option>
+                                        <option value="any">⚡ Any CIE (≤ Cutoff in any CIE)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #9a3412; text-transform: uppercase; margin-bottom: 6px;">📚 Subject Module:</label>
+                                    <select id="slowLearnerSubjectSelect" onchange="onSlowLearnerFilterChange()" style="width: 100%; padding: 10px 12px; font-weight: 700; font-size: 13px; border: 1.5px solid #fed7aa; border-radius: 10px; background: white; color: var(--text-dark); cursor: pointer;">
+                                        <option value="ALL">All My Assigned Subjects</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #9a3412; text-transform: uppercase; margin-bottom: 6px;">🎓 Semester:</label>
+                                    <select id="slowLearnerSemSelect" onchange="onSlowLearnerFilterChange()" style="width: 100%; padding: 10px 12px; font-weight: 700; font-size: 13px; border: 1.5px solid #fed7aa; border-radius: 10px; background: white; color: var(--text-dark); cursor: pointer;">
+                                        <option value="1">Semester 1</option>
+                                        <option value="2">Semester 2</option>
+                                        <option value="3">Semester 3</option>
+                                        <option value="4">Semester 4</option>
+                                        <option value="5" selected>Semester 5</option>
+                                        <option value="6">Semester 6</option>
+                                        <option value="7">Semester 7</option>
+                                        <option value="8">Semester 8</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; font-size: 11px; font-weight: 800; color: #9a3412; text-transform: uppercase; margin-bottom: 6px;">🏷️ Section:</label>
+                                    <select id="slowLearnerSecSelect" onchange="onSlowLearnerFilterChange()" style="width: 100%; padding: 10px 12px; font-weight: 700; font-size: 13px; border: 1.5px solid #fed7aa; border-radius: 10px; background: white; color: var(--text-dark); cursor: pointer;">
+                                        <option value="ALL">All Sections</option>
+                                        <option value="A" selected>Section A</option>
+                                        <option value="B">Section B</option>
+                                        <option value="C">Section C</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- ROW 2: TEACHER CUTOFF BENCHMARK SCALE (SLIDER & SCALE TICKS) -->
+                            <div style="background: white; border: 1.5px solid #fed7aa; border-radius: 14px; padding: 18px 20px; margin-bottom: 14px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 8px;">
+                                    <div>
+                                        <div style="font-size: 13px; font-weight: 900; color: #9a3412; display: flex; align-items: center; gap: 8px;">
+                                            <span>🎯 Cutoff Benchmark (Scale Slider)</span>
+                                            <span style="font-size: 11px; color: #7c2d12; font-weight: 600;">(Students scoring ≤ this mark are flagged)</span>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 10px;">
+                                        <span id="slowLearnerCutoffBadge" style="background: #ea580c; color: white; padding: 4px 14px; border-radius: 999px; font-weight: 900; font-size: 15px; box-shadow: 0 2px 6px rgba(234,88,12,0.3);">≤ 15 / 25 Marks</span>
+                                        <input type="number" id="slowLearnerNumberInput" min="0" max="25" value="15" onchange="onSlowLearnerNumberInput(this.value)" style="width: 65px; text-align: center; font-weight: 900; font-size: 14px; padding: 5px; border-radius: 8px; border: 1.5px solid #fed7aa; color: #c2410c;">
+                                    </div>
+                                </div>
+
+                                <!-- RANGE SLIDER -->
+                                <input type="range" id="slowLearnerScaleSlider" min="0" max="25" value="15" step="1" oninput="onSlowLearnerScaleInput(this.value)" onchange="onSlowLearnerFilterChange()" style="width: 100%; height: 8px; border-radius: 6px; accent-color: #ea580c; cursor: pointer; margin: 8px 0 4px 0;">
+
+                                <!-- SCALE RULER TICKS -->
+                                <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 800; color: #9a3412; margin-top: 4px; padding: 0 2px;">
+                                    <span style="cursor: pointer;" onclick="setSlowLearnerPreset(0)" title="Click to set 0">0 (Min)</span>
+                                    <span style="cursor: pointer;" onclick="setSlowLearnerPreset(5)" title="Click to set 5">5</span>
+                                    <span style="cursor: pointer;" onclick="setSlowLearnerPreset(10)" title="Click to set 10">10</span>
+                                    <span style="cursor: pointer;" onclick="setSlowLearnerPreset(12)" title="Click to set 12">12</span>
+                                    <span style="cursor: pointer;" onclick="setSlowLearnerPreset(14)" title="Click to set 14">14</span>
+                                    <span style="cursor: pointer; background: #ea580c; color: white; padding: 1px 6px; border-radius: 4px;" onclick="setSlowLearnerPreset(15)" title="Click to set standard 15">15 (Std)</span>
+                                    <span style="cursor: pointer;" onclick="setSlowLearnerPreset(18)" title="Click to set 18">18</span>
+                                    <span style="cursor: pointer;" onclick="setSlowLearnerPreset(20)" title="Click to set 20">20</span>
+                                    <span style="cursor: pointer;" onclick="setSlowLearnerPreset(25)" title="Click to set 25">25 (Max)</span>
+                                </div>
+
+                                <!-- PRESET PILL BUTTONS -->
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+                                    <span style="font-size: 11px; font-weight: 800; color: #7c2d12;">Quick Presets:</span>
+                                    <button type="button" onclick="setSlowLearnerPreset(10)" class="btn preset-pill" id="pill_10" style="padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 20px; background: #fff; border: 1px solid #fed7aa; color: #9a3412; cursor: pointer;">≤ 10 Marks</button>
+                                    <button type="button" onclick="setSlowLearnerPreset(12)" class="btn preset-pill" id="pill_12" style="padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 20px; background: #fff; border: 1px solid #fed7aa; color: #9a3412; cursor: pointer;">≤ 12 Marks</button>
+                                    <button type="button" onclick="setSlowLearnerPreset(14)" class="btn preset-pill" id="pill_14" style="padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 20px; background: #fff; border: 1px solid #fed7aa; color: #9a3412; cursor: pointer;">≤ 14 Marks</button>
+                                    <button type="button" onclick="setSlowLearnerPreset(15)" class="btn preset-pill" id="pill_15" style="padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 20px; background: #ea580c; border: 1px solid #ea580c; color: white; cursor: pointer;">≤ 15 Marks (Standard)</button>
+                                    <button type="button" onclick="setSlowLearnerPreset(18)" class="btn preset-pill" id="pill_18" style="padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 20px; background: #fff; border: 1px solid #fed7aa; color: #9a3412; cursor: pointer;">≤ 18 Marks</button>
+                                    <button type="button" onclick="setSlowLearnerPreset(20)" class="btn preset-pill" id="pill_20" style="padding: 4px 10px; font-size: 11px; font-weight: 800; border-radius: 20px; background: #fff; border: 1px solid #fed7aa; color: #9a3412; cursor: pointer;">≤ 20 Marks</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 📊 DYNAMIC STATS KPI CARDS -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 20px;">
+                            <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 14px; padding: 16px;">
+                                <div style="font-size: 10px; font-weight: 800; color: #9a3412; text-transform: uppercase;">Active CIE Assessment</div>
+                                <div id="statActiveCie" style="font-size: 18px; font-weight: 900; color: #c2410c; margin-top: 4px;">Latest CIE</div>
+                                <div style="font-size: 11px; color: #7c2d12; margin-top: 3px;">Evaluation target</div>
+                            </div>
+                            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; padding: 16px;">
+                                <div style="font-size: 10px; font-weight: 800; color: #991b1b; text-transform: uppercase;">Cutoff Benchmark</div>
+                                <div id="statCutoffDisplay" style="font-size: 22px; font-weight: 900; color: #dc2626; margin-top: 4px;">≤ 15 / 25</div>
+                                <div style="font-size: 11px; color: #991b1b; margin-top: 3px;">Teacher fixed scale mark</div>
+                            </div>
+                            <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 14px; padding: 16px;">
+                                <div style="font-size: 10px; font-weight: 800; color: #991b1b; text-transform: uppercase;">Slow Learners Flagged</div>
+                                <div id="slowLearnerCount" style="font-size: 24px; font-weight: 900; color: #b91c1c; margin-top: 4px;">0</div>
+                                <div id="statRatioText" style="font-size: 11px; color: #991b1b; margin-top: 3px;">0% of evaluated students</div>
+                            </div>
+                            <div style="background: #f8fafc; border: 1px solid var(--bento-border); border-radius: 14px; padding: 16px;">
+                                <div style="font-size: 10px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Total Class Evaluated</div>
+                                <div id="statTotalEvaluated" style="font-size: 24px; font-weight: 900; color: var(--text-dark); margin-top: 4px;">0</div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Students with marks</div>
+                            </div>
+                        </div>
+
+                        <!-- 🛠️ ACTION TOOLBAR -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+                            <div style="flex: 1; min-width: 250px; max-width: 400px;">
+                                <input type="text" id="slowLearnerSearch" onkeyup="filterSlowLearnersClient()" placeholder="🔍 Filter by Student Name or USN..." style="width: 100%; padding: 9px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px;">
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button type="button" onclick="exportSlowLearnersCsv()" class="btn" style="background: #0284c7; color: white; font-size: 12px; padding: 8px 14px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer;">📥 Export CSV</button>
+                                <button type="button" onclick="broadcastSlowLearnerSms()" class="btn" style="background: #ea580c; color: white; font-size: 12px; padding: 8px 14px; font-weight: 800; border: none; border-radius: 8px; cursor: pointer;">📲 Broadcast Remedial SMS</button>
+                            </div>
+                        </div>
+
+                        <!-- 📋 SLOW LEARNERS TABLE -->
+                        <div class="table-container" style="margin-bottom: 0;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 4%; text-align: center;">#</th>
+                                        <th style="width: 22%;">Student Details</th>
+                                        <th style="width: 14%;">USN / ID</th>
+                                        <th style="width: 15%;">Subject</th>
+                                        <th style="width: 8%; text-align: center;">CIE 1 (25)</th>
+                                        <th style="width: 8%; text-align: center;">CIE 2 (25)</th>
+                                        <th style="width: 8%; text-align: center;">CIE 3 (25)</th>
+                                        <th style="width: 10%; text-align: center;">Target CIE</th>
+                                        <th style="width: 11%; text-align: center;">Status</th>
+                                        <th style="width: 12%; text-align: center;">Remedial Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="slowLearnersTableBody">
+                                    <tr>
+                                        <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 28px;">Loading slow learners data...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -1649,6 +1831,7 @@
                 loadTeacherPublications();
                 loadTeacherFdpRecords();
                 loadAttendance();
+                updateSlowLearnersQuickBadge();
             } else if (role === 'parent') {
                 if (document.getElementById('parentSectionLayout')) document.getElementById('parentSectionLayout').style.display = 'block';
                 await resolveParentAndChildProfile();
@@ -1828,6 +2011,7 @@
             if (document.getElementById('wrapper_historyLog')) document.getElementById('wrapper_historyLog').style.display = 'none';
             if (document.getElementById('wrapper_marksLedger')) document.getElementById('wrapper_marksLedger').style.display = 'none';
             if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'none';
+            if (document.getElementById('wrapper_slowLearners')) document.getElementById('wrapper_slowLearners').style.display = 'none';
             if (document.getElementById('wrapper_registerView')) document.getElementById('wrapper_registerView').style.display = 'none';
 
             if (targetView === 'live') {
@@ -1846,11 +2030,401 @@
                 document.getElementById('btn_viewMentorship')?.classList.add('active');
                 if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'block';
                 loadMenteeList();
+            } else if (targetView === 'slowLearners') {
+                document.getElementById('btn_viewSlowLearners')?.classList.add('active');
+                if (document.getElementById('wrapper_slowLearners')) document.getElementById('wrapper_slowLearners').style.display = 'block';
+                loadFacultySlowLearners();
             } else if (targetView === 'register') {
                 document.getElementById('btn_viewRegister')?.classList.add('active');
                 if (document.getElementById('wrapper_registerView')) document.getElementById('wrapper_registerView').style.display = 'block';
                 loadAttendanceRegisterMatrix();
             }
+        }
+
+        // ==========================================================================
+        // 📚 TEACHER SLOW LEARNERS BENCHMARK ENGINE (SCALE MANNER & PARTICULAR CIE)
+        // ==========================================================================
+        let currentSlowLearnersCache = [];
+        let currentSlowLearnerCutoff = 15;
+        let currentSlowLearnerCieType = 'latest';
+
+        function onSlowLearnerScaleInput(val) {
+            const num = parseFloat(val);
+            currentSlowLearnerCutoff = num;
+            const badge = document.getElementById('slowLearnerCutoffBadge');
+            const numInput = document.getElementById('slowLearnerNumberInput');
+            const statCutoff = document.getElementById('statCutoffDisplay');
+            if (badge) badge.innerText = `≤ ${num} / 25 Marks`;
+            if (numInput) numInput.value = num;
+            if (statCutoff) statCutoff.innerText = `≤ ${num} / 25`;
+
+            // Highlight active preset button if matches
+            document.querySelectorAll('.preset-pill').forEach(btn => {
+                btn.style.background = '#fff';
+                btn.style.color = '#9a3412';
+                btn.style.borderColor = '#fed7aa';
+            });
+            const activeBtn = document.getElementById(`pill_${num}`);
+            if (activeBtn) {
+                activeBtn.style.background = '#ea580c';
+                activeBtn.style.color = '#fff';
+                activeBtn.style.borderColor = '#ea580c';
+            }
+
+            // Real-time re-filter from cache for ultra-fast instant UI responsiveness
+            recomputeAndRenderSlowLearnersClient();
+        }
+
+        function onSlowLearnerNumberInput(val) {
+            let num = parseFloat(val);
+            if (isNaN(num)) num = 15;
+            num = Math.max(0, Math.min(25, num));
+            const slider = document.getElementById('slowLearnerScaleSlider');
+            if (slider) slider.value = num;
+            onSlowLearnerScaleInput(num);
+            loadFacultySlowLearners();
+        }
+
+        function setSlowLearnerPreset(val) {
+            const slider = document.getElementById('slowLearnerScaleSlider');
+            if (slider) slider.value = val;
+            onSlowLearnerScaleInput(val);
+            loadFacultySlowLearners();
+        }
+
+        async function onSlowLearnerFilterChange() {
+            const slider = document.getElementById('slowLearnerScaleSlider');
+            if (slider) currentSlowLearnerCutoff = parseFloat(slider.value) || 15;
+            const cieSelect = document.getElementById('slowLearnerCieSelect');
+            if (cieSelect) currentSlowLearnerCieType = cieSelect.value || 'latest';
+            await loadFacultySlowLearners();
+        }
+
+        async function loadFacultySlowLearners() {
+            const tableBody = document.getElementById('slowLearnersTableBody');
+            if (!tableBody) return;
+
+            const semSelect = document.getElementById('slowLearnerSemSelect');
+            const subSelect = document.getElementById('slowLearnerSubjectSelect');
+            const cieSelect = document.getElementById('slowLearnerCieSelect');
+            const secSelect = document.getElementById('slowLearnerSecSelect');
+
+            const currentBranch = window.activeTeacherBranch || localStorage.getItem('userBranch') || teacherBranch || '';
+            const semester = semSelect ? semSelect.value : (userSemester || 5);
+            let subject = subSelect ? subSelect.value : (userSubject || 'ALL');
+            const section = secSelect ? secSelect.value : 'ALL';
+            const cieType = cieSelect ? cieSelect.value : (currentSlowLearnerCieType || 'latest');
+            const cutoff = currentSlowLearnerCutoff !== undefined ? currentSlowLearnerCutoff : 15;
+
+            tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-muted); padding: 28px;">⏳ Loading and evaluating student marks for ${cieSelect ? cieSelect.options[cieSelect.selectedIndex].text : 'CIE'}...</td></tr>`;
+
+            try {
+                const subParam = (subject && subject !== 'ALL') ? `&subjectCode=${encodeURIComponent(subject)}` : '';
+                const branchParam = currentBranch ? `&branch=${encodeURIComponent(currentBranch)}` : '';
+                const secParam = (section && section !== 'ALL') ? `&section=${encodeURIComponent(section)}` : '';
+                const url = `${API_BASE}/api/teacher/slow-learners?teacherId=${encodeURIComponent(userUsn)}&semesterNumber=${semester}&cutoff=${cutoff}&cieType=${cieType}&institutionId=${institutionId}${subParam}${branchParam}${secParam}`;
+
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #dc2626; padding: 24px;">❌ ${data.message || 'Unable to load slow learners.'}</td></tr>`;
+                    return;
+                }
+
+                // Update department badge
+                const deptBadge = document.getElementById('slowLearnerDeptBadge');
+                if (deptBadge) {
+                    deptBadge.innerText = `🎯 DEPT: ${data.branch || currentBranch || 'AIML'}`;
+                }
+
+                // Populate subjects dropdown with ONLY this teacher's assigned subjects
+                if (subSelect && data.subjects && data.subjects.length > 0) {
+                    const currentVal = subSelect.value;
+                    subSelect.innerHTML = `<option value="ALL">All Assigned Subjects (${data.branch || currentBranch || 'Dept'})</option>`;
+                    data.subjects.forEach(sub => {
+                        const opt = document.createElement('option');
+                        opt.value = sub.subject_code;
+                        opt.innerText = `${sub.subject_code} - ${sub.subject_name}`;
+                        if (currentVal === sub.subject_code || (userSubject && userSubject.includes(sub.subject_code))) {
+                            opt.selected = true;
+                        }
+                        subSelect.appendChild(opt);
+                    });
+                    if (currentVal && currentVal !== 'ALL') {
+                        subSelect.value = currentVal;
+                    } else if (userSubject) {
+                        for (let i = 0; i < subSelect.options.length; i++) {
+                            if (subSelect.options[i].value.includes(userSubject) || userSubject.includes(subSelect.options[i].value)) {
+                                subSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                currentSlowLearnersCache = data.slowLearners || [];
+                
+                // Update KPI Cards
+                if (document.getElementById('statActiveCie')) document.getElementById('statActiveCie').innerText = data.cieLabel || 'CIE Assessment';
+                if (document.getElementById('statCutoffDisplay')) document.getElementById('statCutoffDisplay').innerText = `≤ ${data.cutoff} / 25`;
+                if (document.getElementById('slowLearnerCount')) document.getElementById('slowLearnerCount').innerText = data.count || 0;
+                if (document.getElementById('statTotalEvaluated')) document.getElementById('statTotalEvaluated').innerText = data.totalEvaluatedCount || 0;
+                
+                const ratio = (data.totalEvaluatedCount && data.totalEvaluatedCount > 0)
+                    ? ((data.count / data.totalEvaluatedCount) * 100).toFixed(1)
+                    : 0;
+                if (document.getElementById('statRatioText')) {
+                    document.getElementById('statRatioText').innerText = `${ratio}% of evaluated students`;
+                }
+
+                // Update Quick Card badge on teacher dashboard
+                updateQuickCardBadge(data.count, data.cutoff, data.cieLabel);
+
+                renderSlowLearnersTable(currentSlowLearnersCache, data.cutoff, data.cieType);
+
+            } catch (err) {
+                console.error("Slow learners load error:", err);
+                tableBody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: #dc2626; padding: 24px;">❌ Network error loading slow learners data.</td></tr>`;
+            }
+        }
+
+        function recomputeAndRenderSlowLearnersClient() {
+            if (!currentSlowLearnersCache || currentSlowLearnersCache.length === 0) return;
+            const cieType = document.getElementById('slowLearnerCieSelect')?.value || 'latest';
+            const cutoff = currentSlowLearnerCutoff;
+
+            const filtered = currentSlowLearnersCache.filter(st => {
+                let mark = st.current_cie;
+                if (cieType === 'cie1') mark = st.cie1 ?? 0;
+                else if (cieType === 'cie2') mark = st.cie2 ?? 0;
+                else if (cieType === 'cie3') mark = st.cie3 ?? 0;
+                return mark !== null && mark <= cutoff;
+            });
+
+            if (document.getElementById('slowLearnerCount')) document.getElementById('slowLearnerCount').innerText = filtered.length;
+            renderSlowLearnersTable(filtered, cutoff, cieType);
+        }
+
+        function renderSlowLearnersTable(list, cutoff, cieType) {
+            const tableBody = document.getElementById('slowLearnersTableBody');
+            if (!tableBody) return;
+
+            if (!list || list.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; color: #047857; padding: 36px; background: #f0fdf4;">
+                            <div style="font-size: 26px; margin-bottom: 6px;">🎉</div>
+                            <strong style="font-size: 15px;">Excellent Performance!</strong><br>
+                            <span style="font-size: 12px; color: #065f46;">No students are scoring equal to or below ${cutoff} marks for the selected assessment.</span>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tableBody.innerHTML = "";
+            list.forEach((st, idx) => {
+                let targetMark = st.current_cie ?? '-';
+                if (cieType === 'cie1') targetMark = st.cie1 ?? '-';
+                else if (cieType === 'cie2') targetMark = st.cie2 ?? '-';
+                else if (cieType === 'cie3') targetMark = st.cie3 ?? '-';
+
+                const targetMarkNum = Number(targetMark);
+                const isUnderCutoff = !isNaN(targetMarkNum) && targetMarkNum <= cutoff;
+
+                const markBadge = isUnderCutoff
+                    ? `<span style="background: #fee2e2; color: #b91c1c; font-weight: 900; padding: 4px 10px; border-radius: 6px; font-size: 13px; border: 1px solid #fca5a5;">${targetMark} / 25</span>`
+                    : `<span style="background: #ecfdf5; color: #047857; font-weight: 800; padding: 4px 10px; border-radius: 6px; font-size: 13px;">${targetMark} / 25</span>`;
+
+                const statusBadge = isUnderCutoff
+                    ? `<span style="background: #ea580c; color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.02em;">⚠️ SLOW LEARNER</span>`
+                    : `<span style="background: #10b981; color: white; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;">NORMAL</span>`;
+
+                const cie1Display = st.cie1 !== null ? `${st.cie1}/25` : '<span style="color:#94a3b8;">-</span>';
+                const cie2Display = st.cie2 !== null ? `${st.cie2}/25` : '<span style="color:#94a3b8;">-</span>';
+                const cie3Display = st.cie3 !== null ? `${st.cie3}/25` : '<span style="color:#94a3b8;">-</span>';
+
+                const initial = (st.name || 'S').charAt(0).toUpperCase();
+
+                tableBody.innerHTML += `
+                    <tr>
+                        <td style="text-align: center; font-weight: 800; color: var(--text-muted);">${idx + 1}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #fed7aa; color: #9a3412; font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0;">${initial}</div>
+                                <div>
+                                    <div style="font-weight: 800; font-size: 13px; color: var(--text-dark);">${st.name || 'Unnamed Student'}</div>
+                                    <div style="font-size: 11px; color: var(--text-muted);">${st.branch || ''} ${st.semester_number ? `• Sem ${st.semester_number}` : ''} ${st.section ? `• Sec ${st.section}` : ''}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><code>${st.usn}</code></td>
+                        <td>
+                            <div style="font-size: 12px; font-weight: 700; color: var(--text-dark);">${st.subject_name || st.subject_code}</div>
+                            <div style="font-size: 10px; color: var(--text-muted); font-family: monospace;">${st.subject_code}</div>
+                        </td>
+                        <td style="text-align: center; font-weight: 700; ${cieType === 'cie1' ? 'background: #fff7ed; font-weight: 900;' : ''}">${cie1Display}</td>
+                        <td style="text-align: center; font-weight: 700; ${cieType === 'cie2' ? 'background: #fff7ed; font-weight: 900;' : ''}">${cie2Display}</td>
+                        <td style="text-align: center; font-weight: 700; ${cieType === 'cie3' ? 'background: #fff7ed; font-weight: 900;' : ''}">${cie3Display}</td>
+                        <td style="text-align: center;">${markBadge}</td>
+                        <td style="text-align: center;">${statusBadge}</td>
+                        <td style="text-align: center;">
+                            <button type="button" onclick="sendIndividualRemedialSms('${st.usn}', '${encodeURIComponent(st.name || '')}', '${encodeURIComponent(st.subject_name || st.subject_code)}', ${targetMarkNum || 0})" class="btn" style="padding: 6px 10px; font-size: 11px; font-weight: 800; background: #fff; border: 1.5px solid #ea580c; color: #ea580c; border-radius: 6px; cursor: pointer;" title="Send Remedial Class Notification SMS to Student">
+                                📲 Remedial SMS
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterSlowLearnersClient() {
+            const query = (document.getElementById('slowLearnerSearch')?.value || '').toLowerCase().trim();
+            const tableBody = document.getElementById('slowLearnersTableBody');
+            if (!tableBody) return;
+            const rows = tableBody.getElementsByTagName('tr');
+            for (let i = 0; i < rows.length; i++) {
+                const text = rows[i].innerText.toLowerCase();
+                rows[i].style.display = text.includes(query) ? '' : 'none';
+            }
+        }
+
+        function updateQuickCardBadge(count, cutoff, cieLabel) {
+            const badge = document.getElementById('quickCardBadge');
+            const text = document.getElementById('quickCardText');
+            if (badge) {
+                if (count > 0) {
+                    badge.innerText = `⚠️ ${count} Students Identified (≤ ${cutoff})`;
+                    badge.style.background = '#dc2626';
+                } else {
+                    badge.innerText = `✅ All Clear (Cutoff: ≤ ${cutoff})`;
+                    badge.style.background = '#059669';
+                }
+            }
+            if (text) {
+                text.innerText = `Scale benchmark set to ≤ ${cutoff} marks for ${cieLabel || 'CIE'}. ${count} students currently flagged for extra support.`;
+            }
+        }
+
+        async function updateSlowLearnersQuickBadge() {
+            try {
+                const url = `${API_BASE}/api/teacher/slow-learners?teacherId=${encodeURIComponent(userUsn)}&semesterNumber=${userSemester || 5}&cutoff=${currentSlowLearnerCutoff || 15}&cieType=latest&institutionId=${institutionId}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    updateQuickCardBadge(data.count, data.cutoff, data.cieLabel);
+                }
+            } catch (e) {
+                console.warn("Could not pre-load slow learners quick badge:", e);
+            }
+        }
+
+        async function sendIndividualRemedialSms(usn, encodedName, encodedSub, mark) {
+            const name = decodeURIComponent(encodedName);
+            const sub = decodeURIComponent(encodedSub);
+            const cieSelect = document.getElementById('slowLearnerCieSelect');
+            const cieLabel = cieSelect ? cieSelect.options[cieSelect.selectedIndex].text : 'CIE Assessment';
+            const teacherName = userName || localStorage.getItem('userName') || 'Faculty In-Charge';
+
+            const confirmSend = confirm(`📲 Dispatch Remedial Support SMS to ${name} (${usn}) for ${sub} (${cieLabel}: ${mark}/25)?`);
+            if (!confirmSend) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/send-slow-learner-sms`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentUsn: usn,
+                        subjectName: sub,
+                        cieLabel: cieLabel,
+                        cieMark: mark,
+                        cutoff: currentSlowLearnerCutoff,
+                        facultyName: teacherName,
+                        institutionId: institutionId
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert(`✅ Remedial notification successfully dispatched to ${usn}!\n📲 Student Mobile: +91-${data.phone || 'registered number'}`);
+                } else {
+                    alert(`❌ Failed to send SMS: ${data.message || 'Server error'}`);
+                }
+            } catch (err) {
+                console.error("SMS error:", err);
+                alert("❌ Network error connecting to SMS gateway.");
+            }
+        }
+
+        async function broadcastSlowLearnerSms() {
+            if (!currentSlowLearnersCache || currentSlowLearnersCache.length === 0) {
+                alert("ℹ️ No slow learners currently identified under the selected cutoff scale.");
+                return;
+            }
+
+            const cieSelect = document.getElementById('slowLearnerCieSelect');
+            const cieLabel = cieSelect ? cieSelect.options[cieSelect.selectedIndex].text : 'CIE Assessment';
+            const teacherName = userName || localStorage.getItem('userName') || 'Faculty In-Charge';
+            const subSelect = document.getElementById('slowLearnerSubjectSelect');
+            const subName = subSelect && subSelect.value !== 'ALL' ? subSelect.options[subSelect.selectedIndex].text : (userSubject || 'Assigned Subject');
+
+            const confirmBroadcast = confirm(`⚠️ Are you sure you want to broadcast Remedial SMS alerts to all ${currentSlowLearnersCache.length} identified slow learners?`);
+            if (!confirmBroadcast) return;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/teacher/send-slow-learner-sms`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        students: currentSlowLearnersCache,
+                        subjectName: subName,
+                        cieLabel: cieLabel,
+                        cutoff: currentSlowLearnerCutoff,
+                        facultyName: teacherName,
+                        institutionId: institutionId
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    alert(`✅ ${data.message}`);
+                } else {
+                    alert(`❌ Error: ${data.message || 'Failed to broadcast SMS.'}`);
+                }
+            } catch (err) {
+                console.error("Broadcast error:", err);
+                alert("❌ Network error broadcasting SMS.");
+            }
+        }
+
+        function exportSlowLearnersCsv() {
+            if (!currentSlowLearnersCache || currentSlowLearnersCache.length === 0) {
+                alert("No records to export.");
+                return;
+            }
+            const headers = ["Index", "Student Name", "USN", "Branch", "Semester", "Subject Code", "Subject Name", "CIE 1 (25)", "CIE 2 (25)", "CIE 3 (25)", "Target CIE Mark", "Cutoff Benchmark"];
+            const rows = currentSlowLearnersCache.map((s, i) => [
+                i + 1,
+                `"${(s.name || '').replace(/"/g, '""')}"`,
+                s.usn,
+                s.branch || '',
+                s.semester_number || '',
+                s.subject_code,
+                `"${(s.subject_name || '').replace(/"/g, '""')}"`,
+                s.cie1 ?? 0,
+                s.cie2 ?? 0,
+                s.cie3 ?? 0,
+                s.current_cie ?? 0,
+                currentSlowLearnerCutoff
+            ]);
+
+            const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `slow_learners_cie_cutoff_${currentSlowLearnerCutoff}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         // ==========================================================================

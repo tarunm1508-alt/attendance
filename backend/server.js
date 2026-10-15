@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const pool = require("./db");
-const { sendManualAttendanceSms } = require("./services/smsService");
+const { sendManualAttendanceSms, sendSlowLearnerRemedialSms } = require("./services/smsService");
 
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
@@ -2749,6 +2749,12 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
             ? parseInt(req.query.semesterNumber)
             : null;
     const requestedSubject = upper(req.query.subjectCode || req.query.subject);
+    const requestedBranch = upper(req.query.branch);
+    const requestedSection = clean(req.query.section);
+    const cutoff = (req.query.cutoff !== undefined && req.query.cutoff !== null && req.query.cutoff !== '')
+        ? Math.max(0, parseFloat(req.query.cutoff))
+        : 15;
+    const cieType = clean(req.query.cieType || 'latest').toLowerCase();
 
     if (!teacherId) {
         return res.status(400).json({
@@ -2766,14 +2772,27 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
     }
 
     try {
+        // 1. Resolve teacher's branch and name to enforce strict departmental isolation
+        const teacherProfile = await pool.query(`
+            SELECT TRIM(name) AS name, TRIM(branch) AS branch
+            FROM users
+            WHERE UPPER(TRIM(usn)) = $1
+              AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($2))
+            LIMIT 1
+        `, [teacherId, tenant]);
+
+        const teacherInfo = teacherProfile.rows[0] || {};
+        const teacherName = teacherInfo.name || "Faculty In-Charge";
+        let teacherDept = requestedBranch || teacherInfo.branch || '';
+
+        // 2. Resolve target semester
         let semester = requestedSemester;
 
         if (semester === null) {
             const semesterResult = await pool.query(`
                 SELECT MAX(semester_number) AS semester
                 FROM weekly_timetables
-                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
-                      UPPER(TRIM($1))
+                WHERE UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($1))
                   AND (
                         UPPER(TRIM(assigned_teacher_id)) = UPPER(TRIM($2))
                         OR UPPER(TRIM(assigned_teacher_name)) ILIKE '%' || UPPER(TRIM($2)) || '%'
@@ -2783,15 +2802,18 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
             semester = semOf(semesterResult.rows[0]?.semester, 5);
         }
 
+        // 3. Fetch ONLY subjects actually assigned to this faculty member in the timetable
         const subjectParams = [tenant, semester, teacherId];
         let subjectFilter = '';
 
-        if (requestedSubject) {
+        if (requestedSubject && requestedSubject !== 'ALL') {
             subjectParams.push(requestedSubject);
             subjectFilter = `
               AND (
                     UPPER(TRIM(wt.subject_code)) = UPPER(TRIM($4))
                     OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM($4))
+                    OR UPPER(TRIM(wt.subject_code)) ILIKE '%' || UPPER(TRIM($4)) || '%'
+                    OR UPPER(TRIM(wt.subject_name)) ILIKE '%' || UPPER(TRIM($4)) || '%'
               )
             `;
         }
@@ -2802,10 +2824,10 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
                 COALESCE(
                     NULLIF(TRIM(wt.subject_name), ''),
                     TRIM(wt.subject_code)
-                ) AS subject_name
+                ) AS subject_name,
+                UPPER(TRIM(wt.branch)) AS branch
             FROM weekly_timetables wt
-            WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
-                  UPPER(TRIM($1))
+            WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) = UPPER(TRIM($1))
               AND wt.semester_number = $2
               AND (
                     UPPER(TRIM(wt.assigned_teacher_id)) = UPPER(TRIM($3))
@@ -2820,16 +2842,106 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
             return res.json({
                 success: true,
                 semester,
+                cutoff,
+                cieType,
+                cieLabel: 'CIE Assessment',
+                branch: teacherDept,
                 subjects: [],
                 slowLearners: [],
                 count: 0,
-                message: requestedSubject
-                    ? "The requested subject is not assigned to this faculty in the selected semester."
-                    : "No subjects are assigned to this faculty in the selected semester."
+                totalEvaluatedCount: 0,
+                message: requestedSubject && requestedSubject !== 'ALL'
+                    ? `The subject ${requestedSubject} is not assigned to ${teacherName} in Semester ${semester}.`
+                    : `No subjects are assigned to ${teacherName} in Semester ${semester}.`
             });
         }
 
-        const slowLearners = await pool.query(`
+        // Determine student branch to strictly isolate cross-department students
+        const targetBranch = teacherDept || assignedSubjects.rows[0]?.branch || 'AIML';
+
+        // 4. Dynamic CIE evaluation and filtering based on teacher choice
+        let dynamicCieExpression = slowLearnerCieExpression;
+        let cieCondition = '';
+        let cieLabel = 'Latest CIE';
+
+        if (cieType === 'cie1') {
+            dynamicCieExpression = `COALESCE(cie1, 0)`;
+            cieCondition = `cie1 IS NOT NULL AND cie1 <= ${cutoff}`;
+            cieLabel = 'CIE 1 (Max 25)';
+        } else if (cieType === 'cie2') {
+            dynamicCieExpression = `COALESCE(cie2, 0)`;
+            cieCondition = `cie2 IS NOT NULL AND cie2 <= ${cutoff}`;
+            cieLabel = 'CIE 2 (Max 25)';
+        } else if (cieType === 'cie3') {
+            dynamicCieExpression = `COALESCE(cie3, 0)`;
+            cieCondition = `cie3 IS NOT NULL AND cie3 <= ${cutoff}`;
+            cieLabel = 'CIE 3 (Max 25)';
+        } else if (cieType === 'any') {
+            dynamicCieExpression = `
+                CASE
+                    WHEN cie1 IS NOT NULL AND cie1 <= ${cutoff} THEN cie1
+                    WHEN cie2 IS NOT NULL AND cie2 <= ${cutoff} THEN cie2
+                    WHEN cie3 IS NOT NULL AND cie3 <= ${cutoff} THEN cie3
+                    ELSE COALESCE(cie3, cie2, cie1, 0)
+                END
+            `;
+            cieCondition = `(
+                (cie1 IS NOT NULL AND cie1 <= ${cutoff}) OR
+                (cie2 IS NOT NULL AND cie2 <= ${cutoff}) OR
+                (cie3 IS NOT NULL AND cie3 <= ${cutoff})
+            )`;
+            cieLabel = 'Any CIE (<= Cutoff)';
+        } else {
+            // 'latest' default
+            dynamicCieExpression = `
+                CASE
+                    WHEN cie3 IS NOT NULL AND cie3 > 0 THEN cie3
+                    WHEN cie2 IS NOT NULL AND cie2 > 0 THEN cie2
+                    WHEN cie1 IS NOT NULL AND cie1 > 0 THEN cie1
+                    ELSE COALESCE(cie1, 0)
+                END
+            `;
+            cieCondition = `
+                (
+                    CASE
+                        WHEN cie3 IS NOT NULL AND cie3 > 0 THEN cie3
+                        WHEN cie2 IS NOT NULL AND cie2 > 0 THEN cie2
+                        WHEN cie1 IS NOT NULL AND cie1 > 0 THEN cie1
+                        ELSE NULL
+                    END
+                ) IS NOT NULL AND (
+                    CASE
+                        WHEN cie3 IS NOT NULL AND cie3 > 0 THEN cie3
+                        WHEN cie2 IS NOT NULL AND cie2 > 0 THEN cie2
+                        WHEN cie1 IS NOT NULL AND cie1 > 0 THEN cie1
+                        ELSE NULL
+                    END
+                ) <= ${cutoff}
+            `;
+            cieLabel = 'Latest Recorded CIE';
+        }
+
+        const queryParams = [tenant, semester, teacherId, targetBranch];
+        let querySubjectFilter = '';
+        if (requestedSubject && requestedSubject !== 'ALL') {
+            queryParams.push(requestedSubject);
+            querySubjectFilter = `
+                AND (
+                    UPPER(TRIM(wt.subject_code)) = UPPER(TRIM($${queryParams.length}))
+                    OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM($${queryParams.length}))
+                    OR UPPER(TRIM(wt.subject_code)) ILIKE '%' || UPPER(TRIM($${queryParams.length})) || '%'
+                    OR UPPER(TRIM(wt.subject_name)) ILIKE '%' || UPPER(TRIM($${queryParams.length})) || '%'
+                )
+            `;
+        }
+
+        let sectionCondition = '';
+        if (requestedSection && requestedSection !== 'ALL') {
+            queryParams.push(requestedSection.toUpperCase());
+            sectionCondition = `AND UPPER(TRIM(u.section)) = UPPER(TRIM($${queryParams.length}))`;
+        }
+
+        const evaluatedQuery = await pool.query(`
             WITH assigned_subjects AS (
                 SELECT DISTINCT
                     UPPER(TRIM(wt.subject_code)) AS subject_code,
@@ -2838,15 +2950,14 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
                         TRIM(wt.subject_code)
                     ) AS subject_name
                 FROM weekly_timetables wt
-                WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) =
-                      UPPER(TRIM($1))
+                WHERE UPPER(COALESCE(TRIM(wt.institution_id), 'DR_AIT')) = UPPER(TRIM($1))
                   AND wt.semester_number = $2
                   AND (
                         UPPER(TRIM(wt.assigned_teacher_id)) = UPPER(TRIM($3))
                         OR UPPER(TRIM(wt.assigned_teacher_name)) ILIKE '%' || UPPER(TRIM($3)) || '%'
                   )
                   AND NULLIF(TRIM(wt.subject_code), '') IS NOT NULL
-                  ${requestedSubject ? 'AND (UPPER(TRIM(wt.subject_code)) = UPPER(TRIM($4)) OR UPPER(TRIM(wt.subject_name)) = UPPER(TRIM($4)))' : ''}
+                  ${querySubjectFilter}
             ),
             ranked_marks AS (
                 SELECT
@@ -2854,6 +2965,9 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
                     COALESCE(NULLIF(TRIM(u.name), ''), 'Unnamed Student') AS name,
                     TRIM(COALESCE(u.branch, '')) AS branch,
                     u.semester_number,
+                    TRIM(COALESCE(u.section, 'A')) AS section,
+                    u.phone_number,
+                    u.email,
                     UPPER(TRIM(m.subject_code)) AS subject_code,
                     COALESCE(
                         NULLIF(TRIM(m.subject_name), ''),
@@ -2870,18 +2984,29 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
                 FROM users u
                 JOIN student_marks m
                   ON UPPER(TRIM(u.usn)) = UPPER(TRIM(m.usn))
-                 AND UPPER(COALESCE(TRIM(m.institution_id), 'DR_AIT')) =
-                     UPPER(TRIM($1))
+                 AND UPPER(COALESCE(TRIM(m.institution_id), 'DR_AIT')) = UPPER(TRIM($1))
                 JOIN assigned_subjects a
-                  ON UPPER(TRIM(m.subject_code)) = a.subject_code
-                  OR UPPER(TRIM(m.subject_name)) = a.subject_name
-                  OR UPPER(TRIM(m.subject)) = a.subject_code
-                  OR UPPER(TRIM(m.subject)) = a.subject_name
+                  ON (
+                      UPPER(TRIM(m.subject_code)) = a.subject_code
+                      OR UPPER(TRIM(m.subject_name)) = a.subject_name
+                      OR UPPER(TRIM(m.subject)) = a.subject_code
+                      OR UPPER(TRIM(m.subject)) = a.subject_name
+                      OR a.subject_code ILIKE '%' || UPPER(TRIM(m.subject_code)) || '%'
+                      OR UPPER(TRIM(m.subject_code)) ILIKE '%' || a.subject_code || '%'
+                      OR (a.subject_code ILIKE '%503%' AND (m.subject_code ILIKE '%503%' OR m.subject_code ILIKE '%ML%'))
+                      OR (a.subject_code ILIKE '%502%' AND (m.subject_code ILIKE '%502%' OR m.subject_code ILIKE '%CN%'))
+                      OR (a.subject_code ILIKE '%505A%' AND (m.subject_code ILIKE '%505A%' OR m.subject_code ILIKE '%CV%'))
+                      OR (a.subject_code ILIKE '%DDCO%' AND (m.subject_code ILIKE '%DDCO%' OR m.subject_code ILIKE '%302%'))
+                      OR (a.subject_code ILIKE '%DSA%' AND (m.subject_code ILIKE '%DSA%' OR m.subject_code ILIKE '%304%' OR m.subject_code ILIKE '%303%'))
+                      OR (a.subject_code ILIKE '%GIT%' AND (m.subject_code ILIKE '%GIT%' OR m.subject_code ILIKE '%308C%' OR m.subject_code ILIKE '%307A%'))
+                      OR (a.subject_code ILIKE '%JAVA%' AND (m.subject_code ILIKE '%JAVA%' OR m.subject_code ILIKE '%305%'))
+                  )
                 WHERE LOWER(TRIM(u.role)) IN ('student', 'students')
-                  AND UPPER(COALESCE(TRIM(u.institution_id), 'DR_AIT')) =
-                      UPPER(TRIM($1))
+                  AND UPPER(COALESCE(TRIM(u.institution_id), 'DR_AIT')) = UPPER(TRIM($1))
                   AND u.semester_number = $2
                   AND m.semester_number = $2
+                  AND UPPER(TRIM(u.branch)) = UPPER(TRIM($4))
+                  ${sectionCondition}
                   AND NULLIF(TRIM(u.usn), '') IS NOT NULL
             )
             SELECT
@@ -2889,25 +3014,35 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
                 name,
                 branch,
                 semester_number,
+                section,
+                phone_number,
+                email,
                 subject_code,
                 subject_name,
                 cie1,
                 cie2,
                 cie3,
-                ${slowLearnerCieExpression} AS current_cie
+                ${dynamicCieExpression} AS current_cie,
+                CASE WHEN ${cieCondition} THEN 1 ELSE 0 END AS is_slow_learner
             FROM ranked_marks
             WHERE rn = 1
-              AND ${slowLearnerCieExpression} IS NOT NULL
-              AND ${slowLearnerCieExpression} <= 15
-            ORDER BY UPPER(name), usn, subject_code
-        `, requestedSubject ? [tenant, semester, teacherId, requestedSubject] : [tenant, semester, teacherId]);
+            ORDER BY is_slow_learner DESC, ${dynamicCieExpression} ASC NULLS LAST, UPPER(name), usn, subject_code
+        `, queryParams);
+
+        const allStudents = evaluatedQuery.rows;
+        const slowLearners = allStudents.filter(r => r.is_slow_learner === 1);
 
         return res.json({
             success: true,
             semester,
+            cutoff,
+            cieType,
+            cieLabel,
+            branch: targetBranch,
             subjects: assignedSubjects.rows,
-            slowLearners: slowLearners.rows,
-            count: slowLearners.rows.length
+            slowLearners: slowLearners,
+            count: slowLearners.length,
+            totalEvaluatedCount: allStudents.length
         });
     } catch (err) {
         console.error("Faculty slow learners error:", err);
@@ -2916,6 +3051,91 @@ app.get("/api/teacher/slow-learners", async (req, res) => {
             message: "Unable to calculate faculty slow learners.",
             error: err.message
         });
+    }
+});
+
+/* ==========================================================================
+   SLOW LEARNER REMEDIAL SMS DISPATCH (INDIVIDUAL OR BULK BROADCAST)
+  ========================================================================== */
+app.post("/api/teacher/send-slow-learner-sms", async (req, res) => {
+    const {
+        studentUsn,
+        students,
+        subjectName,
+        cieLabel,
+        cieMark,
+        cutoff,
+        facultyName,
+        institutionId
+    } = req.body || {};
+
+    const tenant = tenantOf(institutionId);
+    const teacherName = clean(facultyName, "Faculty In-Charge");
+    const subject = clean(subjectName, "Subject Module");
+    const assessmentLabel = clean(cieLabel, "CIE Assessment");
+    const cutoffMark = cutoff !== undefined ? cutoff : 15;
+
+    try {
+        if (Array.isArray(students) && students.length > 0) {
+            // Bulk dispatch
+            const results = [];
+            for (const s of students) {
+                const dispatch = await sendSlowLearnerRemedialSms({
+                    pool,
+                    studentUsn: s.usn,
+                    studentName: s.name,
+                    studentPhone: s.phone_number,
+                    subjectName: subject,
+                    cieLabel: assessmentLabel,
+                    cieMark: s.current_cie,
+                    cutoff: cutoffMark,
+                    facultyName: teacherName,
+                    institutionId: tenant
+                });
+                results.push({ usn: s.usn, dispatched: dispatch.dispatched, phone: dispatch.phone });
+            }
+            return res.json({
+                success: true,
+                message: `Remedial SMS alert dispatched to ${results.length} students!`,
+                dispatches: results
+            });
+        }
+
+        // Single student dispatch
+        if (!studentUsn) {
+            return res.status(400).json({ success: false, message: "Student USN is required." });
+        }
+
+        const studentQuery = await pool.query(`
+            SELECT name, phone_number FROM users
+            WHERE UPPER(TRIM(usn)) = UPPER(TRIM($1))
+              AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) = UPPER(TRIM($2))
+            LIMIT 1
+        `, [studentUsn, tenant]);
+
+        const student = studentQuery.rows[0] || {};
+        const dispatch = await sendSlowLearnerRemedialSms({
+            pool,
+            studentUsn: studentUsn,
+            studentName: student.name,
+            studentPhone: student.phone_number,
+            subjectName: subject,
+            cieLabel: assessmentLabel,
+            cieMark: cieMark,
+            cutoff: cutoffMark,
+            facultyName: teacherName,
+            institutionId: tenant
+        });
+
+        return res.json({
+            success: true,
+            message: `Remedial SMS alert sent to ${studentUsn} (${dispatch.phone})!`,
+            dispatched: dispatch.dispatched,
+            phone: dispatch.phone
+        });
+    } catch (err) {
+        console.error("Send slow learner SMS error:", err);
+        return res.status(500).json({ success: false, error: err.message });
     }
 });
 
