@@ -133,6 +133,56 @@
         }
 
         /* ==========================================================================
+           💼 FACULTY PORTAL BENTO SERVICES GRID (MATCHING PARENT PORTAL)
+           ========================================================================== */
+        .faculty-profile-banner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+        .faculty-badge { display: flex; align-items: center; gap: 14px; }
+        .faculty-avatar-circle { width: 56px; height: 56px; border-radius: 50%; background: #eff6ff; border: 2.5px solid var(--primary-blue); display: flex; justify-content: center; align-items: center; font-size: 26px; }
+        .faculty-name-title { font-size: 20px; font-weight: 800; color: var(--text-dark); margin: 0; }
+        .faculty-dept-sub { font-size: 13px; color: var(--primary-blue); font-weight: 700; margin-top: 3px; }
+        
+        .faculty-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .faculty-info-box { background: #f8fafc; border: 1px solid var(--bento-border); padding: 14px 18px; border-radius: 14px; text-align: left; }
+        .faculty-info-box h4 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .faculty-info-box .val { font-size: 15px; font-weight: 800; color: var(--text-dark); }
+        
+        .faculty-modules-section { padding: 26px; border-radius: 24px; margin-bottom: 24px; text-align: left; background: #ffffff; border: 1px solid var(--bento-border); }
+        .faculty-modules-heading { font-size: 20px; font-weight: 900; margin-bottom: 18px; color: var(--text-dark); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .faculty-modules-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+        .faculty-module-tile { appearance: none; width: 100%; min-height: 190px; border: 1px solid #dbeafe; border-radius: 22px; background: linear-gradient(145deg, #ffffff, #f8fbff); padding: 20px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; cursor: pointer; color: var(--text-dark); box-shadow: 0 5px 14px rgba(15,23,42,.06); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; outline: none; }
+        .faculty-module-tile:hover, .faculty-module-tile:focus-visible { transform: translateY(-3px); box-shadow: 0 12px 22px rgba(30,64,175,.12); border-color: #93c5fd; }
+        .faculty-module-tile.active { border-color: var(--primary-blue); background: linear-gradient(145deg, #eff6ff, #dbeafe); box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.22), 0 10px 24px rgba(30,64,175,.15); transform: translateY(-2px); }
+        
+        .faculty-module-icon { width: 92px; height: 92px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 46px; box-shadow: inset 0 1px 0 rgba(255,255,255,.8); flex-shrink: 0; }
+        .faculty-module-label { font-size: 15px; font-weight: 850; line-height: 1.25; text-align: center; color: var(--text-dark); }
+        
+        .module-qr-session .faculty-module-icon { background: #dbeafe; }
+        .module-class-stream .faculty-module-icon { background: #d1fae5; }
+        .module-marks .faculty-module-icon { background: #ede9fe; }
+        .module-slow-learners .faculty-module-icon { background: #ffedd5; }
+        .module-attendance-register .faculty-module-icon { background: #e0f2fe; }
+        .module-mentorship .faculty-module-icon { background: #fef3c7; }
+        .module-publications .faculty-module-icon { background: #dcfce7; }
+        .module-fdp .faculty-module-icon { background: #e0e7ff; }
+        .module-profile .faculty-module-icon { background: #fee2e2; }
+        
+        .active-module-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid var(--bento-border); border-radius: 16px; padding: 14px 20px; font-size: 14px; font-weight: 700; color: var(--primary-blue); box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+        
+        @media (max-width: 768px) {
+            .faculty-modules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+            .faculty-module-tile { min-height: 155px; border-radius: 18px; padding: 14px 10px; }
+            .faculty-module-icon { width: 72px; height: 72px; border-radius: 18px; font-size: 36px; }
+            .faculty-module-label { font-size: 13px; }
+            .faculty-modules-section { padding: 18px; }
+        }
+        @media (max-width: 420px) {
+            .faculty-modules-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .faculty-module-tile { padding: 12px 6px; min-height: 135px; }
+            .faculty-module-icon { width: 62px; height: 62px; font-size: 30px; }
+            .faculty-module-label { font-size: 12px; }
+        }
+
+        /* ==========================================================================
             🖨️ PERFECTED PRINT STYLING FIX (Eliminates Blank Leading Pages)
             ========================================================================== */
         @media print {
@@ -525,210 +575,131 @@
                 ========================================================================== -->
             <div id="teacherSectionLayout" style="display: none;">
 
-                <!-- 🚀 EXECUTIVE QUICK-JUMP NAVIGATION BAR -->
-                <div style="position: sticky; top: 16px; z-index: 1000; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid var(--bento-border); padding: 12px 18px; border-radius: 16px; display: flex; gap: 10px; overflow-x: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin-bottom: 24px;">
-                    <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); align-self: center; text-transform: uppercase; margin-right: 4px;">⚡ Jump To:</span>
-                    <button onclick="scrollToSection('teacherProfileCredentialsHub')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">👤 My Profile & Credentials</button>
-                    <button onclick="scrollToSection('teacherPubsHub')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">📚 Research Hub</button>
-                    <button onclick="scrollToSection('teacherFdpHub')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">🏛️ FDP Records</button>
-                    <button onclick="scrollToSection('teacherSlotSelector')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">🎯 Class Slots</button>
-                    <button onclick="scrollToSection('teacherQrDispatcher')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">⚡ QR Dispatcher</button>
-                    <button onclick="scrollToSection('teacherViewsBar')" class="btn btn-dark" style="font-size: 11px; padding: 6px 14px; white-space: nowrap;">📊 Stream & Registers</button>
+                <!-- 👤 FACULTY EXECUTIVE PROFILE BANNER (MATCHING PARENT PORTAL STYLE) -->
+                <div class="bento-card" style="margin-bottom: 24px; text-align: left;">
+                    <div class="faculty-profile-banner">
+                        <div class="faculty-badge">
+                            <div class="faculty-avatar-circle">👨‍🏫</div>
+                            <div>
+                                <h3 class="faculty-name-title" id="facultyProfileHeaderName">Faculty Instructor</h3>
+                                <div class="faculty-dept-sub" id="facultyProfileHeaderRole">Faculty Management Portal Gateway | Dr. AIT Autonomous</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button onclick="handleLogout()" class="btn btn-dark" style="padding: 9px 16px; font-size: 12px;">Logout ⬅️</button>
+                        </div>
+                    </div>
+                    <div class="faculty-info-grid">
+                        <div class="faculty-info-box">
+                            <h4>Instructor USN / ID</h4>
+                            <div class="val" id="facultyHeaderUsn">FACULTY_AIML</div>
+                        </div>
+                        <div class="faculty-info-box">
+                            <h4>Department Branch</h4>
+                            <div class="val" id="facultyHeaderBranch">AIML</div>
+                        </div>
+                        <div class="faculty-info-box">
+                            <h4>Assigned Subject Module</h4>
+                            <div class="val" id="facultyHeaderSubject" style="color: var(--primary-blue);">Loading...</div>
+                        </div>
+                        <div class="faculty-info-box">
+                            <h4>Current Academic Term</h4>
+                            <div class="val" id="facultyHeaderTerm">2026-2027 (Odd Sem)</div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 👤 TEACHER PROFESSIONAL PROFILE & CREDENTIALS HUB (Phase 1) -->
-                <div id="teacherProfileCredentialsHub" class="bento-card" style="border-left: 5px solid var(--accent-purple); margin-bottom: 24px; text-align: left;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <!-- 💼 FACULTY PORTAL SERVICES FEATURE TILES (EXACT PARENT PORTAL DESIGN) -->
+                <section class="faculty-modules-section" aria-labelledby="facultyModulesHeading">
+                    <div class="faculty-modules-heading" id="facultyModulesHeading">
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 22px;">👤</span>
-                            <div>
-                                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">My Professional & Service Records (NAAC / NBA Audit)</h3>
-                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">View your official service credentials, qualifications, and academic profile links.</p>
-                            </div>
+                            <span>💼 Faculty Portal Services</span>
+                            <span style="font-size: 11px; font-weight: 800; background: #eff6ff; color: var(--primary-blue); padding: 3px 10px; border-radius: 999px; border: 1px solid #bfdbfe;">Active Instructor Hub</span>
                         </div>
-                        <button id="btnEditTeacherProfile" onclick="openTeacherProfileEdit()" class="btn btn-blue" style="padding: 10px 20px; font-size: 12px;">✏️ Edit Profile</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="button" onclick="openFacultyModule('all')" style="background: #f8fafc; border: 1px solid var(--bento-border); border-radius: 10px; padding: 6px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer;">👁️ Show All Modules</button>
+                        </div>
                     </div>
 
-                    <style>
-                        .teacher-profile-view-item { background: #fff; border: 1px solid var(--bento-border); border-radius: 12px; padding: 12px 14px; min-height: 68px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
-                        .teacher-profile-view-item label { font-size: 10px; font-weight: 900; color: var(--text-muted); letter-spacing: .4px; }
-                    .slow-learners-responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
-        @media (max-width: 520px) { .slow-learners-responsive-grid { grid-template-columns: 1fr; } }
-        </style>
+                    <div class="faculty-modules-grid">
+                        <!-- Box 1: Live QR Attendance -->
+                        <button type="button" class="faculty-module-tile module-qr-session active" onclick="openFacultyModule('qr-session')">
+                            <span class="faculty-module-icon" aria-hidden="true">⚡</span>
+                            <span class="faculty-module-label">Live QR Attendance<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Session Studio)</small></span>
+                        </button>
 
-                    <div id="teacherProfileViewMode" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid var(--bento-border);"></div>
+                        <!-- Box 2: Live Class Stream -->
+                        <button type="button" class="faculty-module-tile module-class-stream" onclick="openFacultyModule('class-stream')">
+                            <span class="faculty-module-icon" aria-hidden="true">📋</span>
+                            <span class="faculty-module-label">Live Class Stream<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Real-Time Scans)</small></span>
+                        </button>
 
-                    <div id="teacherProfileEditMode" style="display: none;">
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--bento-border);">
-                            <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">PAN NUMBER</label>
-                                <input type="text" id="profPan" placeholder="e.g., ABCDE1234F" style="width: 100%; text-transform: uppercase;">
-                            </div>
-                            <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">AADHAR NUMBER</label>
-                                <input type="text" id="profAadhar" placeholder="e.g., 1234 5678 9012" style="width: 100%;">
-                            </div>
-                            <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF BIRTH</label>
-                                <input type="date" id="profDob" style="width: 100%;">
-                            </div>
-                            <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">JOINING DATE</label>
-                                <input type="date" id="profJoiningDate" style="width: 100%;">
-                            </div>
-                            <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CURRENT DESIGNATION</label>
-                                <select id="profDesignation" style="width: 100%;">
-                                    <option value="Professor">Professor</option>
-                                    <option value="Associate Professor">Associate Professor</option>
-                                    <option value="Assistant Professor" selected>Assistant Professor</option>
-                                    <option value="Guest Faculty">Guest Faculty</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF LAST PROMOTION</label>
-                                <input type="date" id="profPromotionDate" style="width: 100%;">
-                            </div>
-                            <div>
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">HIGHEST QUALIFICATION</label>
-                                <input type="text" id="profQualification" placeholder="e.g., Ph.D. in AI, M.Tech" style="width: 100%;">
-                            </div>
-                        </div>
+                        <!-- Box 3: CIE Marks Ledger -->
+                        <button type="button" class="faculty-module-tile module-marks" onclick="openFacultyModule('marks')">
+                            <span class="faculty-module-icon" aria-hidden="true">📝</span>
+                            <span class="faculty-module-label">CIE Marks &amp; SEE<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Marks Roster)</small></span>
+                        </button>
 
-                        <div style="margin-top: 20px; border-top: 1px dashed var(--bento-border); padding-top: 16px;">
-                            <h4 style="font-size: 13px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">🔗 Optional Academic Profile Links</h4>
-                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Link your official repositories for automated verification during institutional reviews.</p>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
-                                <div>
-                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">Google Scholar Profile URL</label>
-                                    <input type="text" id="profGoogleScholar" placeholder="https://scholar.google.com/..." style="width: 100%;">
-                                </div>
-                                <div>
-                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">ORCID iD Link</label>
-                                    <input type="text" id="profOrcid" placeholder="https://orcid.org/0000-..." style="width: 100%;">
-                                </div>
-                                <div>
-                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">VIDWAN Profile URL</label>
-                                    <input type="text" id="profVidwan" placeholder="https://vidwan.inflibnet.ac.in/..." style="width: 100%;">
-                                </div>
-                                <div>
-                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">IRINS Profile URL</label>
-                                    <input type="text" id="profIrins" placeholder="https://drait.irins.org/..." style="width: 100%;">
-                                </div>
-                            </div>
+                        <!-- Box 4: Slow Learners Desk -->
+                        <button type="button" class="faculty-module-tile module-slow-learners" onclick="openFacultyModule('slow-learners')">
+                            <span class="faculty-module-icon" aria-hidden="true">📚</span>
+                            <span class="faculty-module-label">Slow Learners Desk<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Scale Benchmark &amp; SMS)</small></span>
+                        </button>
+
+                        <!-- Box 5: Attendance Register Matrix -->
+                        <button type="button" class="faculty-module-tile module-attendance-register" onclick="openFacultyModule('attendance-register')">
+                            <span class="faculty-module-icon" aria-hidden="true">📊</span>
+                            <span class="faculty-module-label">Attendance Register<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Matrix &amp; PDF Export)</small></span>
+                        </button>
+
+                        <!-- Box 6: Faculty Mentorship Desk -->
+                        <button type="button" class="faculty-module-tile module-mentorship" onclick="openFacultyModule('mentorship')">
+                            <span class="faculty-module-icon" aria-hidden="true">🎓</span>
+                            <span class="faculty-module-label">Faculty Mentorship<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Assigned Mentees)</small></span>
+                        </button>
+
+                        <!-- Box 7: Research Papers & Publications -->
+                        <button type="button" class="faculty-module-tile module-publications" onclick="openFacultyModule('publications')">
+                            <span class="faculty-module-icon" aria-hidden="true">📖</span>
+                            <span class="faculty-module-label">Research Hub<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Papers &amp; H-Index)</small></span>
+                        </button>
+
+                        <!-- Box 8: Faculty Development Programs -->
+                        <button type="button" class="faculty-module-tile module-fdp" onclick="openFacultyModule('fdp')">
+                            <span class="faculty-module-icon" aria-hidden="true">🏛️</span>
+                            <span class="faculty-module-label">FDP Records<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Conferences &amp; ATAL)</small></span>
+                        </button>
+
+                        <!-- Box 9: Profile & Service Credentials -->
+                        <button type="button" class="faculty-module-tile module-profile" onclick="openFacultyModule('profile')">
+                            <span class="faculty-module-icon" aria-hidden="true">👤</span>
+                            <span class="faculty-module-label">Profile &amp; Credentials<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(NAAC / NBA Service)</small></span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 📌 ACTIVE MODULE INDICATOR BANNER (MATCHING PARENT PORTAL STYLE) -->
+                <div id="facultyActiveViewBanner" class="active-module-bar">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span id="facultyActiveViewIcon" style="font-size: 24px;">⚡</span>
+                        <div>
+                            <span id="facultyActiveViewTitle" style="font-size: 15px; font-weight: 800; color: var(--text-dark);">Viewing: Live QR Attendance Session Studio</span>
+                            <div id="facultyActiveViewDesc" style="font-size: 11px; font-weight: 600; color: var(--text-muted);">HOD class slot dispatch & dynamic 5-minute cryptographic check-in.</div>
                         </div>
-                        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
-                            <button onclick="cancelTeacherProfileEdit()" class="btn btn-dark" style="padding: 10px 18px; font-size: 12px;">Cancel</button>
-                            <button onclick="saveTeacherProfessionalProfile()" class="btn btn-blue" style="padding: 10px 20px; font-size: 12px;">Save Profile Credentials 💾</button>
-                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" onclick="openFacultyModule('qr-session')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">⚡ QR Session</button>
+                        <button type="button" onclick="openFacultyModule('marks')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">📝 Marks</button>
+                        <button type="button" onclick="openFacultyModule('slow-learners')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">📚 Slow Learners</button>
+                        <button type="button" onclick="openFacultyModule('attendance-register')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">📊 Register</button>
                     </div>
                 </div>
 
-                <!-- 📚 TEACHER RESEARCH & PUBLICATIONS HUB -->
-                <div id="teacherPubsHub" class="bento-card" style="border-left: 5px solid var(--accent-green); margin-bottom: 24px; text-align: left;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 22px;">📚</span>
-                            <div>
-                                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Research Papers & Publications Hub</h3>
-                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Submit your research papers, journals, conferences, and citation impact metrics.</p>
-                            </div>
-                        </div>
-                         
-                        <!-- 🎯 SELECT YEAR DROPDOWN FOR TEACHER PUBLICATIONS -->
-                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--bento-border);">
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Year:</label>
-                                <select id="teacherPubsYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
-                                    <option value="2025-2026">2025 - 2026</option>
-                                    <option value="2026-2027" selected>2026 - 2027</option>
-                                    <option value="2027-2028">2027 - 2028</option>
-                                </select>
-                            </div>
-                            <button onclick="openAddPublicationModal()" class="btn btn-green" style="padding: 10px 18px; font-size: 12px;">+ Add Publication</button>
-                        </div>
-                    </div>
-
-                    <div class="table-container" style="margin-top: 12px; margin-bottom: 0;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="width: 8%; text-align: center;">Sl. No.</th>
-                                    <th style="width: 18%;">Authors</th>
-                                    <th style="width: 24%;">Title</th>
-                                    <th style="width: 16%;">Venue</th>
-                                    <th style="width: 10%;">Indexed</th>
-                                    <th style="width: 8%; text-align: center;">Year</th>
-                                    <th style="width: 8%; text-align: center;">Quartile</th>
-                                    <th style="width: 10%; text-align: center;">DOI / Link</th>
-                                    <th style="width: 5%; text-align: center;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="teacherPubsTableBody">
-                                <tr><td colspan="9" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">Loading your publications...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 🏛️ FDP ATTENDED BY FACULTY SECTION -->
-                <div id="teacherFdpHub" class="bento-card" style="border-left: 5px solid var(--primary-blue); margin-bottom: 24px; text-align: left;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 22px;">🏛️</span>
-                            <div>
-                                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">FDP Attended by Faculty</h3>
-                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Track Faculty Development Programs, ATAL/DST sponsorships, and duration dates.</p>
-                            </div>
-                        </div>
-
-                        <!-- 🎯 SELECT YEAR DROPDOWN FOR TEACHER FDP -->
-                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--bento-border);">
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Year:</label>
-                                <select id="teacherFdpYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
-                                    <option value="2025-2026">2025 - 2026</option>
-                                    <option value="2026-2027" selected>2026 - 2027</option>
-                                    <option value="2027-2028">2027 - 2028</option>
-                                </select>
-                            </div>
-                            <button onclick="openAddFdpModal()" class="btn btn-blue" style="padding: 10px 18px; font-size: 12px;">+ Add FDP Record</button>
-                        </div>
-                    </div>
-
-                    <div class="table-container" style="margin-top: 12px; margin-bottom: 0;">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Name of Faculty</th>
-                                    <th>Title of FDP (Online/Offline)</th>
-                                    <th>ATAL / VGST / DST Sponsored</th>
-                                    <th>Organizing Full Address</th>
-                                    <th>From Date</th>
-                                    <th>To Date</th>
-                                    <th style="text-align: center;">Participants</th>
-                                    <th style="text-align: center;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="teacherFdpTableBody">
-                                <tr><td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">Loading FDP records...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 🎯 PROMINENT ACTION BANNER: ENTER MARKS VIA DEDICATED MODAL -->
-                <div style="background: linear-gradient(135deg, #1e40af, #1d4ed8); border-radius: 18px; padding: 22px 26px; margin-bottom: 24px; color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
-                    <div>
-                        <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">🎓 Single Student Marks Evaluation</h3>
-                        <p style="font-size: 13px; opacity: 0.9; margin: 0;">Search any student by USN to enter marks for your HOD-assigned module. Other subjects remain frozen.</p>
-                    </div>
-                    <button onclick="openMarksEntryModal()" class="btn btn-green" style="font-size: 14px; padding: 12px 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.2);">
-                        ➕ Enter Marks of a Student
-                    </button>
-                </div>
-
-                <!-- 📅 HOD-MAPPED CLASS SLOT SELECTOR CARD -->
+                <!-- ============================================================== -->
+                <!-- MODULE 1: LIVE QR ATTENDANCE SESSION STUDIO                    -->
+                <!-- ============================================================== -->
+                <div id="container_qrSession" style="display: block;">
+                    <!-- 📅 HOD-MAPPED CLASS SLOT SELECTOR CARD -->
                 <div id="teacherSlotSelector" style="background: #eff6ff; border: 2px solid var(--primary-blue); border-radius: 18px; padding: 20px; margin-bottom: 24px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
                         <div>
@@ -779,35 +750,17 @@
                         <div id="sessionLabel" style="font-size: 11px; font-weight: 700; color: var(--text-muted); font-family: monospace; margin-top: 4px;">NO ACTIVE DISPATCH</div>
                     </div>
                 </div>
+                </div>
 
-                <!-- 📚 SLOW LEARNERS QUICK ACCESS CARD -->
-                <div id="slowLearnersQuickCard" style="background: linear-gradient(135deg, #fff7ed, #ffffff); border: 2px solid #fed7aa; border-radius: 18px; padding: 20px 22px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(194,65,12,0.08);">
-                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
-                        <div style="display:flex; align-items:center; gap:14px; min-width:0;">
-                            <div style="width:48px; height:48px; border-radius:14px; background:#ffedd5; display:flex; align-items:center; justify-content:center; font-size:25px; flex-shrink:0;">📚</div>
-                            <div>
-                                <div style="display:flex; align-items:center; gap:10px;">
-                                    <h3 style="font-size:16px; font-weight:900; color:#9a3412; margin:0;">Slow Learners Identification</h3>
-                                    <span id="quickCardBadge" style="background:#ea580c; color:#fff; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px;">🎯 Scale Benchmark</span>
-                                </div>
-                                <p id="quickCardText" style="font-size:12px; color:#7c2d12; margin:4px 0 0; line-height:1.45;">Set custom cutoff marks on a scale for CIE 1, 2, or 3. Students scoring ≤ cutoff are flagged automatically for remedial attention.</p>
-                            </div>
-                        </div>
-                        <button class="btn" onclick="switchTeacherView('slowLearners')" style="background:#c2410c; color:#fff; border-color:#c2410c; padding:10px 18px; white-space:nowrap; font-weight:800; cursor:pointer;">📚 Open Slow Learners Desk</button>
+                <!-- ============================================================== -->
+                <!-- MODULE 2: LIVE CLASS STREAM & ATTENDEES ROSTER                 -->
+                <!-- ============================================================== -->
+                <div id="container_classStream" style="display: none;">
+                    <div style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 2px solid var(--bento-border); padding-bottom: 8px;">
+                        <button class="toggle-tab-btn active" id="btn_streamLive" onclick="switchTeacherView('live')">📋 Active Class Stream</button>
+                        <button class="toggle-tab-btn" id="btn_streamHistory" onclick="switchTeacherView('history')">🕒 Past Sessions Log</button>
                     </div>
-                </div>
-
-                <!-- 🎛️ TEACHER TAB SWITCHER -->
-                <div id="teacherViewsBar" class="view-toggle-bar">
-                    <button class="toggle-tab-btn active" id="btn_viewLive" onclick="switchTeacherView('live')">📋 Active Class Stream</button>
-                    <button class="toggle-tab-btn" id="btn_viewHistory" onclick="switchTeacherView('history')">🕒 Past Sessions Log</button>
-                    <button class="toggle-tab-btn" id="btn_viewMarks" onclick="switchTeacherView('marks')">📝 Subject Marks Roster</button>
-                    <button class="toggle-tab-btn" id="btn_viewMentorship" onclick="switchTeacherView('mentorship')">🎓 Faculty Mentorship</button>
-                    <button class="toggle-tab-btn" id="btn_viewSlowLearners" onclick="switchTeacherView('slowLearners')" style="font-weight:900; color:#c2410c;">📚 Slow Learners</button>
-                    <button class="toggle-tab-btn" id="btn_viewRegister" onclick="switchTeacherView('register')">📊 Attendance Register PDF</button>
-                </div>
-
-                <!-- TAB 1: LIVE CLASS STREAM -->
+                    <!-- TAB 1: LIVE CLASS STREAM -->
                 <div id="wrapper_liveStream">
                     <div style="text-align: left; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                         <h3 style="font-size: 14px; font-weight: 800; color: var(--text-muted);">Live Stream Log Ledger</h3>
@@ -883,8 +836,7 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- TAB 2: PAST SESSIONS LOG -->
+                    <!-- TAB 2: PAST SESSIONS LOG -->
                 <div id="wrapper_historyLog" style="display: none; text-align: left;">
                     <div style="margin-bottom: 16px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
                         <label style="margin: 0; font-size: 14px; font-weight:700;">Select Previous Session Date:</label>
@@ -927,8 +879,23 @@
                         </div>
                     </div>
                 </div>
+                </div>
 
-                <!-- TAB 3: MULTI-TIER EXCEL-LIKE BATCH SUBJECT MARKS ROSTER -->
+                <!-- ============================================================== -->
+                <!-- MODULE 3: CIE MARKS EVALUATION LEDGER & SEE                    -->
+                <!-- ============================================================== -->
+                <div id="container_marks" style="display: none;">
+                    <!-- 🎯 PROMINENT ACTION BANNER: ENTER MARKS VIA DEDICATED MODAL -->
+                <div style="background: linear-gradient(135deg, #1e40af, #1d4ed8); border-radius: 18px; padding: 22px 26px; margin-bottom: 24px; color: white; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div>
+                        <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 4px;">🎓 Single Student Marks Evaluation</h3>
+                        <p style="font-size: 13px; opacity: 0.9; margin: 0;">Search any student by USN to enter marks for your HOD-assigned module. Other subjects remain frozen.</p>
+                    </div>
+                    <button onclick="openMarksEntryModal()" class="btn btn-green" style="font-size: 14px; padding: 12px 22px; box-shadow: 0 4px 14px rgba(0,0,0,0.2);">
+                        ➕ Enter Marks of a Student
+                    </button>
+                </div>
+                    <!-- TAB 3: MULTI-TIER EXCEL-LIKE BATCH SUBJECT MARKS ROSTER -->
                 <div id="wrapper_marksLedger" style="display: none; text-align: left;">
                     <div style="background: white; border: 1px solid var(--bento-border); border-radius: 18px; padding: 20px; margin-bottom: 20px;">
                         <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue); margin-bottom: 4px;">📝 Multi-Class & Cross-Branch Batch Evaluation Grid</h3>
@@ -1002,25 +969,29 @@
                         </table>
                     </div>
                 </div>
-
-                <!-- 🎓 TAB 4: FACULTY MENTORSHIP WORKSPACE (MENTOR BLOCK) -->
-                <div id="wrapper_mentorshipWorkspace" style="display: none; text-align: left;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <div>
-                            <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">Proctor / Mentorship Workspace</h3>
-                            <p style="font-size: 12px; color: var(--text-muted);">Appointed student profiles, historical activities, and parent emergency logs.</p>
-                        </div>
-                        <button class="btn btn-blue" onclick="loadMenteeList()" style="padding: 6px 12px; font-size: 12px;">🔄 Sync Mentees</button>
-                    </div>
-
-                    <div class="mentee-grid" id="menteesCardsContainer">
-                        <div style="text-align: center; color: var(--text-muted); padding: 20px; grid-column: 1 / -1;">Loading assigned mentees...</div>
-                    </div>
                 </div>
 
-                <!-- TAB 5: ATTENDANCE REGISTER MATRIX & PDF EXPORT -->
-                <!-- 📚 TAB 5: SLOW LEARNERS WORKSPACE (UI BLOCK ONLY) -->
-                <!-- 📚 TAB 5: SLOW LEARNERS WORKSPACE WITH TEACHER-CONFIGURABLE SCALE BENCHMARK & PARTICULAR CIE -->
+                <!-- ============================================================== -->
+                <!-- MODULE 4: SLOW LEARNERS IDENTIFICATION & REMEDIAL DESK         -->
+                <!-- ============================================================== -->
+                <div id="container_slowLearners" style="display: none;">
+                    <!-- 📚 SLOW LEARNERS QUICK ACCESS CARD -->
+                <div id="slowLearnersQuickCard" style="background: linear-gradient(135deg, #fff7ed, #ffffff); border: 2px solid #fed7aa; border-radius: 18px; padding: 20px 22px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(194,65,12,0.08);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap;">
+                        <div style="display:flex; align-items:center; gap:14px; min-width:0;">
+                            <div style="width:48px; height:48px; border-radius:14px; background:#ffedd5; display:flex; align-items:center; justify-content:center; font-size:25px; flex-shrink:0;">📚</div>
+                            <div>
+                                <div style="display:flex; align-items:center; gap:10px;">
+                                    <h3 style="font-size:16px; font-weight:900; color:#9a3412; margin:0;">Slow Learners Identification</h3>
+                                    <span id="quickCardBadge" style="background:#ea580c; color:#fff; font-size:11px; font-weight:800; padding:3px 10px; border-radius:999px;">🎯 Scale Benchmark</span>
+                                </div>
+                                <p id="quickCardText" style="font-size:12px; color:#7c2d12; margin:4px 0 0; line-height:1.45;">Set custom cutoff marks on a scale for CIE 1, 2, or 3. Students scoring ≤ cutoff are flagged automatically for remedial attention.</p>
+                            </div>
+                        </div>
+                        <button class="btn" onclick="switchTeacherView('slowLearners')" style="background:#c2410c; color:#fff; border-color:#c2410c; padding:10px 18px; white-space:nowrap; font-weight:800; cursor:pointer;">📚 Open Slow Learners Desk</button>
+                    </div>
+                </div>
+                    <!-- 📚 TAB 5: SLOW LEARNERS WORKSPACE WITH TEACHER-CONFIGURABLE SCALE BENCHMARK & PARTICULAR CIE -->
                 <div id="wrapper_slowLearners" style="display: none; text-align: left;">
                     <div style="background: #ffffff; border: 1px solid var(--bento-border); border-radius: 18px; padding: 24px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
                         <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 18px;">
@@ -1201,8 +1172,13 @@
                         </div>
                     </div>
                 </div>
+                </div>
 
-                <div id="wrapper_registerView" style="display: none; text-align: left;">
+                <!-- ============================================================== -->
+                <!-- MODULE 5: ATTENDANCE REGISTER MATRIX & PDF                     -->
+                <!-- ============================================================== -->
+                <div id="container_attendanceRegister" style="display: none;">
+                    <div id="wrapper_registerView" style="display: none; text-align: left;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">📋 Monthly Attendance Register Matrix</h3>
@@ -1232,8 +1208,227 @@
                         </table>
                     </div>
                 </div>
+                </div>
 
-            </div>
+                <!-- ============================================================== -->
+                <!-- MODULE 6: FACULTY MENTORSHIP & GUIDANCE DESK                   -->
+                <!-- ============================================================== -->
+                <div id="container_mentorship" style="display: none;">
+                    <!-- 🎓 TAB 4: FACULTY MENTORSHIP WORKSPACE (MENTOR BLOCK) -->
+                <div id="wrapper_mentorshipWorkspace" style="display: none; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--primary-blue);">Proctor / Mentorship Workspace</h3>
+                            <p style="font-size: 12px; color: var(--text-muted);">Appointed student profiles, historical activities, and parent emergency logs.</p>
+                        </div>
+                        <button class="btn btn-blue" onclick="loadMenteeList()" style="padding: 6px 12px; font-size: 12px;">🔄 Sync Mentees</button>
+                    </div>
+
+                    <div class="mentee-grid" id="menteesCardsContainer">
+                        <div style="text-align: center; color: var(--text-muted); padding: 20px; grid-column: 1 / -1;">Loading assigned mentees...</div>
+                    </div>
+                </div>
+
+                <!-- TAB 5: ATTENDANCE REGISTER MATRIX & PDF EXPORT -->
+                <!-- 📚 TAB 5: SLOW LEARNERS WORKSPACE (UI BLOCK ONLY) -->
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- MODULE 7: RESEARCH PAPERS & PUBLICATIONS HUB                   -->
+                <!-- ============================================================== -->
+                <div id="container_publications" style="display: none;">
+                    <!-- 📚 TEACHER RESEARCH & PUBLICATIONS HUB -->
+                <div id="teacherPubsHub" class="bento-card" style="border-left: 5px solid var(--accent-green); margin-bottom: 24px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 22px;">📚</span>
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">Research Papers & Publications Hub</h3>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Submit your research papers, journals, conferences, and citation impact metrics.</p>
+                            </div>
+                        </div>
+                         
+                        <!-- 🎯 SELECT YEAR DROPDOWN FOR TEACHER PUBLICATIONS -->
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--bento-border);">
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Year:</label>
+                                <select id="teacherPubsYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
+                                    <option value="2025-2026">2025 - 2026</option>
+                                    <option value="2026-2027" selected>2026 - 2027</option>
+                                    <option value="2027-2028">2027 - 2028</option>
+                                </select>
+                            </div>
+                            <button onclick="openAddPublicationModal()" class="btn btn-green" style="padding: 10px 18px; font-size: 12px;">+ Add Publication</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container" style="margin-top: 12px; margin-bottom: 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 8%; text-align: center;">Sl. No.</th>
+                                    <th style="width: 18%;">Authors</th>
+                                    <th style="width: 24%;">Title</th>
+                                    <th style="width: 16%;">Venue</th>
+                                    <th style="width: 10%;">Indexed</th>
+                                    <th style="width: 8%; text-align: center;">Year</th>
+                                    <th style="width: 8%; text-align: center;">Quartile</th>
+                                    <th style="width: 10%; text-align: center;">DOI / Link</th>
+                                    <th style="width: 5%; text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacherPubsTableBody">
+                                <tr><td colspan="9" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">Loading your publications...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- MODULE 8: FDP ATTENDED BY FACULTY SECTION                      -->
+                <!-- ============================================================== -->
+                <div id="container_fdp" style="display: none;">
+                    <!-- 🏛️ FDP ATTENDED BY FACULTY SECTION -->
+                <div id="teacherFdpHub" class="bento-card" style="border-left: 5px solid var(--primary-blue); margin-bottom: 24px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 22px;">🏛️</span>
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">FDP Attended by Faculty</h3>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Track Faculty Development Programs, ATAL/DST sponsorships, and duration dates.</p>
+                            </div>
+                        </div>
+
+                        <!-- 🎯 SELECT YEAR DROPDOWN FOR TEACHER FDP -->
+                        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; padding: 6px 12px; border-radius: 10px; border: 1px solid var(--bento-border);">
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Year:</label>
+                                <select id="teacherFdpYearDropdown" onchange="switchAcademicYear(this.value)" style="border: none; background: transparent; font-weight: 800; color: var(--primary-blue); font-size: 13px; outline: none; cursor: pointer;">
+                                    <option value="2025-2026">2025 - 2026</option>
+                                    <option value="2026-2027" selected>2026 - 2027</option>
+                                    <option value="2027-2028">2027 - 2028</option>
+                                </select>
+                            </div>
+                            <button onclick="openAddFdpModal()" class="btn btn-blue" style="padding: 10px 18px; font-size: 12px;">+ Add FDP Record</button>
+                        </div>
+                    </div>
+
+                    <div class="table-container" style="margin-top: 12px; margin-bottom: 0;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name of Faculty</th>
+                                    <th>Title of FDP (Online/Offline)</th>
+                                    <th>ATAL / VGST / DST Sponsored</th>
+                                    <th>Organizing Full Address</th>
+                                    <th>From Date</th>
+                                    <th>To Date</th>
+                                    <th style="text-align: center;">Participants</th>
+                                    <th style="text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teacherFdpTableBody">
+                                <tr><td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 20px;">Loading FDP records...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                </div>
+
+                <!-- ============================================================== -->
+                <!-- MODULE 9: FACULTY PROFILE & NAAC / NBA SERVICE CREDENTIALS     -->
+                <!-- ============================================================== -->
+                <div id="container_profile" style="display: none;">
+                    <!-- 👤 TEACHER PROFESSIONAL PROFILE & CREDENTIALS HUB (Phase 1) -->
+                <div id="teacherProfileCredentialsHub" class="bento-card" style="border-left: 5px solid var(--accent-purple); margin-bottom: 24px; text-align: left;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 22px;">👤</span>
+                            <div>
+                                <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">My Professional & Service Records (NAAC / NBA Audit)</h3>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">View your official service credentials, qualifications, and academic profile links.</p>
+                            </div>
+                        </div>
+                        <button id="btnEditTeacherProfile" onclick="openTeacherProfileEdit()" class="btn btn-blue" style="padding: 10px 20px; font-size: 12px;">✏️ Edit Profile</button>
+                    </div>
+
+                    <style>
+                        .teacher-profile-view-item { background: #fff; border: 1px solid var(--bento-border); border-radius: 12px; padding: 12px 14px; min-height: 68px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+                        .teacher-profile-view-item label { font-size: 10px; font-weight: 900; color: var(--text-muted); letter-spacing: .4px; }
+                    .slow-learners-responsive-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+        @media (max-width: 520px) { .slow-learners-responsive-grid { grid-template-columns: 1fr; } }
+        </style>
+
+                    <div id="teacherProfileViewMode" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid var(--bento-border);"></div>
+
+                    <div id="teacherProfileEditMode" style="display: none;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--bento-border);">
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">PAN NUMBER</label>
+                                <input type="text" id="profPan" placeholder="e.g., ABCDE1234F" style="width: 100%; text-transform: uppercase;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">AADHAR NUMBER</label>
+                                <input type="text" id="profAadhar" placeholder="e.g., 1234 5678 9012" style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF BIRTH</label>
+                                <input type="date" id="profDob" style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">JOINING DATE</label>
+                                <input type="date" id="profJoiningDate" style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CURRENT DESIGNATION</label>
+                                <select id="profDesignation" style="width: 100%;">
+                                    <option value="Professor">Professor</option>
+                                    <option value="Associate Professor">Associate Professor</option>
+                                    <option value="Assistant Professor" selected>Assistant Professor</option>
+                                    <option value="Guest Faculty">Guest Faculty</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF LAST PROMOTION</label>
+                                <input type="date" id="profPromotionDate" style="width: 100%;">
+                            </div>
+                            <div>
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">HIGHEST QUALIFICATION</label>
+                                <input type="text" id="profQualification" placeholder="e.g., Ph.D. in AI, M.Tech" style="width: 100%;">
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px; border-top: 1px dashed var(--bento-border); padding-top: 16px;">
+                            <h4 style="font-size: 13px; font-weight: 800; color: var(--primary-blue); margin-bottom: 6px;">🔗 Optional Academic Profile Links</h4>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Link your official repositories for automated verification during institutional reviews.</p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px;">
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">Google Scholar Profile URL</label>
+                                    <input type="text" id="profGoogleScholar" placeholder="https://scholar.google.com/..." style="width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">ORCID iD Link</label>
+                                    <input type="text" id="profOrcid" placeholder="https://orcid.org/0000-..." style="width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">VIDWAN Profile URL</label>
+                                    <input type="text" id="profVidwan" placeholder="https://vidwan.inflibnet.ac.in/..." style="width: 100%;">
+                                </div>
+                                <div>
+                                    <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">IRINS Profile URL</label>
+                                    <input type="text" id="profIrins" placeholder="https://drait.irins.org/..." style="width: 100%;">
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+                            <button onclick="cancelTeacherProfileEdit()" class="btn btn-dark" style="padding: 10px 18px; font-size: 12px;">Cancel</button>
+                            <button onclick="saveTeacherProfessionalProfile()" class="btn btn-blue" style="padding: 10px 20px; font-size: 12px;">Save Profile Credentials 💾</button>
+                        </div>
+                    </div>
+                </div>
+                </div>
+</div>
 
             <!-- ==========================================================================
                 🎓 STUDENT INTERFACE HUB (OPTIMIZED DUAL-TAB UX)
@@ -2478,6 +2673,21 @@
                 loadTeacherFdpRecords();
                 loadAttendance();
                 updateSlowLearnersQuickBadge();
+
+                // Sync Faculty Profile Header Info (Matching Parent Portal Info-Boxes)
+                const fName = document.getElementById('facultyProfileHeaderName');
+                if (fName) fName.innerText = userName || 'Faculty Instructor';
+                const fUsn = document.getElementById('facultyHeaderUsn');
+                if (fUsn) fUsn.innerText = userUsn || 'FACULTY_ID';
+                const fBranch = document.getElementById('facultyHeaderBranch');
+                if (fBranch) fBranch.innerText = teacherBranch || 'AIML';
+                const fSub = document.getElementById('facultyHeaderSubject');
+                if (fSub) fSub.innerText = userSubject || 'AI - Artificial Intelligence';
+                const fRole = document.getElementById('facultyProfileHeaderRole');
+                if (fRole) fRole.innerText = `Department of ${teacherBranch || 'AIML'} | Dr. AIT Autonomous`;
+
+                // Open Live QR Attendance module box by default
+                openFacultyModule('qr-session');
             } else if (role === 'parent') {
                 if (document.getElementById('parentSectionLayout')) document.getElementById('parentSectionLayout').style.display = 'block';
                 await resolveParentAndChildProfile();
@@ -2642,6 +2852,8 @@
                     localStorage.setItem('userSubject', userSubject);
                     localStorage.setItem('userSemester', userSemester);
                     localStorage.setItem('userBranch', window.activeTeacherBranch);
+                    const fSub = document.getElementById('facultyHeaderSubject');
+                    if (fSub && userSubject) fSub.innerText = userSubject;
                 }
             } catch (err) { 
                 console.error("❌ Error fetching teacher slots:", err);
@@ -2691,39 +2903,187 @@
             }
         }
 
+        function openFacultyModule(module) {
+            // 1. Remove active state from all tiles
+            document.querySelectorAll('.faculty-module-tile').forEach(t => t.classList.remove('active'));
+
+            const bannerIcon = document.getElementById('facultyActiveViewIcon');
+            const bannerTitle = document.getElementById('facultyActiveViewTitle');
+            const bannerDesc = document.getElementById('facultyActiveViewDesc');
+
+            const containers = [
+                'container_qrSession',
+                'container_classStream',
+                'container_marks',
+                'container_slowLearners',
+                'container_attendanceRegister',
+                'container_mentorship',
+                'container_publications',
+                'container_fdp',
+                'container_profile'
+            ];
+
+            if (module === 'all') {
+                containers.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'block';
+                });
+                if (bannerIcon) bannerIcon.innerText = '📑';
+                if (bannerTitle) bannerTitle.innerText = 'Viewing: All Faculty Workspaces';
+                if (bannerDesc) bannerDesc.innerText = 'Full unified overview of all active department modules and academic registries.';
+                return;
+            }
+
+            containers.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+
+            const meta = {
+                'qr-session': {
+                    icon: '⚡',
+                    title: 'Live QR Attendance Session Studio',
+                    desc: 'HOD class slot dispatch & dynamic 5-minute cryptographic check-in.',
+                    containerId: 'container_qrSession',
+                    tileClass: 'module-qr-session',
+                    action: () => {}
+                },
+                'class-stream': {
+                    icon: '📋',
+                    title: 'Live Class Stream & Attendees Roster',
+                    desc: 'Real-time scan verification, present/absent breakdown, and SMS manual override.',
+                    containerId: 'container_classStream',
+                    tileClass: 'module-class-stream',
+                    action: () => {
+                        if (document.getElementById('wrapper_liveStream')) document.getElementById('wrapper_liveStream').style.display = 'block';
+                        if (document.getElementById('wrapper_historyLog')) document.getElementById('wrapper_historyLog').style.display = 'none';
+                        document.getElementById('btn_streamLive')?.classList.add('active');
+                        document.getElementById('btn_streamHistory')?.classList.remove('active');
+                        loadAttendance();
+                    }
+                },
+                'marks': {
+                    icon: '📝',
+                    title: 'CIE Marks Evaluation Ledger & SEE',
+                    desc: 'Continuous Internal Evaluation marks entry and exam grade ledger.',
+                    containerId: 'container_marks',
+                    tileClass: 'module-marks',
+                    action: () => {
+                        if (document.getElementById('wrapper_marksLedger')) document.getElementById('wrapper_marksLedger').style.display = 'block';
+                        onFilterBranchChanged();
+                    }
+                },
+                'slow-learners': {
+                    icon: '📚',
+                    title: 'Slow Learners Remedial Desk',
+                    desc: 'Interactive scale benchmark, CIE cutoff analysis, and instant parent SMS alerts.',
+                    containerId: 'container_slowLearners',
+                    tileClass: 'module-slow-learners',
+                    action: () => {
+                        if (document.getElementById('wrapper_slowLearners')) document.getElementById('wrapper_slowLearners').style.display = 'block';
+                        loadFacultySlowLearners();
+                    }
+                },
+                'attendance-register': {
+                    icon: '📊',
+                    title: 'Attendance Register Matrix & PDF',
+                    desc: 'Subject attendance register matrix with monthly export to printable PDF.',
+                    containerId: 'container_attendanceRegister',
+                    tileClass: 'module-attendance-register',
+                    action: () => {
+                        if (document.getElementById('wrapper_registerView')) document.getElementById('wrapper_registerView').style.display = 'block';
+                        loadAttendanceRegisterMatrix();
+                    }
+                },
+                'mentorship': {
+                    icon: '🎓',
+                    title: 'Faculty Mentorship & Guidance Hub',
+                    desc: 'Official appointed student mentees, academic tracking, and parent contact logs.',
+                    containerId: 'container_mentorship',
+                    tileClass: 'module-mentorship',
+                    action: () => {
+                        if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'block';
+                        loadMenteeList();
+                    }
+                },
+                'publications': {
+                    icon: '📖',
+                    title: 'Research Papers & Publications Hub',
+                    desc: 'Journals, conferences, Scopus/Web of Science indexed papers, and H-Index.',
+                    containerId: 'container_publications',
+                    tileClass: 'module-publications',
+                    action: () => {
+                        loadTeacherPublications();
+                    }
+                },
+                'fdp': {
+                    icon: '🏛️',
+                    title: 'Faculty Development Programs (FDP)',
+                    desc: 'ATAL, DST, and institutional workshops, conferences, and certifications.',
+                    containerId: 'container_fdp',
+                    tileClass: 'module-fdp',
+                    action: () => {
+                        loadTeacherFdpRecords();
+                    }
+                },
+                'profile': {
+                    icon: '👤',
+                    title: 'Faculty Profile & NAAC/NBA Credentials',
+                    desc: 'Official service history, designation, PAN/Aadhar, Vidwan, and Google Scholar links.',
+                    containerId: 'container_profile',
+                    tileClass: 'module-profile',
+                    action: () => {
+                        loadTeacherProfessionalProfile();
+                    }
+                }
+            };
+
+            const target = meta[module] || meta['qr-session'];
+            const activeTile = document.querySelector(`.${target.tileClass}`);
+            if (activeTile) activeTile.classList.add('active');
+
+            const targetContainer = document.getElementById(target.containerId);
+            if (targetContainer) {
+                targetContainer.style.display = 'block';
+            }
+
+            if (bannerIcon) bannerIcon.innerText = target.icon;
+            if (bannerTitle) bannerTitle.innerText = `Viewing: ${target.title}`;
+            if (bannerDesc) bannerDesc.innerText = target.desc;
+
+            if (typeof target.action === 'function') {
+                target.action();
+            }
+
+            if (targetContainer) {
+                targetContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         function switchTeacherView(targetView) {
             document.querySelectorAll('.toggle-tab-btn').forEach(b => b.classList.remove('active'));
-            if (document.getElementById('wrapper_liveStream')) document.getElementById('wrapper_liveStream').style.display = 'none';
-            if (document.getElementById('wrapper_historyLog')) document.getElementById('wrapper_historyLog').style.display = 'none';
-            if (document.getElementById('wrapper_marksLedger')) document.getElementById('wrapper_marksLedger').style.display = 'none';
-            if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'none';
-            if (document.getElementById('wrapper_slowLearners')) document.getElementById('wrapper_slowLearners').style.display = 'none';
-            if (document.getElementById('wrapper_registerView')) document.getElementById('wrapper_registerView').style.display = 'none';
-
             if (targetView === 'live') {
-                document.getElementById('btn_viewLive')?.classList.add('active');
+                openFacultyModule('class-stream');
                 if (document.getElementById('wrapper_liveStream')) document.getElementById('wrapper_liveStream').style.display = 'block';
+                if (document.getElementById('wrapper_historyLog')) document.getElementById('wrapper_historyLog').style.display = 'none';
+                document.getElementById('btn_streamLive')?.classList.add('active');
+                document.getElementById('btn_streamHistory')?.classList.remove('active');
                 loadAttendance();
             } else if (targetView === 'history') {
-                document.getElementById('btn_viewHistory')?.classList.add('active');
+                openFacultyModule('class-stream');
+                if (document.getElementById('wrapper_liveStream')) document.getElementById('wrapper_liveStream').style.display = 'none';
                 if (document.getElementById('wrapper_historyLog')) document.getElementById('wrapper_historyLog').style.display = 'block';
+                document.getElementById('btn_streamLive')?.classList.remove('active');
+                document.getElementById('btn_streamHistory')?.classList.add('active');
                 fetchPastSessionTokens();
             } else if (targetView === 'marks') {
-                document.getElementById('btn_viewMarks')?.classList.add('active');
-                if (document.getElementById('wrapper_marksLedger')) document.getElementById('wrapper_marksLedger').style.display = 'block';
-                onFilterBranchChanged();
+                openFacultyModule('marks');
             } else if (targetView === 'mentorship') {
-                document.getElementById('btn_viewMentorship')?.classList.add('active');
-                if (document.getElementById('wrapper_mentorshipWorkspace')) document.getElementById('wrapper_mentorshipWorkspace').style.display = 'block';
-                loadMenteeList();
+                openFacultyModule('mentorship');
             } else if (targetView === 'slowLearners') {
-                document.getElementById('btn_viewSlowLearners')?.classList.add('active');
-                if (document.getElementById('wrapper_slowLearners')) document.getElementById('wrapper_slowLearners').style.display = 'block';
-                loadFacultySlowLearners();
+                openFacultyModule('slow-learners');
             } else if (targetView === 'register') {
-                document.getElementById('btn_viewRegister')?.classList.add('active');
-                if (document.getElementById('wrapper_registerView')) document.getElementById('wrapper_registerView').style.display = 'block';
-                loadAttendanceRegisterMatrix();
+                openFacultyModule('attendance-register');
             }
         }
 

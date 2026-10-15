@@ -1571,20 +1571,20 @@ async function getFacultyProfile(teacherId, tenant) {
         WHERE UPPER(TRIM(usn)) = UPPER(TRIM($1))
           AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
               UPPER(TRIM($2))
-          AND LOWER(TRIM(role)) IN ('teacher', 'faculty', 'staff')
+          AND LOWER(TRIM(role)) IN ('teacher', 'faculty', 'staff', 'hod')
         LIMIT 1
     `, [teacherId, tenant]);
     return result.rows[0] || null;
 }
 
-app.get("/api/teacher/profile", async (req, res) => {
-    const teacherId = upper(req.query.teacherId || req.query.userId || req.query.usn);
+app.get(["/api/teacher/profile", "/api/hod/profile"], async (req, res) => {
+    const teacherId = upper(req.query.teacherId || req.query.hodId || req.query.userId || req.query.usn);
     const tenant = tenantOf(req.query.institutionId);
 
     if (!teacherId) {
         return res.status(400).json({
             success: false,
-            message: "Faculty ID is required."
+            message: "Faculty or HOD ID is required."
         });
     }
 
@@ -1593,16 +1593,16 @@ app.get("/api/teacher/profile", async (req, res) => {
         if (!profile) {
             return res.status(404).json({
                 success: false,
-                message: "Faculty profile not found."
+                message: "Profile not found."
             });
         }
 
         res.json({ success: true, profile });
     } catch (err) {
-        console.error("Faculty profile fetch error:", err);
+        console.error("Profile fetch error:", err);
         res.status(500).json({
             success: false,
-            message: "Unable to load faculty profile.",
+            message: "Unable to load profile.",
             error: err.message
         });
     }
@@ -1610,13 +1610,13 @@ app.get("/api/teacher/profile", async (req, res) => {
 
 const saveFacultyProfile = async (req, res) => {
     const b = req.body || {};
-    const teacherId = upper(b.teacherId || b.userId || b.usn);
+    const teacherId = upper(b.teacherId || b.hodId || b.userId || b.usn);
     const tenant = tenantOf(b.institutionId);
 
     if (!teacherId) {
         return res.status(400).json({
             success: false,
-            message: "Faculty ID is required."
+            message: "Faculty or HOD ID is required."
         });
     }
 
@@ -1651,14 +1651,14 @@ const saveFacultyProfile = async (req, res) => {
             WHERE UPPER(TRIM(usn)) = UPPER(TRIM($1))
               AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
                   UPPER(TRIM($2))
-              AND LOWER(TRIM(role)) IN ('teacher', 'faculty', 'staff')
+              AND LOWER(TRIM(role)) IN ('teacher', 'faculty', 'staff', 'hod')
             LIMIT 1
         `, [teacherId, tenant]);
 
         if (!existing.rows.length) {
             return res.status(404).json({
                 success: false,
-                message: "Faculty account not found for this institution."
+                message: "Account not found for this institution."
             });
         }
 
@@ -1678,7 +1678,7 @@ const saveFacultyProfile = async (req, res) => {
             WHERE UPPER(TRIM(usn)) = UPPER(TRIM($12))
               AND UPPER(COALESCE(TRIM(institution_id), 'DR_AIT')) =
                   UPPER(TRIM($13))
-              AND LOWER(TRIM(role)) IN ('teacher', 'faculty', 'staff')
+              AND LOWER(TRIM(role)) IN ('teacher', 'faculty', 'staff', 'hod')
             RETURNING ${facultyProfileSelect}
         `, [
             panNumber || null,
@@ -1698,21 +1698,21 @@ const saveFacultyProfile = async (req, res) => {
 
         res.json({
             success: true,
-            message: "Faculty profile credentials saved successfully.",
+            message: "Profile credentials saved successfully.",
             profile: result.rows[0]
         });
     } catch (err) {
-        console.error("Faculty profile save error:", err);
+        console.error("Profile save error:", err);
         res.status(500).json({
             success: false,
-            message: "Unable to save faculty profile credentials.",
+            message: "Unable to save profile credentials.",
             error: err.message
         });
     }
 };
 
-app.post("/api/teacher/profile", saveFacultyProfile);
-app.put("/api/teacher/profile", saveFacultyProfile);
+app.post(["/api/teacher/profile", "/api/hod/profile"], saveFacultyProfile);
+app.put(["/api/teacher/profile", "/api/hod/profile"], saveFacultyProfile);
 
 /* ==========================================================================
    HOD DEPARTMENT DATA / TEACHERS / TIMETABLE

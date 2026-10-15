@@ -26,7 +26,7 @@
         body { background-color: var(--bg-canvas); color: var(--text-dark); padding: 30px; min-height: 100vh; display: flex; justify-content: center; align-items: flex-start; }
         
         /* 🎯 TRUE FULL-PAGE FLUID CONTAINER STRETCH */
-        .container { max-width: 1100px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; transition: max-width 0.25s ease, width 0.25s ease; }
+        .container { max-width: 1250px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; transition: max-width 0.25s ease, width 0.25s ease; }
         .container.full-page-mode { max-width: 100% !important; width: 100% !important; padding: 0 !important; }
 
         .bento-card { background: white; border: 1px solid var(--border-clean); border-radius: 20px; padding: 28px; box-shadow: var(--shadow-premium); width: 100%; }
@@ -97,6 +97,81 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #customToastPopup.show { transform: translateY(0); opacity: 1; }
+
+        /* ==========================================================================
+           🏛️ HOD PORTAL BENTO SERVICES GRID (MATCHING PARENT & FACULTY PORTAL)
+           ========================================================================== */
+        .hod-profile-banner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+        .hod-badge { display: flex; align-items: center; gap: 14px; }
+        .hod-avatar-circle { width: 56px; height: 56px; border-radius: 50%; background: #eff6ff; border: 2.5px solid var(--primary-blue); display: flex; justify-content: center; align-items: center; font-size: 26px; }
+        .hod-name-title { font-size: 20px; font-weight: 800; color: var(--text-dark); margin: 0; }
+        .hod-dept-sub { font-size: 13px; color: var(--primary-blue); font-weight: 700; margin-top: 3px; }
+        
+        .hod-info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 4px; }
+        .hod-info-box { background: #f8fafc; border: 1px solid var(--border-clean); padding: 14px 18px; border-radius: 14px; text-align: left; }
+        .hod-info-box h4 { font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .hod-info-box .val { font-size: 15px; font-weight: 800; color: var(--text-dark); }
+        
+        .hod-modules-section { padding: 26px; border-radius: 24px; margin-bottom: 0px; text-align: left; background: #ffffff; border: 1px solid var(--border-clean); }
+        .hod-modules-heading { font-size: 20px; font-weight: 900; margin-bottom: 18px; color: var(--text-dark); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        .hod-modules-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+        .hod-module-tile { appearance: none; width: 100%; min-height: 190px; border: 1px solid #dbeafe; border-radius: 22px; background: linear-gradient(145deg, #ffffff, #f8fbff); padding: 20px 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; cursor: pointer; color: var(--text-dark); box-shadow: 0 5px 14px rgba(15,23,42,.06); transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; outline: none; }
+        .hod-module-tile:hover, .hod-module-tile:focus-visible { transform: translateY(-3px); box-shadow: 0 12px 22px rgba(30,64,175,.12); border-color: #93c5fd; }
+        .hod-module-tile.active { border-color: var(--primary-blue); background: linear-gradient(145deg, #eff6ff, #dbeafe); box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.22), 0 10px 24px rgba(30,64,175,.15); transform: translateY(-2px); }
+        
+        .hod-module-icon { width: 92px; height: 92px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 46px; box-shadow: inset 0 1px 0 rgba(255,255,255,.8); flex-shrink: 0; }
+        .hod-module-label { font-size: 15px; font-weight: 850; line-height: 1.25; text-align: center; color: var(--text-dark); }
+        
+        /* Module Icon Pastel Backgrounds */
+        .module-timetable .hod-module-icon { background: #e0f2fe; }
+        .module-faculty-directory .hod-module-icon { background: #ede9fe; }
+        .module-marks .hod-module-icon { background: #fef3c7; }
+        .module-proctor .hod-module-icon { background: #d1fae5; }
+        .module-broadcast .hod-module-icon { background: #fee2e2; }
+        .module-swaps .hod-module-icon { background: #ffedd5; }
+        .module-research .hod-module-icon { background: #dcfce7; }
+        .module-fdp .hod-module-icon { background: #e0e7ff; }
+        .module-medical .hod-module-icon { background: #ffe4e6; }
+        .module-messages .hod-module-icon { background: #f3e8ff; }
+        .module-profile .hod-module-icon { background: #fee2e2; }
+        .hod-profile-view-item { background: #fff; border: 1px solid var(--border-clean); border-radius: 12px; padding: 12px 14px; min-height: 68px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
+        .hod-profile-view-item label { font-size: 10px; font-weight: 900; color: var(--text-muted); letter-spacing: .4px; }
+
+        @media (min-width: 769px) {
+            .hod-module-tile.module-messages {
+                grid-column: span 2;
+                min-height: 190px;
+                flex-direction: column;
+                justify-content: center;
+                gap: 14px;
+                padding: 20px 14px;
+            }
+            .hod-module-tile.module-messages .hod-module-icon {
+                width: 92px;
+                height: 92px;
+                font-size: 46px;
+            }
+            .hod-module-tile.module-messages .hod-module-label {
+                text-align: center;
+            }
+        }
+        
+        .active-module-bar { display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid var(--border-clean); border-radius: 16px; padding: 14px 20px; font-size: 14px; font-weight: 700; color: var(--primary-blue); box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-top: 4px; margin-bottom: 12px; flex-wrap: wrap; gap: 12px; }
+        
+        @media (max-width: 768px) {
+            .hod-modules-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+            .hod-module-tile.module-messages { grid-column: span 2; }
+            .hod-module-tile { min-height: 155px; border-radius: 18px; padding: 14px 10px; }
+            .hod-module-icon { width: 72px; height: 72px; border-radius: 18px; font-size: 36px; }
+            .hod-module-label { font-size: 13px; }
+            .hod-modules-section { padding: 18px; }
+        }
+        @media (max-width: 420px) {
+            .hod-modules-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+            .hod-module-tile { padding: 12px 6px; min-height: 135px; }
+            .hod-module-icon { width: 62px; height: 62px; font-size: 30px; }
+            .hod-module-label { font-size: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -104,118 +179,137 @@
     <div id="customToastPopup"></div>
 
     <div class="container" id="mainDashboardContainer">
-        <!-- 👔 1. HOD Profile Header (Hidden when inside a full-page module) -->
+        <!-- 👔 1. HOD EXECUTIVE IDENTITY PROFILE CARD -->
         <div class="bento-card" id="hodProfileHeaderCard">
-            <div class="profile-banner">
+            <div class="hod-profile-banner">
                 <div class="hod-badge">
-                    <div class="avatar-circle">👔</div>
+                    <div class="hod-avatar-circle">👔</div>
                     <div>
-                        <div class="hod-name" id="displayHodName">Prof. HOD Leader</div>
-                        <div class="hod-dept" id="displayHodDept">Head of Department | Branch (Dr. AIT)</div>
+                        <h3 class="hod-name-title" id="displayHodName">Prof. HOD Leader</h3>
+                        <div class="hod-dept-sub" id="displayHodDept">Department Head | Dr. AIT Autonomous</div>
                     </div>
                 </div>
-                <button onclick="handleLogout()" style="padding: 10px 18px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">Logout ⬅️</button>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="handleLogout()" style="padding: 10px 18px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">Logout ⬅️</button>
+                </div>
+            </div>
+            <div class="hod-info-grid">
+                <div class="hod-info-box">
+                    <h4>HOD USN / ID</h4>
+                    <div class="val" id="displayHodUsn">HOD_ID</div>
+                </div>
+                <div class="hod-info-box">
+                    <h4>Department Branch</h4>
+                    <div class="val" id="displayHodBranch">CSBS</div>
+                </div>
+                <div class="hod-info-box">
+                    <h4>Institutional Role</h4>
+                    <div class="val" id="displayHodRoleBadge" style="color: var(--primary-blue);">Head of Department (Autonomous)</div>
+                </div>
+                <div class="hod-info-box">
+                    <h4>Current Academic Term</h4>
+                    <div class="val" id="displayHodTerm">2026-2027 (Odd Sem)</div>
+                </div>
             </div>
         </div>
 
-        <!-- 🏛️ HOD LANDING CARD GRID (2 Cards per Row, Centered) -->
-        <div id="hodLandingGridContainer" class="bento-card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
-            <div style="font-size: 12px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px;">
-                🏛️ HOD Executive Management Modules — Select Workspace
+        <!-- 🏛️ HOD DEPARTMENT SERVICES BENTO GRID (MATCHING PARENT & FACULTY PORTAL) -->
+        <section class="bento-card hod-modules-section" id="hodModulesSection" aria-labelledby="hodModulesHeading">
+            <div class="hod-modules-heading" id="hodModulesHeading">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span>🏛️ Department Command Services</span>
+                    <span style="font-size: 11px; font-weight: 800; background: #eff6ff; color: var(--primary-blue); padding: 3px 10px; border-radius: 999px; border: 1px solid #bfdbfe;">HOD Management Suite</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="openHodModule('all')" style="background: #f8fafc; border: 1px solid var(--border-clean); border-radius: 10px; padding: 6px 14px; font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer;">👁️ Show All Modules</button>
+                </div>
             </div>
-            
-            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                
-                <!-- Card 1: Research Hub -->
-                <div onclick="switchHodWorkspace('research')" style="background: white; border: 2px solid var(--primary-blue); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">📚</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Research Hub</h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Review faculty research papers, journals, Scopus/WoS quartile rankings, and export department publication reports.</p>
-                </div>
 
-                <!-- Card 2: Marks Uploader -->
-                <div onclick="switchHodWorkspace('marks')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">📝</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Marks Uploader</h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Inject historical CIE and SEE scores across past semesters and manage multi-tier student evaluation scorecards.</p>
-                </div>
+            <div class="hod-modules-grid">
+                <!-- Box 1: Master Timetable -->
+                <button type="button" class="hod-module-tile module-timetable active" onclick="openHodModule('timetable')">
+                    <span class="hod-module-icon" aria-hidden="true">📅</span>
+                    <span class="hod-module-label">Master Timetable<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Weekly Matrix &amp; Slots)</small></span>
+                </button>
 
-                <!-- Card 3: Medical Desk -->
-                <div onclick="switchHodWorkspace('medical')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">🩺</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Medical Desk</h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Manually excuse absent students due to health issues or approved medical leave for active session codes.</p>
-                </div>
+                <!-- Box 2: Faculty Directory & Service Records -->
+                <button type="button" class="hod-module-tile module-faculty-directory" onclick="openHodModule('faculty_directory')">
+                    <span class="hod-module-icon" aria-hidden="true">👥</span>
+                    <span class="hod-module-label">Faculty Directory<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Service Records &amp; Profiles)</small></span>
+                </button>
 
-                <!-- Card 4: Swap Approvals -->
-                <div onclick="switchHodWorkspace('swaps')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">🔄</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Swap Approvals</h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Review and authorize or reject faculty schedule swap requests and timetable adjustment notes.</p>
-                </div>
+                <!-- Box 3: Marks Ledger Uploader -->
+                <button type="button" class="hod-module-tile module-marks" onclick="openHodModule('marks')">
+                    <span class="hod-module-icon" aria-hidden="true">📝</span>
+                    <span class="hod-module-label">Marks Ledger<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(CIE &amp; SEE Evaluation)</small></span>
+                </button>
 
-                <!-- Card 5: Master Timetable -->
-                <div onclick="switchHodWorkspace('timetable')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">📅</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Master Timetable</h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Build and dispatch weekly matrix schedules, assign department faculty, and export high-resolution PDFs.</p>
-                </div>
+                <!-- Box 4: Proctor Allocation -->
+                <button type="button" class="hod-module-tile module-proctor" onclick="openHodModule('proctor')">
+                    <span class="hod-module-icon" aria-hidden="true">🎓</span>
+                    <span class="hod-module-label">Proctor Allocation<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Mentorship Allocation)</small></span>
+                </button>
 
-                <!-- Card 6: Broadcast Desk -->
-                <div onclick="switchHodWorkspace('broadcast')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">📢</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Broadcast Desk</h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Send official announcements and department circulars directly to students, parents, or faculty members.</p>
-                </div>
+                <!-- Box 5: Broadcast Desk -->
+                <button type="button" class="hod-module-tile module-broadcast" onclick="openHodModule('broadcast')">
+                    <span class="hod-module-icon" aria-hidden="true">📢</span>
+                    <span class="hod-module-label">Broadcast Desk<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Circulars &amp; Alerts)</small></span>
+                </button>
 
-                <!-- Card 7: Proctor Tool -->
-                <div onclick="switchHodWorkspace('proctor')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">🎓</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Proctor Tool</h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Appoint student batches by USN range to faculty mentors for guidance and monitoring.</p>
-                </div>
+                <!-- Box 6: Swap Approvals -->
+                <button type="button" class="hod-module-tile module-swaps" onclick="openHodModule('swaps')">
+                    <span class="hod-module-icon" aria-hidden="true">🔄</span>
+                    <span class="hod-module-label">Swap Approvals<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Schedule Adjustments)</small></span>
+                </button>
 
-                <!-- Card 8: FDP Records -->
-                <div onclick="switchHodWorkspace('fdp')" style="background: white; border: 2px solid var(--border-clean); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">🏛️</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">FDP Records</h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Track faculty professional development programs, ATAL/DST sponsorships, and training records.</p>
-                </div>
+                <!-- Box 7: Research Hub -->
+                <button type="button" class="hod-module-tile module-research" onclick="openHodModule('research')">
+                    <span class="hod-module-icon" aria-hidden="true">📚</span>
+                    <span class="hod-module-label">Research Hub<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Papers &amp; H-Index)</small></span>
+                </button>
 
-                <!-- Card 9: Message Inbox -->
-                <div onclick="switchHodWorkspace('messages')" style="background: white; border: 2px solid var(--primary-blue); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s; grid-column: span 2;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">💬</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Message Inbox & Faculty Comms <span id="inboxCardBadge" style="background: var(--primary-blue); color: white; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 8px;">0 New</span></h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Read personal communications, leave notes, and direct inquiries sent by department faculty and college administrators.</p>
-                </div>
+                <!-- Box 8: FDP Records -->
+                <button type="button" class="hod-module-tile module-fdp" onclick="openHodModule('fdp')">
+                    <span class="hod-module-icon" aria-hidden="true">🏛️</span>
+                    <span class="hod-module-label">FDP Records<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Conferences &amp; ATAL)</small></span>
+                </button>
 
-                <!-- Card 10: Faculty Directory & Service Records (Phase 1) -->
-                <div onclick="switchHodWorkspace('faculty_directory')" style="background: white; border: 2px solid var(--accent-purple); border-radius: 18px; padding: 22px; cursor: pointer; box-shadow: var(--shadow-premium); transition: transform 0.2s; grid-column: span 2;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
-                        <span style="font-size: 26px;">👥</span>
-                        <h3 style="font-size: 17px; font-weight: 800; color: var(--text-dark); margin: 0;">Faculty Directory & Service Records</h3>
-                    </div>
-                    <p style="font-size: 12px; color: var(--text-muted); line-height: 1.4;">Manage verified faculty service records, professional credentials (PAN, qualifications), and one-click academic profile links for NAAC/NBA audits.</p>
-                </div>
+                <!-- Box 9: Medical Desk -->
+                <button type="button" class="hod-module-tile module-medical" onclick="openHodModule('medical')">
+                    <span class="hod-module-icon" aria-hidden="true">🩺</span>
+                    <span class="hod-module-label">Medical Desk<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Excuse Attendance)</small></span>
+                </button>
 
+                <!-- Box 10: Profile & Service Credentials -->
+                <button type="button" class="hod-module-tile module-profile" onclick="openHodModule('profile')">
+                    <span class="hod-module-icon" aria-hidden="true">👤</span>
+                    <span class="hod-module-label">Profile &amp; Credentials<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Service Records &amp; NAAC)</small></span>
+                </button>
+
+                <!-- Box 11: Message Inbox & Faculty Comms -->
+                <button type="button" class="hod-module-tile module-messages" onclick="openHodModule('messages')">
+                    <span class="hod-module-icon" aria-hidden="true">💬</span>
+                    <span class="hod-module-label">Message Inbox &amp; Faculty Comms<br><small style="font-size: 11px; font-weight: 700; color: var(--text-muted);">(Direct Inquiries &amp; Notes)</small> <span id="inboxCardBadge" style="background: var(--primary-blue); color: white; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; margin-left: 6px;">0 New</span></span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 📌 ACTIVE MODULE INDICATOR BANNER (MATCHING PARENT & FACULTY PORTAL) -->
+        <div id="hodActiveViewBanner" class="active-module-bar">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span id="hodActiveViewIcon" style="font-size: 24px;">📅</span>
+                <div>
+                    <span id="hodActiveViewTitle" style="font-size: 15px; font-weight: 800; color: var(--text-dark);">Viewing: Master Timetable Studio</span>
+                    <div id="hodActiveViewDesc" style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Weekly matrix schedules, slot faculty assignments, and PDF exports.</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" onclick="openHodModule('timetable')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">📅 Timetable</button>
+                <button type="button" onclick="openHodModule('faculty_directory')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">👥 Faculty Directory</button>
+                <button type="button" onclick="openHodModule('marks')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">📝 Marks</button>
+                <button type="button" onclick="openHodModule('broadcast')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">📢 Broadcast</button>
+                <button type="button" onclick="openHodModule('profile')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">👤 Profile</button>
+                <button type="button" onclick="openHodModule('messages')" style="padding: 6px 12px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; font-weight: 700; font-size: 12px; color: var(--primary-blue); cursor: pointer;">💬 Messages</button>
             </div>
         </div>
 
@@ -792,6 +886,80 @@
                 </div>
             </div>
         </div>
+        <!-- 👤 11. HOD Profile & Credentials Workspace Pane -->
+        <div id="hodPane_profile" class="hod-workspace-pane" style="display: none; width: 100%;">
+            <div class="back-nav-bar">
+                <button onclick="returnToHodLanding()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer;">⬅️ Back to Executive Menu</button>
+                <span style="font-weight: 800; color: var(--primary-blue); font-size: 15px;">👤 HOD Profile &amp; Service Records Workspace</span>
+            </div>
+            <div class="bento-card" style="border-left: 5px solid var(--accent-purple); border-radius: 0 0 20px 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 22px;">👤</span>
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: var(--text-dark); margin: 0;">My Professional &amp; Service Records (NAAC / NBA Audit)</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Official service history, designation, PAN/Aadhaar, and highest qualifications.</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="btnEditHodProfile" onclick="openHodProfileEdit()" style="background: var(--primary-blue); color: white; border: none; padding: 10px 20px; font-size: 12px; border-radius: 10px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">✏️ Edit Profile</button>
+                    </div>
+                </div>
+
+                <!-- VIEW MODE -->
+                <div id="hodProfileViewMode" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid var(--border-clean);"></div>
+
+                <!-- EDIT MODE (FORM TO FILL DETAILS) -->
+                <div id="hodProfileEditMode" style="display: none;">
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 14px 18px; margin-bottom: 16px;">
+                        <span style="font-size: 13px; font-weight: 800; color: var(--primary-blue);">📝 Fill / Update HOD Official Profile Details</span>
+                        <p style="font-size: 12px; color: var(--text-muted); margin: 3px 0 0;">Enter your official government credentials and service information below. Click Save when finished.</p>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border-clean);">
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">PAN NUMBER</label>
+                            <input type="text" id="hodProfPan" placeholder="e.g., ABCDE1234F" style="width: 100%; text-transform: uppercase;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">AADHAAR NUMBER</label>
+                            <input type="text" id="hodProfAadhar" placeholder="e.g., 1234 5678 9012" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF BIRTH</label>
+                            <input type="date" id="hodProfDob" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">JOINING DATE</label>
+                            <input type="date" id="hodProfJoiningDate" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">CURRENT DESIGNATION</label>
+                            <select id="hodProfDesignation" style="width: 100%;">
+                                <option value="Professor &amp; HOD" selected>Professor &amp; HOD</option>
+                                <option value="Professor">Professor</option>
+                                <option value="Associate Professor &amp; HOD">Associate Professor &amp; HOD</option>
+                                <option value="Associate Professor">Associate Professor</option>
+                                <option value="Assistant Professor">Assistant Professor</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">DATE OF LAST PROMOTION</label>
+                            <input type="date" id="hodProfPromotionDate" style="width: 100%;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px;">HIGHEST QUALIFICATION</label>
+                            <input type="text" id="hodProfQualification" placeholder="e.g., Ph.D. in Computer Science, M.Tech" style="width: 100%;">
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; flex-wrap: wrap;">
+                        <button type="button" onclick="cancelHodProfileEdit()" style="padding: 10px 18px; font-size: 12px; background: #ffffff; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">Cancel</button>
+                        <button type="button" onclick="saveHodProfessionalProfile()" style="padding: 10px 20px; font-size: 12px; background: var(--primary-blue); color: white; border: none; border-radius: 10px; font-weight: 800; cursor: pointer;">Save Profile Credentials 💾</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript Handlers -->
@@ -802,7 +970,7 @@
 
         const userBranch = localStorage.getItem('userBranch') || 'AIML';
         const userName = localStorage.getItem('userName') || 'HOD Leader';
-        const userUsn = localStorage.getItem('userUsn') || 'HOD_ADMIN';
+        const userUsn = localStorage.getItem('userUsn') || localStorage.getItem('usn') || localStorage.getItem('userId') || 'HOD_ADMIN';
         const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
 
         let activeScheme = 'ODD';
@@ -825,35 +993,308 @@
         let departmentFdpRecords = [];
         let departmentFacultyList = [];
 
-        // 🏛️ SWITCH WORKSPACE (Expands container to 100% full-page width, hides profile header & landing grid)
-        function switchHodWorkspace(moduleKey) {
-            document.getElementById('mainDashboardContainer').classList.add('full-page-mode');
-            document.getElementById('hodLandingGridContainer').style.display = 'none';
-            document.getElementById('hodProfileHeaderCard').style.display = 'none';
+        // 🏛️ HOD DYNAMIC MODULE MANAGER (MATCHING PARENT & FACULTY PORTAL ARCHITECTURE)
+        function openHodModule(moduleKey) {
+            document.querySelectorAll('.hod-module-tile').forEach(t => t.classList.remove('active'));
 
-            const panes = document.querySelectorAll('.hod-workspace-pane');
-            panes.forEach(pane => pane.style.display = 'none');
+            const banner = document.getElementById('hodActiveViewBanner');
+            const bannerIcon = document.getElementById('hodActiveViewIcon');
+            const bannerTitle = document.getElementById('hodActiveViewTitle');
+            const bannerDesc = document.getElementById('hodActiveViewDesc');
 
-            const targetPane = document.getElementById(`hodPane_${moduleKey}`);
-            if (targetPane) {
-                targetPane.style.display = 'block';
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            const panes = [
+                'timetable', 'faculty_directory', 'marks', 'proctor',
+                'broadcast', 'swaps', 'research', 'fdp', 'medical', 'profile', 'messages'
+            ];
+
+            if (moduleKey === 'all') {
+                panes.forEach(key => {
+                    const el = document.getElementById(`hodPane_${key}`);
+                    if (el) el.style.display = 'block';
+                });
+                if (banner) banner.style.display = 'flex';
+                if (bannerIcon) bannerIcon.innerText = '📑';
+                if (bannerTitle) bannerTitle.innerText = 'Viewing: All Department Workspaces';
+                if (bannerDesc) bannerDesc.innerText = 'Full unified overview of all departmental modules, schedules, and registers.';
+                return;
             }
 
-            showPopupNotification(`📂 Opened ${moduleKey.toUpperCase()} Full-Page Workspace`);
+            const meta = {
+                'timetable': {
+                    icon: '📅',
+                    title: 'Master Timetable Studio',
+                    desc: 'Weekly matrix schedules, slot faculty assignments, and PDF exports.',
+                    paneId: 'hodPane_timetable',
+                    tileClass: 'module-timetable',
+                    action: () => { reloadTimetableGrid(); }
+                },
+                'faculty_directory': {
+                    icon: '👥',
+                    title: 'Faculty Directory & Service Records',
+                    desc: 'Verified faculty credentials, PAN/qualifications, and academic links for NAAC/NBA.',
+                    paneId: 'hodPane_faculty_directory',
+                    tileClass: 'module-faculty-directory',
+                    action: () => { loadDepartmentFacultyDirectory(); }
+                },
+                'marks': {
+                    icon: '📝',
+                    title: 'CIE & SEE Marks Ledger Uploader',
+                    desc: 'Continuous Internal Evaluation marks and semester scorecards for student batches.',
+                    paneId: 'hodPane_marks',
+                    tileClass: 'module-marks',
+                    action: () => {}
+                },
+                'proctor': {
+                    icon: '🎓',
+                    title: 'Proctor & Mentorship Allocation Tool',
+                    desc: 'Appoint student batches and USN ranges to faculty proctors for academic guidance.',
+                    paneId: 'hodPane_proctor',
+                    tileClass: 'module-proctor',
+                    action: () => { fetchTeachers(); }
+                },
+                'broadcast': {
+                    icon: '📢',
+                    title: 'Department Circulars Broadcast Desk',
+                    desc: 'Publish official announcements and circulars to students, parents, and faculty.',
+                    paneId: 'hodPane_broadcast',
+                    tileClass: 'module-broadcast',
+                    action: () => { loadHodCirculars(); }
+                },
+                'swaps': {
+                    icon: '🔄',
+                    title: 'Faculty Schedule Swap Approvals',
+                    desc: 'Review and approve/reject timetable swap requests submitted by department teachers.',
+                    paneId: 'hodPane_swaps',
+                    tileClass: 'module-swaps',
+                    action: () => { loadHodSwapRequests(); }
+                },
+                'research': {
+                    icon: '📚',
+                    title: 'Department Research Papers & Publications Hub',
+                    desc: 'Faculty research papers, journals, quartile rankings, and citation impact reports.',
+                    paneId: 'hodPane_research',
+                    tileClass: 'module-research',
+                    action: () => { loadDepartmentPublications(); }
+                },
+                'fdp': {
+                    icon: '🏛️',
+                    title: 'Faculty Development Programs (FDP) Records',
+                    desc: 'Track faculty training, ATAL/DST sponsorships, and workshop participation.',
+                    paneId: 'hodPane_fdp',
+                    tileClass: 'module-fdp',
+                    action: () => { loadDepartmentFdpRecords(); }
+                },
+                'medical': {
+                    icon: '🩺',
+                    title: 'Medical / Health Leave Attendance Excuse Desk',
+                    desc: 'Grant medical attendance overrides for active session codes with official approval.',
+                    paneId: 'hodPane_medical',
+                    tileClass: 'module-medical',
+                    action: () => {}
+                },
+                'profile': {
+                    icon: '👤',
+                    title: 'HOD Profile & Service Records',
+                    desc: 'Official service history, designation, PAN/Aadhaar, and qualification records.',
+                    paneId: 'hodPane_profile',
+                    tileClass: 'module-profile',
+                    action: () => { loadHodProfessionalProfile(); }
+                },
+                'messages': {
+                    icon: '💬',
+                    title: 'Direct Messaging & Faculty Comms Inbox',
+                    desc: 'Faculty communications, swap notes, leave requests, and institutional inquiries.',
+                    paneId: 'hodPane_messages',
+                    tileClass: 'module-messages',
+                    action: () => { loadHodChatLedger(); }
+                }
+            };
+
+            const target = meta[moduleKey] || meta['timetable'];
+
+            panes.forEach(key => {
+                const el = document.getElementById(`hodPane_${key}`);
+                if (el) el.style.display = 'none';
+            });
+
+            const activeTile = document.querySelector(`.${target.tileClass}`);
+            if (activeTile) activeTile.classList.add('active');
+
+            const targetPane = document.getElementById(target.paneId);
+            if (targetPane) {
+                targetPane.style.display = 'block';
+            }
+
+            if (banner) banner.style.display = 'flex';
+            if (bannerIcon) bannerIcon.innerText = target.icon;
+            if (bannerTitle) bannerTitle.innerText = `Viewing: ${target.title}`;
+            if (bannerDesc) bannerDesc.innerText = target.desc;
+
+            if (typeof target.action === 'function') {
+                target.action();
+            }
+
+            if (targetPane) {
+                targetPane.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
         }
 
-        // ⬅️ RETURN TO LANDING MENU GRID (Restores container max-width, profile header, and card grid)
+        function switchHodWorkspace(moduleKey) {
+            openHodModule(moduleKey);
+        }
+
         function returnToHodLanding() {
-            document.getElementById('mainDashboardContainer').classList.remove('full-page-mode');
+            const target = document.getElementById('hodModulesSection') || document.getElementById('hodProfileHeaderCard');
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            showPopupNotification(`🏠 Returned to Executive Services Menu`);
+        }
 
-            const panes = document.querySelectorAll('.hod-workspace-pane');
-            panes.forEach(pane => pane.style.display = 'none');
+        // =========================================================================
+        // 👤 HOD PROFESSIONAL PROFILE & CREDENTIALS HANDLERS (No External URLs)
+        // =========================================================================
+        function getHodProfileFieldValue(id, fallback = '') {
+            const el = document.getElementById(id);
+            return el ? (el.value || fallback) : fallback;
+        }
 
-            document.getElementById('hodLandingGridContainer').style.display = 'block';
-            document.getElementById('hodProfileHeaderCard').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            showPopupNotification(`🏠 Returned to Executive Menu`);
+        function escapeHodProfileHtml(value) {
+            return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
+        function formatHodProfileDate(value) {
+            if (!value) return 'Not provided';
+            const parts = String(value).split('-');
+            if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            return escapeHodProfileHtml(value);
+        }
+
+        function maskHodAadhar(value) {
+            const clean = String(value || '').replace(/\s+/g, '');
+            if (!clean) return 'Not provided';
+            if (clean.length <= 4) return escapeHodProfileHtml(clean);
+            return `********${escapeHodProfileHtml(clean.slice(-4))}`;
+        }
+
+        function hodProfileValueHtml(value) {
+            const text = value ? escapeHodProfileHtml(value) : 'Not provided';
+            return `<span style="font-size: 13px; font-weight: 700; color: var(--text-dark); word-break: break-word;">${text}</span>`;
+        }
+
+        function updateHodProfileView() {
+            const view = document.getElementById('hodProfileViewMode');
+            if (!view) return;
+            const pan = getHodProfileFieldValue('hodProfPan');
+            const aadhar = getHodProfileFieldValue('hodProfAadhar');
+            const dob = getHodProfileFieldValue('hodProfDob');
+            const joiningDate = getHodProfileFieldValue('hodProfJoiningDate');
+            const designation = getHodProfileFieldValue('hodProfDesignation', 'Professor & HOD');
+            const promotionDate = getHodProfileFieldValue('hodProfPromotionDate');
+            const qualification = getHodProfileFieldValue('hodProfQualification');
+
+            view.innerHTML = `
+                <div style="grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; padding: 2px 0 8px;">
+                    <span style="font-size: 20px;">📋</span>
+                    <div><div style="font-size: 13px; font-weight: 900; color: var(--text-dark);">HOD Institutional Profile</div><div style="font-size: 11px; color: var(--text-muted);">Verified credentials and service records</div></div>
+                </div>
+                <div class="hod-profile-view-item"><label>PAN NUMBER</label>${hodProfileValueHtml(pan)}</div>
+                <div class="hod-profile-view-item"><label>AADHAAR NUMBER</label><span style="font-size: 13px; font-weight: 700; color: var(--text-dark);">${maskHodAadhar(aadhar)}</span></div>
+                <div class="hod-profile-view-item"><label>DATE OF BIRTH</label><span style="font-size: 13px; font-weight: 700; color: var(--text-dark);">${formatHodProfileDate(dob)}</span></div>
+                <div class="hod-profile-view-item"><label>JOINING DATE</label><span style="font-size: 13px; font-weight: 700; color: var(--text-dark);">${formatHodProfileDate(joiningDate)}</span></div>
+                <div class="hod-profile-view-item"><label>CURRENT DESIGNATION</label>${hodProfileValueHtml(designation || 'Professor & HOD')}</div>
+                <div class="hod-profile-view-item"><label>DATE OF LAST PROMOTION</label><span style="font-size: 13px; font-weight: 700; color: var(--text-dark);">${formatHodProfileDate(promotionDate)}</span></div>
+                <div class="hod-profile-view-item"><label>HIGHEST QUALIFICATION</label>${hodProfileValueHtml(qualification)}</div>
+            `;
+        }
+
+        function openHodProfileEdit() {
+            const view = document.getElementById('hodProfileViewMode');
+            const edit = document.getElementById('hodProfileEditMode');
+            const btn = document.getElementById('btnEditHodProfile');
+            if (view) view.style.display = 'none';
+            if (edit) edit.style.display = 'block';
+            if (btn) btn.style.display = 'none';
+        }
+
+        function cancelHodProfileEdit() {
+            const view = document.getElementById('hodProfileViewMode');
+            const edit = document.getElementById('hodProfileEditMode');
+            const btn = document.getElementById('btnEditHodProfile');
+            updateHodProfileView();
+            if (edit) edit.style.display = 'none';
+            if (view) view.style.display = 'grid';
+            if (btn) btn.style.display = 'inline-flex';
+        }
+
+        async function loadHodProfessionalProfile() {
+            try {
+                const res = await fetch(`${API_BASE}/api/hod/profile?hodId=${encodeURIComponent(userUsn)}&institutionId=${encodeURIComponent(institutionId)}`);
+                const data = await res.json();
+                let hasData = false;
+                if (res.ok && data.success && data.profile) {
+                    const p = data.profile;
+                    if (document.getElementById('hodProfPan')) document.getElementById('hodProfPan').value = p.pan_number || '';
+                    if (document.getElementById('hodProfAadhar')) document.getElementById('hodProfAadhar').value = p.aadhar_number || '';
+                    if (document.getElementById('hodProfDob')) document.getElementById('hodProfDob').value = p.dob ? p.dob.split('T')[0] : '';
+                    if (document.getElementById('hodProfJoiningDate')) document.getElementById('hodProfJoiningDate').value = p.joining_date ? p.joining_date.split('T')[0] : '';
+                    if (document.getElementById('hodProfDesignation')) document.getElementById('hodProfDesignation').value = p.current_designation || 'Professor & HOD';
+                    if (document.getElementById('hodProfPromotionDate')) document.getElementById('hodProfPromotionDate').value = p.promotion_date ? p.promotion_date.split('T')[0] : '';
+                    if (document.getElementById('hodProfQualification')) document.getElementById('hodProfQualification').value = p.highest_qualification || '';
+                    if (p.pan_number || p.aadhar_number || p.dob || p.joining_date || p.highest_qualification) {
+                        hasData = true;
+                    }
+                }
+                updateHodProfileView();
+                if (!hasData) {
+                    openHodProfileEdit();
+                } else {
+                    cancelHodProfileEdit();
+                }
+            } catch (err) {
+                console.error("Error loading HOD profile credentials:", err);
+                updateHodProfileView();
+                openHodProfileEdit();
+            }
+        }
+
+        async function saveHodProfessionalProfile() {
+            const panNumber = document.getElementById('hodProfPan')?.value.trim().toUpperCase();
+            const aadharNumber = document.getElementById('hodProfAadhar')?.value.trim();
+            const dob = document.getElementById('hodProfDob')?.value;
+            const joiningDate = document.getElementById('hodProfJoiningDate')?.value;
+            const currentDesignation = document.getElementById('hodProfDesignation')?.value;
+            const promotionDate = document.getElementById('hodProfPromotionDate')?.value;
+            const highestQualification = document.getElementById('hodProfQualification')?.value.trim();
+
+            try {
+                const res = await fetch(`${API_BASE}/api/hod/profile`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        hodId: userUsn,
+                        institutionId: institutionId,
+                        panNumber,
+                        aadharNumber,
+                        dob,
+                        joiningDate,
+                        currentDesignation,
+                        promotionDate,
+                        highestQualification
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    updateHodProfileView();
+                    cancelHodProfileEdit();
+                    showPopupNotification("✅ HOD professional credentials saved successfully!");
+                } else {
+                    showPopupNotification(`❌ ${data.message || data.error || 'Failed to save credentials.'}`, 'error');
+                }
+            } catch (err) {
+                console.error("Save HOD profile error:", err);
+                showPopupNotification("❌ Network error saving profile credentials.", 'error');
+            }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -861,8 +1302,13 @@
         });
 
         async function initializeHodWorkspace() {
-            document.getElementById('displayHodName').innerText = `HOD: ${userName}`;
-            document.getElementById('displayHodDept').innerText = `Department Head | ${userBranch} Branch (${institutionId})`;
+            document.getElementById('displayHodName').innerText = userName ? `Prof. ${userName}` : 'Prof. HOD Leader';
+            document.getElementById('displayHodDept').innerText = `Department of ${userBranch} | Dr. AIT Autonomous`;
+
+            if (document.getElementById('displayHodUsn')) document.getElementById('displayHodUsn').innerText = userUsn || 'HOD_ID';
+            if (document.getElementById('displayHodBranch')) document.getElementById('displayHodBranch').innerText = userBranch || 'CSBS';
+            if (document.getElementById('displayHodRoleBadge')) document.getElementById('displayHodRoleBadge').innerText = 'Head of Department (Autonomous)';
+            if (document.getElementById('displayHodTerm')) document.getElementById('displayHodTerm').innerText = '2026-2027 (Odd Sem)';
 
             renderSemesterPills();
             
@@ -878,6 +1324,8 @@
             await loadDepartmentPublications();
             await loadDepartmentFdpRecords();
             await loadDepartmentFacultyDirectory();
+            await loadHodProfessionalProfile();
+            openHodModule('timetable');
         }
 
         function switchAcademicYear(yearStr) {
