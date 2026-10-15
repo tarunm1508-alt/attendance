@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dr. Ambedkar Institute of Technology | Mobile Gateway</title>
+    <style>
+        /* ==========================================================================
+           🎨 THE PREMIUM SLATE LIGHT CORPORATE MOBILE DESIGN SYSTEM
+           ========================================================================== */
+        :root {
+            --bg-canvas: #f8fafc;
+            --surface-card: #ffffff;
+            --border-clean: #e2e8f0;
+            
+            --primary-blue: #1e40af;
+            --primary-hover: #1d4ed8;
+            --primary-glow: rgba(30, 64, 175, 0.05);
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --text-labels: #475569;
+            --shadow-mobile: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.03);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }
+        
+        body { 
+            background-color: var(--bg-canvas); 
+            color: var(--text-dark); 
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            padding: 16px;
+        }
+
+        /* 📱 MOBILE RESPONSIVE BENTO DESIGN BOX */
+        .login-container { 
+            background: var(--surface-card); 
+            border: 1px solid var(--border-clean); 
+            padding: 36px 24px; 
+            border-radius: 24px; 
+            box-shadow: var(--shadow-mobile); 
+            width: 100%; 
+            max-width: 400px; 
+            text-align: center;
+        }
+
+        /* ⬅️ BACK BUTTON STYLING */
+        .back-link-wrapper {
+            text-align: left;
+            margin-bottom: 16px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 700;
+            transition: color 0.2s ease;
+        }
+        
+        .back-link:hover { color: var(--primary-blue); }
+
+        h2 { font-size: 26px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px; letter-spacing: -0.02em; }
+        p.subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 28px; font-weight: 500; }
+        
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; color: var(--text-labels); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        input { 
+            width: 100%; 
+            padding: 16px; 
+            background: #ffffff; 
+            border: 1px solid var(--border-clean); 
+            border-radius: 14px; 
+            color: var(--text-dark); 
+            font-size: 15px; 
+            font-weight: 500; 
+            outline: none;
+            transition: all 0.2s ease;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+        input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 4px var(--primary-glow); }
+        
+        .btn { 
+            width: 100%; 
+            padding: 16px; 
+            background: var(--primary-blue); 
+            border: none; 
+            border-radius: 14px; 
+            color: #ffffff; 
+            font-size: 15px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.15); 
+            transition: all 0.2s ease; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            margin-top: 24px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active { transform: scale(0.98); background: #1d4ed8; }
+        
+        .footer-links { margin-top: 24px; font-size: 14px; color: var(--text-muted); }
+        .footer-links a { color: var(--primary-blue); text-decoration: none; font-weight: 700; }
+        
+        .alert { padding: 14px; border-radius: 12px; margin-bottom: 20px; font-size: 13px; display: none; text-align: center; background-color: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; font-weight: 500; }
+
+        /* ==========================================================================
+           🎯 PREMIUM LIGHT BIOMETRIC SHEET (MOBILE SLIDE-UP EMULATOR)
+           ========================================================================== */
+        .biometric-sheet-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.4);
+            z-index: 99999;
+            display: none;
+            justify-content: center;
+            align-items: flex-end;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .mobile-slate-sheet {
+            background: #ffffff;
+            border-top: 1px solid var(--border-clean);
+            padding: 32px 24px 40px 24px;
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+            box-shadow: 0 -10px 25px rgba(0,0,0,0.05);
+            animation: slideUpSheet 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUpSheet { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .mobile-slate-sheet h3 { color: var(--text-dark); font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+        .mobile-slate-sheet p { color: var(--text-muted); font-size: 13px; margin-bottom: 24px; }
+
+        .touch-sensor-node {
+            width: 90px; height: 90px;
+            border: 2px solid var(--border-clean);
+            border-radius: 50%;
+            margin: 0 auto 20px auto;
+            display: flex; justify-content: center; align-items: center;
+            background: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            position: relative;
+        }
+        .touch-sensor-node.scanning {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 10px rgba(30, 64, 175, 0.08);
+            animation: pulseSensor 1.5s infinite ease-in-out;
+        }
+        @keyframes pulseSensor { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+
+        .twin-action-row { display: flex; gap: 12px; width: 100%; }
+        .sheet-btn { flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.15s; -webkit-tap-highlight-color: transparent; }
+        .btn-bypass-success { background: rgba(30,64,175,0.08); color: var(--primary-blue); border: 1px solid rgba(30,64,175,0.15); }
+        .btn-cancel-abort { background: #f1f5f9; color: var(--text-labels); }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <!-- ⬅️ Back Button Navigation directly to 1st Gateway Page -->
+        <div class="back-link-wrapper">
+            <a href="index.html" class="back-link">⬅️ Back to Role Selection</a>
+        </div>
+
+        <h2 id="portalTitle">Portal Login</h2>
+        <p class="subtitle">Academic Biometric Management System</p>
+
+        <div id="alertBox" class="alert"></div>
+
+        <form id="loginForm" autocomplete="off" onsubmit="triggerMobileBiometricFlow(event)">
+            <div class="form-group">
+                <label id="usernameLabel" for="username">USN / Username</label>
+                <input type="text" id="username" placeholder="Enter identification key" required autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="••••••••" required autocomplete="new-password">
+            </div>
+
+            <div class="form-group" id="parentLinkGroup" style="display: none;">
+                <label for="childUsn">Student USN (Link to Child)</label>
+                <input type="text" id="childUsn" placeholder="Enter child's USN (e.g., 1DA23AI012)" autocomplete="off">
+            </div>
+
+            <button type="submit" class="btn">Verify Credentials</button>
+        </form>
+
+        <div class="footer-links">
+            Don't have an account? <a href="signup.html">Sign Up</a>
+        </div>
+    </div>
+
+    <div id="biometricMobileSheet" class="biometric-sheet-overlay">
+        <div class="mobile-slate-sheet">
+            <h3 id="sheetHeaderTitle">Touch ID Verification</h3>
+            <p id="sheetInstructionSubtitle">Place registered finger on your phone's fingerprint node</p>
+
+            <div id="sensorNodeIndicator" class="touch-sensor-node scanning" onclick="invokeNativePhoneBiometricBroker()">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--primary-blue)" stroke-width="1.5" stroke-linecap="round">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+            </div>
+
+            <div id="mobileBioStatus" style="color: var(--primary-blue); font-size: 12px; font-weight: 700; margin-bottom: 24px; font-family: monospace; text-transform: uppercase; letter-spacing: 0.02em;">Awaiting Phone Hardware...</div>
+
+            <div class="twin-action-row">
+                <button type="button" class="sheet-btn btn-bypass-success" onclick="executeDatabaseAuthenticationHandshake('SIMULATED_SUCCESS_TOKEN')">Simulate Touch Pass</button>
+                <button type="button" class="sheet-btn btn-cancel-abort" onclick="dismissMobileSheet()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let API_BASE = window.location.origin;
+        if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
+        else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
+
+        let activePortalRole = 'student'; 
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // Automatically clear form input fields so previous session credentials don't linger
+            document.getElementById('username').value = "";
+            document.getElementById('password').value = "";
+
+            const urlParams = new URLSearchParams(window.location.search);
+            let roleParam = urlParams.get('role') || localStorage.getItem('intendedPortalRole') || 'student';
+            
+            activePortalRole = roleParam.toLowerCase().trim();
+            
+            const titleHeader = document.getElementById('portalTitle');
+            const usernameLabel = document.getElementById('usernameLabel');
+            const usernameInput = document.getElementById('username');
+            const parentLinkGroup = document.getElementById('parentLinkGroup');
+            const childUsnField = document.getElementById('childUsn');
+
+            if (activePortalRole === 'teacher') {
+                titleHeader.innerText = "Teacher Login";
+                usernameLabel.innerText = "Teacher ID / Employee ID";
+                usernameInput.placeholder = "Enter your Teacher Employee ID";
+            } else if (activePortalRole === 'hod') {
+                titleHeader.innerText = "HOD Executive Login";
+                usernameLabel.innerText = "HOD Employee ID / Username";
+                usernameInput.placeholder = "Enter HOD Employee ID";
+            } else if (activePortalRole === 'parent') {
+                titleHeader.innerText = "Parent Login";
+                usernameLabel.innerText = "Parent Username / ID";
+                usernameInput.placeholder = "Enter your Parent account identifier";
+                parentLinkGroup.style.display = 'block';
+                childUsnField.required = true;
+            } else {
+                titleHeader.innerText = "Student Login";
+                usernameLabel.innerText = "Student USN";
+                usernameInput.placeholder = "Enter your college USN";
+                activePortalRole = 'student';
+            }
+        });
+
+        function triggerMobileBiometricFlow(event) {
+            event.preventDefault();
+            document.getElementById('alertBox').style.display = 'none';
+            document.getElementById('biometricMobileSheet').style.display = 'flex';
+            document.getElementById('mobileBioStatus').innerText = "Awaiting Phone Hardware...";
+            document.getElementById('mobileBioStatus').style.color = "var(--primary-blue)";
+            invokeNativePhoneBiometricBroker();
+        }
+
+        async function invokeNativePhoneBiometricBroker() {
+            const status = document.getElementById('mobileBioStatus');
+            
+            if (window.PublicKeyCredential) {
+                try {
+                    status.innerText = "Calling Phone Sensor Node...";
+                    const nativeHardwareResponseCheck = await navigator.credentials.isUserVerifyingPlatformAuthenticatorAvailable();
+                    
+                    if (nativeHardwareResponseCheck) {
+                        status.innerText = "Touch Phone Fingerprint Sensor Now";
+                        setTimeout(() => { executeDatabaseAuthenticationHandshake('NATIVE_MOBILE_HARDWARE_KEY'); }, 1200);
+                    } else {
+                        status.innerText = "Hardware Ready // Use Sheet Actions";
+                    }
+                } catch (err) {
+                    status.innerText = "Sensor Waiting // Tap Bypass Button";
+                }
+            } else {
+                status.innerText = "Sensor Waiting // Tap Bypass Button";
+            }
+        }
+
+        async function executeDatabaseAuthenticationHandshake(incomingBiometricToken) {
+            const statusMessage = document.getElementById('mobileBioStatus');
+            const alertBox = document.getElementById('alertBox');
+            
+            const usn = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const childUsn = document.getElementById('childUsn') ? document.getElementById('childUsn').value.trim() : '';
+
+            statusMessage.innerText = "AUTHENTICATING MATRIX ROW...";
+            statusMessage.style.color = "var(--text-dark)";
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/combined-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        usn: usn, 
+                        password: password, 
+                        role: activePortalRole, 
+                        biometricKey: incomingBiometricToken 
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    document.getElementById('biometricMobileSheet').style.display = 'none';
+                    alertBox.innerText = data.message || "Credential check failed.";
+                    alertBox.style.display = 'block';
+                    return;
+                }
+
+                statusMessage.innerText = "VERIFIED ✓ SECURE ACCESS UNLOCKED";
+                statusMessage.style.color = "var(--accent-green)";
+
+                setTimeout(() => {
+                    document.getElementById('biometricMobileSheet').style.display = 'none';
+                    
+                    localStorage.setItem('userUsn', data.usn);
+                    localStorage.setItem('userName', data.name);
+                    localStorage.setItem('userRole', data.role || activePortalRole);
+                    localStorage.setItem('userSubject', data.subjectName || '');
+                    localStorage.setItem('userBranch', data.branch || 'AIML');
+                    
+                    if (activePortalRole === 'parent') {
+                        localStorage.setItem('childUsn', childUsn);
+                    }
+                    
+                    if (data.role === 'hod' || activePortalRole === 'hod') {
+                        window.location.href = "hod_dashboard.html";
+                    } else {
+                        window.location.href = "dashboard.html";
+                    }
+                }, 800);
+
+            } catch (err) {
+                document.getElementById('biometricMobileSheet').style.display = 'none';
+                alertBox.innerText = "Connection lost to API network port.";
+                alertBox.style.display = 'block';
+            }
+        }
+
+        function dismissMobileSheet() { document.getElementById('biometricMobileSheet').style.display = 'none'; }
+    </script>
+</body>
+</html>

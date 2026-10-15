@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Ambedkar Institute of Technology | Portal Gateway</title>
+    <style>
+        /* ==========================================================================
+           🎨 SOPHISTICATED ACADEMIC LIGHT THEME VARIATION
+           ========================================================================== */
+        :root {
+            --bg-canvas: #f1f5f9;
+            --surface-card: #ffffff;
+            --primary-blue: #1e40af;
+            --primary-hover: #1d4ed8;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border-clean: #e2e8f0;
+            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            
+            --ease-kinetic: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-fluid: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+            opacity: 0;
+            animation: gatewayFadeIn 0.5s var(--ease-fluid) forwards;
+        }
+
+        @keyframes gatewayFadeIn {
+            to { opacity: 1; }
+        }
+
+        /* ==========================================================================
+           🏛️ INSTITUTIONAL BRANDING HEADER
+           ========================================================================== */
+        .institution-header {
+            background: var(--surface-card);
+            border: 1px solid var(--border-clean);
+            border-radius: 20px;
+            padding: 24px 32px;
+            width: 100%;
+            max-width: 950px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            box-shadow: var(--shadow-premium);
+            margin-bottom: 32px;
+        }
+
+        .logo-box {
+            width: 90px;
+            height: 90px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .logo-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .logo-subtext {
+            font-size: 9px;
+            font-weight: 700;
+            color: #b91c1c;
+            text-align: center;
+            margin-top: 4px;
+            white-space: nowrap;
+        }
+
+        .branding-text {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .branding-text h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--primary-blue);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .branding-text p {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        /* ==========================================================================
+           📦 GATEWAY SELECTION CARD & INTERACTIVE GRID
+           ========================================================================== */
+        .gateway-card {
+            background: var(--surface-card);
+            border: 1px solid var(--border-clean);
+            border-radius: 24px;
+            padding: 40px;
+            width: 100%;
+            max-width: 950px;
+            box-shadow: var(--shadow-premium);
+            text-align: center;
+            transform: translateY(20px);
+            animation: cardSlideUp 0.6s var(--ease-kinetic) 0.1s forwards;
+            opacity: 0;
+        }
+
+        @keyframes cardSlideUp {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .gateway-card h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .gateway-card .section-desc {
+            color: var(--text-muted);
+            font-size: 15px;
+            margin-bottom: 36px;
+        }
+
+        /* Modern Grid Architecture for 4 Role Choice Cards */
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 20px;
+        }
+
+        .role-choice-card {
+            background: #f8fafc;
+            border: 1px solid var(--border-clean);
+            border-radius: 16px;
+            padding: 32px 20px;
+            cursor: pointer;
+            transition: all 0.25s var(--ease-fluid);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .role-icon-wrapper {
+            width: 56px;
+            height: 56px;
+            background: #eff6ff;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            transition: all 0.25s var(--ease-fluid);
+        }
+
+        .role-choice-card h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .role-choice-card .action-indicator {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary-blue);
+            opacity: 0;
+            transform: translateX(-5px);
+            transition: all 0.25s var(--ease-fluid);
+        }
+
+        /* High-fidelity responsive micro-interactions */
+        .role-choice-card:hover {
+            background: #ffffff;
+            border-color: var(--primary-blue);
+            box-shadow: 0 10px 20px -5px rgba(30, 64, 175, 0.08);
+            transform: translateY(-4px);
+        }
+
+        .role-choice-card:hover .role-icon-wrapper {
+            background: var(--primary-blue);
+            transform: scale(1.05);
+        }
+
+        .role-choice-card:hover .action-indicator {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Responsive Mobile Scaling Interceptor Layouts */
+        @media (max-width: 768px) {
+            .roles-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 680px) {
+            .institution-header {
+                flex-direction: column;
+                text-align: center;
+                padding: 24px;
+            }
+            .branding-text h1 { font-size: 20px; }
+            .roles-grid { grid-template-columns: 1fr; }
+            .role-choice-card { padding: 20px; flex-direction: row; justify-content: space-between; }
+            .role-choice-card .action-indicator { opacity: 1; transform: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="institution-header">
+        <div class="logo-box">
+            <img src="logo.png" alt="Dr. AIT Logo" onerror="this.src='https://images.shiksha.com/mediadata/images/1571898437phpZQhmrq.jpeg'">
+            <div class="logo-subtext">Aided By Govt. of Karnataka</div>
+        </div>
+        <div class="branding-text">
+            <h1>DR. AMBEDKAR INSTITUTE OF TECHNOLOGY</h1>
+            <p>Outer Ring Road, Malathahalli, Bengaluru-560056, Karnataka, India</p>
+        </div>
+    </header>
+
+    <main class="gateway-card">
+        <h2>Welcome to Academic Portal</h2>
+        <p class="section-desc">Select your organizational profile role to log into your workspace dashboard</p>
+
+        <div class="roles-grid">
+            <!-- 👔 1. HOD Card -->
+            <div class="role-choice-card" onclick="routeToAuthentication('hod')">
+                <div class="role-icon-wrapper">👔</div>
+                <h3>HOD Login</h3>
+                <div class="action-indicator">Proceed →</div>
+            </div>
+
+            <!-- 👨‍🏫 2. Teacher Card -->
+            <div class="role-choice-card" onclick="routeToAuthentication('teacher')">
+                <div class="role-icon-wrapper">👨‍🏫</div>
+                <h3>Teacher Login</h3>
+                <div class="action-indicator">Proceed →</div>
+            </div>
+
+            <!-- 🎓 3. Student Card -->
+            <div class="role-choice-card" onclick="routeToAuthentication('student')">
+                <div class="role-icon-wrapper">🎓</div>
+                <h3>Student Login</h3>
+                <div class="action-indicator">Proceed →</div>
+            </div>
+
+            <!-- 👥 4. Parent Card -->
+            <div class="role-choice-card" onclick="routeToAuthentication('parent')">
+                <div class="role-icon-wrapper">👥</div>
+                <h3>Parent Login</h3>
+                <div class="action-indicator">Proceed →</div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function routeToAuthentication(selectedProfileRole) {
+            localStorage.setItem('intendedPortalRole', selectedProfileRole);
+            window.location.href = `login.html?role=${selectedProfileRole}`;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dean Academic Affairs Portal | Dr. AIT</title>
+    <style>
+        :root {
+            --bg-canvas: #f8fafc;
+            --surface-card: #ffffff;
+            --border-clean: #cbd5e1;
+            --primary-blue: #1e40af;
+            --primary-hover: #1d4ed8;
+            --accent-purple: #7c3aed;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 10px 15px -3px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); padding: 24px; min-height: 100vh; display: flex; justify-content: center; }
+        
+        .container { max-width: 1200px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .bento-card { background: var(--surface-card); border: 1px solid var(--border-clean); border-radius: 20px; padding: 26px; box-shadow: var(--shadow-premium); width: 100%; }
+
+        /* Profile Banner */
+        .profile-banner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .dean-badge { display: flex; align-items: center; gap: 14px; }
+        .avatar-circle { width: 56px; height: 56px; border-radius: 50%; background: #f5f3ff; border: 2.5px solid var(--accent-purple); display: flex; justify-content: center; align-items: center; font-size: 26px; }
+        .dean-name { font-size: 20px; font-weight: 850; color: var(--text-dark); }
+        .dean-dept { font-size: 13px; color: var(--accent-purple); font-weight: 700; margin-top: 2px; }
+
+        /* KPI Stats Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 14px; }
+        .kpi-box { background: #f8fafc; border: 1px solid var(--border-clean); padding: 18px; border-radius: 14px; transition: transform 0.2s; }
+        .kpi-box:hover { transform: translateY(-2px); border-color: var(--accent-purple); }
+        .kpi-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .kpi-val { font-size: 26px; font-weight: 900; color: var(--text-dark); margin-top: 6px; }
+
+        /* Module Workspace Navigation */
+        .modules-nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 14px; }
+        .module-tile { background: white; border: 1.5px solid var(--border-clean); border-radius: 16px; padding: 20px; cursor: pointer; transition: all 0.2s ease; text-align: left; }
+        .module-tile:hover { border-color: var(--accent-purple); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(124,58,237,0.08); }
+        .module-tile.active { border-color: var(--accent-purple); background: #f5f3ff; box-shadow: 0 0 0 2px var(--accent-purple); }
+        .module-tile-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .module-tile-header h4 { font-size: 16px; font-weight: 800; color: var(--text-dark); }
+        .module-tile-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+
+        /* Workspace View Section */
+        .workspace-panel { display: none; }
+        .workspace-panel.active { display: block; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border-clean); padding-bottom: 14px; }
+        .panel-header h3 { font-size: 18px; font-weight: 850; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+
+        /* Form Controls */
+        .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        select, input[type="text"], textarea { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-clean); font-weight: 600; font-size: 13px; background: white; outline: none; }
+        select:focus, input:focus, textarea:focus { border-color: var(--accent-purple); }
+        .btn-action { padding: 10px 20px; background: var(--accent-purple); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; }
+        .btn-action:hover { background: #6d28d9; }
+
+        /* Tables */
+        .table-responsive { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border-clean); margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: white; text-align: left; }
+        th, td { border: 1px solid var(--border-clean); padding: 10px 14px; font-size: 13px; }
+        th { background: #f1f5f9; font-weight: 800; color: var(--text-dark); }
+        tr:hover td { background-color: #f8fafc; }
+
+        /* Toast */
+        #customToastPopup {
+            position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: white;
+            padding: 14px 22px; border-radius: 14px; font-weight: 700; font-size: 13px;
+            z-index: 10000; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            transform: translateY(20px); opacity: 0; transition: all 0.3s ease;
+        }
+        #customToastPopup.show { transform: translateY(0); opacity: 1; }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .modules-nav-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="customToastPopup"></div>
+
+    <div class="container">
+        <!-- 📜 1. Dean Profile Header -->
+        <div class="bento-card">
+            <div class="profile-banner">
+                <div class="dean-badge">
+                    <div class="avatar-circle">📜</div>
+                    <div>
+                        <div class="dean-name" id="displayDeanName">Dr. S. K. Nandeesh</div>
+                        <div class="dean-dept">Dean (Academic Affairs) | Office of Academic Governance (Dr. AIT)</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="refreshDeanKPIs()" style="padding: 10px 18px; background: #f5f3ff; color: var(--accent-purple); border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">🔄 Refresh KPIs</button>
+                    <button onclick="handleLogout()" style="padding: 10px 18px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; cursor: pointer;">Logout ⬅️</button>
+                </div>
+            </div>
+
+            <!-- Academic Governance KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-box">
+                    <div class="kpi-label">📚 Academic Scheme</div>
+                    <div class="kpi-val" style="font-size: 20px;">VTU 2022/2026</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">🏛️ Academic Departments</div>
+                    <div class="kpi-val" id="kpiDeanDepts">8</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">👨‍🏫 Teaching Faculty</div>
+                    <div class="kpi-val" id="kpiDeanFaculty">Loading...</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">🎓 Enrolled Students</div>
+                    <div class="kpi-val" id="kpiDeanStudents">Loading...</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">📜 Academic Directives</div>
+                    <div class="kpi-val" id="kpiDeanCirculars">0</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">📚 Faculty Publications</div>
+                    <div class="kpi-val" id="kpiDeanPubs">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🧭 2. Academic Affairs Workspaces -->
+        <div class="bento-card">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px; color: var(--text-dark);">📜 Academic Affairs Workspaces</h3>
+            <div class="modules-nav-grid">
+                <div class="module-tile active" id="tab_curriculum" onclick="switchDeanWorkspace('curriculum')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">📅</span>
+                        <h4>Curricular Timetables</h4>
+                    </div>
+                    <p class="module-tile-desc">Audit master timetable matrix across branches and semesters for syllabus pacing.</p>
+                </div>
+
+                <div class="module-tile" id="tab_directives" onclick="switchDeanWorkspace('directives')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">📜</span>
+                        <h4>Academic Directives</h4>
+                    </div>
+                    <p class="module-tile-desc">Issue academic calendar directives, exam guidelines, and curricular schedules.</p>
+                </div>
+
+                <div class="module-tile" id="tab_slowlearners" onclick="switchDeanWorkspace('slowlearners')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">⚠️</span>
+                        <h4>Remedial &amp; Slow Learners</h4>
+                    </div>
+                    <p class="module-tile-desc">Monitor student continuous internal evaluations and remedial coaching programs.</p>
+                </div>
+
+                <div class="module-tile" id="tab_publications" onclick="switchDeanWorkspace('publications')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">📚</span>
+                        <h4>Academic Research Ledger</h4>
+                    </div>
+                    <p class="module-tile-desc">Review faculty research papers, journals, and NBA/NAAC compliance metrics.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 📅 WORKSPACE 1: Curricular Timetables -->
+        <div class="bento-card workspace-panel active" id="panel_curriculum">
+            <div class="panel-header">
+                <h3>📅 Curricular Timetable Audit &amp; Teaching Load</h3>
+                <div style="display: flex; gap: 10px;">
+                    <select id="deanBranchSelect" onchange="loadDeanTimetable()">
+                        <option value="AIML">AIML</option>
+                        <option value="CSBS">CSBS</option>
+                        <option value="CSE">CSE</option>
+                        <option value="ISE">ISE</option>
+                        <option value="ECE">ECE</option>
+                    </select>
+                    <select id="deanSemSelect" onchange="loadDeanTimetable()">
+                        <option value="5">Semester 5</option>
+                        <option value="3">Semester 3</option>
+                        <option value="7">Semester 7</option>
+                        <option value="1">Semester 1</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>09:00 - 10:00</th>
+                            <th>10:00 - 11:00</th>
+                            <th>11:15 - 12:15</th>
+                            <th>12:15 - 01:15</th>
+                            <th>02:00 - 03:00</th>
+                            <th>03:00 - 04:00</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deanTimetableBody">
+                        <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Select department and semester to audit timetable.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 📜 WORKSPACE 2: Academic Directives -->
+        <div class="bento-card workspace-panel" id="panel_directives">
+            <div class="panel-header">
+                <h3>📜 Issue Academic Notification / Calendar Directive</h3>
+                <button class="btn-action" onclick="togglePublishDirectiveForm()">+ New Directive</button>
+            </div>
+
+            <div id="publishDirectiveBox" style="display: none; background: #f8fafc; border: 1px solid var(--border-clean); border-radius: 14px; padding: 20px; margin-bottom: 20px;">
+                <h4 style="margin-bottom: 14px; font-size: 15px;">Publish Academic Council Order</h4>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Directive Title</label>
+                        <input type="text" id="dirTitle" placeholder="e.g. Schedule of CIE-2 Conduction and Syllabus Completion Verification" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Audience Scope</label>
+                        <select id="dirScope" style="width: 100%;">
+                            <option value="college">All Departments, Faculty &amp; Students</option>
+                            <option value="faculty">Faculty &amp; HODs Only</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Academic Directive Text</label>
+                        <textarea id="dirMessage" rows="4" placeholder="Enter academic instructions..." style="width: 100%;"></textarea>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">PDF / Circular Document URL (Optional)</label>
+                        <input type="text" id="dirDocUrl" placeholder="https://..." style="width: 100%;">
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-action" onclick="submitAcademicDirective()">Dispatch Academic Order 📜</button>
+                        <button onclick="togglePublishDirectiveForm()" style="padding: 10px 18px; background: #e2e8f0; border: none; border-radius: 10px; font-weight: 700; cursor: pointer;">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date Issued</th>
+                            <th>Directive Title</th>
+                            <th>Audience</th>
+                            <th>Authorized By</th>
+                            <th>Document URL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deanDirectivesTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading academic directives...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ⚠️ WORKSPACE 3: Remedial & Slow Learners -->
+        <div class="bento-card workspace-panel" id="panel_slowlearners">
+            <div class="panel-header">
+                <h3>⚠️ Remedial Coaching &amp; Academic Intervention Tracking</h3>
+                <div style="display: flex; gap: 10px;">
+                    <select id="slBranchSelect" onchange="loadDeanSlowLearners()">
+                        <option value="AIML">AIML</option>
+                        <option value="CSBS">CSBS</option>
+                        <option value="CSE">CSE</option>
+                        <option value="ISE">ISE</option>
+                        <option value="ECE">ECE</option>
+                    </select>
+                    <select id="slSemSelect" onchange="loadDeanSlowLearners()">
+                        <option value="5">Semester 5</option>
+                        <option value="3">Semester 3</option>
+                        <option value="4">Semester 4</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student USN</th>
+                            <th>Student Name</th>
+                            <th>Branch</th>
+                            <th>Semester</th>
+                            <th>Average CIE Score</th>
+                            <th>Academic Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deanSlowLearnersTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading students requiring academic intervention...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 📚 WORKSPACE 4: Publications Oversight -->
+        <div class="bento-card workspace-panel" id="panel_publications">
+            <div class="panel-header">
+                <h3>📚 Institutional Research &amp; Academic Publications</h3>
+                <input type="text" id="deanSearchInput" placeholder="🔍 Search paper or faculty..." onkeyup="filterDeanPublications()" style="max-width: 280px;">
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Faculty Name</th>
+                            <th>Department</th>
+                            <th>Paper Title</th>
+                            <th>Journal / Conference</th>
+                            <th>Year</th>
+                            <th>Quartile / DOI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deanPubsTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Loading publication records...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let BACKEND_URL = window.location.origin;
+        if (BACKEND_URL.includes("-5501.")) BACKEND_URL = BACKEND_URL.replace("-5501.", "-5000.");
+        else if (BACKEND_URL.includes(":5501")) BACKEND_URL = BACKEND_URL.replace(":5501", ":5000");
+        else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            BACKEND_URL = "http://localhost:5000";
+        }
+
+        const institutionId = localStorage.getItem("institutionId") || "DR_AIT";
+        let cachedDeanPubs = [];
+
+        // 🔒 Dean Role Guard
+        (function checkDeanAuth() {
+            const role = (localStorage.getItem("userRole") || localStorage.getItem("role") || "").toLowerCase().trim();
+            if (role !== "dean" && role !== "admin") {
+                alert("🔒 Access Restricted: Dean Academic credentials required.");
+                window.location.href = "login.html?role=dean";
+            }
+        })();
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const storedName = localStorage.getItem("userName");
+            if (storedName) document.getElementById("displayDeanName").innerText = storedName;
+            
+            refreshDeanKPIs();
+            loadDeanTimetable();
+        });
+
+        function showPopupNotification(msg, type = "success") {
+            const toast = document.getElementById("customToastPopup");
+            toast.innerText = msg;
+            toast.style.background = type === "success" ? "#0f172a" : "#991b1b";
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 2500);
+        }
+
+        function switchDeanWorkspace(wsId) {
+            document.querySelectorAll(".module-tile").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".workspace-panel").forEach(p => p.classList.remove("active"));
+            
+            document.getElementById(`tab_${wsId}`)?.classList.add("active");
+            document.getElementById(`panel_${wsId}`)?.classList.add("active");
+
+            if (wsId === 'curriculum') loadDeanTimetable();
+            if (wsId === 'directives') loadDeanDirectives();
+            if (wsId === 'slowlearners') loadDeanSlowLearners();
+            if (wsId === 'publications') loadDeanPublications();
+        }
+
+        async function refreshDeanKPIs() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/institutional-metrics?institutionId=${institutionId}`);
+                const data = await res.json();
+                if (data && data.success) {
+                    document.getElementById("kpiDeanDepts").innerText = data.totalDepartments || 8;
+                    document.getElementById("kpiDeanFaculty").innerText = data.totalFaculty || 0;
+                    document.getElementById("kpiDeanStudents").innerText = data.totalStudents || 0;
+                    document.getElementById("kpiDeanCirculars").innerText = data.totalCirculars || 0;
+                    document.getElementById("kpiDeanPubs").innerText = data.totalPublications || 0;
+                }
+            } catch (err) {
+                console.error("Dean KPI Error:", err);
+            }
+        }
+
+        async function loadDeanTimetable() {
+            const branch = document.getElementById("deanBranchSelect").value;
+            const sem = document.getElementById("deanSemSelect").value;
+            const tbody = document.getElementById("deanTimetableBody");
+
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Auditing ${branch} Sem ${sem} Timetable...</td></tr>`;
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/weekly-timetable?branch=${encodeURIComponent(branch)}&semester=${encodeURIComponent(sem)}&institutionId=${institutionId}`);
+                const data = await res.json();
+                const rows = data.timetable || [];
+
+                const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+                tbody.innerHTML = days.map(d => {
+                    const daySlots = rows.filter(r => (r.day_name || r.day_of_week) === d);
+                    return `
+                        <tr>
+                            <td style="font-weight: 800; background: #f8fafc;">${d}</td>
+                            <td>${daySlots.find(s => s.period_number === 1)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 2)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 3)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 4)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 5)?.subject_code || '—'}</td>
+                            <td>${daySlots.find(s => s.period_number === 6)?.subject_code || '—'}</td>
+                        </tr>
+                    `;
+                }).join("");
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--accent-red);">Could not load timetable matrix.</td></tr>`;
+            }
+        }
+
+        function togglePublishDirectiveForm() {
+            const box = document.getElementById("publishDirectiveBox");
+            box.style.display = box.style.display === "none" ? "block" : "none";
+        }
+
+        async function submitAcademicDirective() {
+            const title = document.getElementById("dirTitle").value.trim();
+            const message = document.getElementById("dirMessage").value.trim();
+            const scope = document.getElementById("dirScope").value;
+            const docUrl = document.getElementById("dirDocUrl").value.trim();
+
+            if (!title || !message) {
+                alert("Please provide both directive title and message guidelines.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/circulars`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        title,
+                        message,
+                        documentUrl: docUrl,
+                        audienceScope: scope,
+                        createdBy: localStorage.getItem("userUsn") || "DEAN01",
+                        createdByName: localStorage.getItem("userName") || "Dr. S. K. Nandeesh (Dean Academic)",
+                        institutionId: institutionId
+                    })
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showPopupNotification("✅ Academic Directive published successfully!");
+                    document.getElementById("dirTitle").value = "";
+                    document.getElementById("dirMessage").value = "";
+                    document.getElementById("dirDocUrl").value = "";
+                    togglePublishDirectiveForm();
+                    loadDeanDirectives();
+                    refreshDeanKPIs();
+                } else {
+                    alert("❌ Failed to publish: " + (data.message || "Server error"));
+                }
+            } catch (e) {
+                alert("Network error connecting to API server.");
+            }
+        }
+
+        async function loadDeanDirectives() {
+            const tbody = document.getElementById("deanDirectivesTableBody");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/circulars?institutionId=${institutionId}`);
+                const data = await res.json();
+                const circulars = data.circulars || [];
+
+                if (!circulars.length) {
+                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No academic directives found.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = circulars.map(c => `
+                    <tr>
+                        <td>${new Date(c.created_at || c.published_at).toLocaleDateString()}</td>
+                        <td style="font-weight: 700; color: var(--text-dark);">${c.title}</td>
+                        <td><span style="background: #f5f3ff; color: var(--accent-purple); padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; text-transform: uppercase;">${c.audience_scope || 'College'}</span></td>
+                        <td>${c.created_by_name || 'Dean Academics'}</td>
+                        <td>${c.document_url ? `<a href="${c.document_url}" target="_blank" style="color: var(--accent-purple); font-weight: 700;">View PDF ↗</a>` : 'Notice Only'}</td>
+                    </tr>
+                `).join("");
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--accent-red);">Failed to load directives.</td></tr>`;
+            }
+        }
+
+        async function loadDeanSlowLearners() {
+            const branch = document.getElementById("slBranchSelect").value;
+            const sem = document.getElementById("slSemSelect").value;
+            const tbody = document.getElementById("deanSlowLearnersTableBody");
+
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Checking student evaluation metrics...</td></tr>`;
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/teacher/slow-learners?branch=${encodeURIComponent(branch)}&semester=${encodeURIComponent(sem)}&institutionId=${institutionId}`);
+                const data = await res.json();
+                const list = data.slowLearners || [];
+
+                if (!list.length) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--accent-green); font-weight: 700;">✅ Excellent: No students flagged on academic watch in ${branch} Sem ${sem}.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = list.map(s => `
+                    <tr>
+                        <td style="font-weight: 700;">${s.usn || s.student_id}</td>
+                        <td style="font-weight: 800;">${s.name || s.student_name || 'Student'}</td>
+                        <td>${branch}</td>
+                        <td>Sem ${sem}</td>
+                        <td style="font-weight: 800; color: var(--accent-red);">${s.avg_cie ? s.avg_cie + ' / 30' : 'Below 60%'}</td>
+                        <td><span style="background: #fee2e2; color: #991b1b; padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">Remedial Mentoring</span></td>
+                    </tr>
+                `).join("");
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">Evaluation ledger verified. No active remedial flags.</td></tr>`;
+            }
+        }
+
+        async function loadDeanPublications() {
+            const tbody = document.getElementById("deanPubsTableBody");
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/publications?institutionId=${institutionId}`);
+                const data = await res.json();
+                cachedDeanPubs = Array.isArray(data) ? data : (data.publications || []);
+
+                if (!cachedDeanPubs.length) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No publication entries found.</td></tr>`;
+                    return;
+                }
+
+                renderDeanPubsRows(cachedDeanPubs);
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--accent-red);">Failed to load publication records.</td></tr>`;
+            }
+        }
+
+        function renderDeanPubsRows(papers) {
+            const tbody = document.getElementById("deanPubsTableBody");
+            tbody.innerHTML = papers.map(p => `
+                <tr>
+                    <td style="font-weight: 800;">${p.faculty_name || p.author || 'Faculty Member'}</td>
+                    <td><span style="background: #f5f3ff; color: var(--accent-purple); padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: 700;">${p.branch || 'AIML'}</span></td>
+                    <td style="font-weight: 600;">${p.title || 'Paper Title'}</td>
+                    <td>${p.journal_name || p.journal || 'Journal'}</td>
+                    <td>${p.publication_year || p.year || '—'}</td>
+                    <td>${p.doi ? `<a href="https://doi.org/${p.doi}" target="_blank" style="color: var(--accent-purple); font-weight: 750;">DOI ↗</a>` : (p.quartile || 'Scopus')}</td>
+                </tr>
+            `).join("");
+        }
+
+        function filterDeanPublications() {
+            const q = document.getElementById("deanSearchInput").value.toLowerCase().trim();
+            if (!q) {
+                renderDeanPubsRows(cachedDeanPubs);
+                return;
+            }
+            const filtered = cachedDeanPubs.filter(p => 
+                (p.title && p.title.toLowerCase().includes(q)) || 
+                (p.faculty_name && p.faculty_name.toLowerCase().includes(q))
+            );
+            renderDeanPubsRows(filtered);
+        }
+
+        function handleLogout() {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>

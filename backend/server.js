@@ -148,10 +148,10 @@ app.get("/api/auth/student-subject-metrics", async (req, res) => {
                     'Unknown Subject'
                 ) AS subject_name,
                 semester_number,
-                COALESCE(cie1, 0) AS cie1,
-                COALESCE(cie2, 0) AS cie2,
-                COALESCE(cie3, 0) AS cie3,
-                COALESCE(see, 0) AS see
+                cie1,
+                cie2,
+                cie3,
+                see
             FROM student_marks
             WHERE UPPER(TRIM(usn)) = $1
               AND semester_number = $2

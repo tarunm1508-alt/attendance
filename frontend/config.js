@@ -1,12 +1,24 @@
-let API_URL;
+/**
+ * Shared Environment Configuration for Academic Biometric Management System
+ * Dynamically resolves backend URL across Capacitor Android container, local dev, and Render production.
+ */
+(function () {
+    const isCapacitorAndroid = Boolean(
+        (window.Capacitor && (typeof window.Capacitor.isNativePlatform === 'function' ? window.Capacitor.isNativePlatform() : window.Capacitor.getPlatform?.() === 'android')) ||
+        window.location.protocol === 'capacitor:' ||
+        (window.location.hostname === 'localhost' && !window.location.port)
+    );
 
-// Check if running inside Capacitor Android container
-if (window.Capacitor && window.Capacitor.getPlatform() === 'android') {
-    API_URL = "https://dr-ait-portal-backend.onrender.com/api";
-} else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    // Local testing on laptop (change port if your backend runs on a different port like 5000)
-    API_URL = "http://localhost:5000/api"; 
-} else {
-    // Production web deployment
-    API_URL = "https://dr-ait-portal-backend.onrender.com/api";
-}
+    const resolvedBase = isCapacitorAndroid
+        ? "https://dr-ait-portal-backend.onrender.com"
+        : (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+            ? (window.location.port === "5000" ? window.location.origin : "http://localhost:5000")
+            : (window.location.origin.includes("-5501.") ? window.location.origin.replace("-5501.", "-5000.") :
+               window.location.origin.includes(":5501") ? window.location.origin.replace(":5501", ":5000") :
+               window.location.origin);
+
+    window.APP_BACKEND_URL = resolvedBase;
+    if (typeof window.API_BASE === 'undefined') window.API_BASE = resolvedBase;
+    if (typeof window.BACKEND_URL === 'undefined') window.BACKEND_URL = resolvedBase;
+    if (typeof window.API_URL === 'undefined') window.API_URL = resolvedBase + "/api";
+})();

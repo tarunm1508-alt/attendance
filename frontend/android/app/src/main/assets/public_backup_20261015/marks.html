@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Transcript | Full Course</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        :root { --primary: #2c3e50; --accent : #3498db; --bg: #f4f7f6; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        
+        .info-box { background: #eef2f3; padding: 20px; border-radius: 10px; margin-bottom: 30px; text-align: left; border-left: 5px solid var(--accent); }
+        
+        .year-card { margin-bottom: 15px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden; }
+        .year-header { background: var(--primary); color: white; padding: 15px; cursor: pointer; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        
+        .sem-content { display: none; padding: 15px; background: #fff; border-top: 1px solid #eee; }
+        .sem-btn-row { display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap; }
+        .sem-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: 600; }
+
+        .table-wrapper { display: none; margin-top: 15px; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        th { background: var(--primary); color: white; padding: 12px; font-size: 12px; }
+        td { padding: 12px; border: 1px solid #eee; font-size: 14px; text-align: center; }
+        
+        .no-data-msg { font-style: italic; color: #7f8c8d; padding: 15px; }
+        .action-btns { margin-top: 30px; display: flex; justify-content: center; gap: 15px; }
+        .back-btn { padding: 12px 30px; background: #34495e; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📜 Complete Academic Transcript</h2>
+    
+    <div class="info-box">
+        <h3 id="studentHeader">Loading Student Profile...</h3>
+        <p><strong>SRN:</strong> <span id="displaySRN"></span></p>
+        <div id="parentContent"></div>
+    </div>
+
+    <div id="accordionContainer"></div>
+
+    <div class="action-btns">
+        <button class="back-btn" onclick="goBack()">⬅️ Back to Dashboard</button>
+    </div>
+</div>
+
+<script>
+    const years = [
+        { label: "FIRST YEAR", sems: [1, 2] },
+        { label: "SECOND YEAR", sems: [3, 4] },
+        { label: "THIRD YEAR", sems: [5, 6] },
+        { label: "FOURTH YEAR", sems: [7, 8] }
+    ];
+
+    const accordion = document.getElementById('accordionContainer');
+    years.forEach(y => {
+        accordion.innerHTML += `
+            <div class="year-card">
+                <div class="year-header" onclick="toggleSection('year${y.sems[0]}')">${y.label} (Sem ${y.sems[0]} & ${y.sems[1]}) <span>▼</span></div>
+                <div id="year${y.sems[0]}" class="sem-content">
+                    <div class="sem-btn-row">
+                        <button class="sem-btn" onclick="toggleTable('tableSem${y.sems[0]}')">Semester ${y.sems[0]}</button>
+                        <button class="sem-btn" onclick="toggleTable('tableSem${y.sems[1]}')">Semester ${y.sems[1]}</button>
+                    </div>
+                    <div id="tableSem${y.sems[0]}" class="table-wrapper">
+                        <table><thead><tr><th>Subject</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>Lab</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem${y.sems[0]}"><tr><td colspan="6" class="no-data-msg">No marks added for Sem ${y.sems[0]}</td></tr></tbody></table>
+                    </div>
+                    <div id="tableSem${y.sems[1]}" class="table-wrapper">
+                        <table><thead><tr><th>Subject</th><th>CIE 1</th><th>CIE 2</th><th>CIE 3</th><th>Lab</th><th>SEE</th></tr></thead>
+                        <tbody id="data-sem${y.sems[1]}"><tr><td colspan="6" class="no-data-msg">No marks added for Sem ${y.sems[1]}</td></tr></tbody></table>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    function toggleSection(id) {
+        const el = document.getElementById(id);
+        const isVisible = el.style.display === 'block';
+        document.querySelectorAll('.sem-content').forEach(s => s.style.display = 'none');
+        el.style.display = isVisible ? 'none' : 'block';
+    }
+
+    function toggleTable(id) {
+        document.querySelectorAll('.table-wrapper').forEach(t => t.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+    }
+
+    async function loadAllData() {
+        const srn = localStorage.getItem("student_id");
+        if (!srn) { window.location.href = 'login.html'; return; }
+        document.getElementById("displaySRN").innerText = srn;
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/marks/student-profile/${srn}`);
+            const data = await response.json();
+
+            if (data.parent) {
+                document.getElementById('parentContent').innerHTML = `<p><strong>Guardian:</strong> ${data.parent.parent_name}</p>`;
+                document.getElementById('studentHeader').innerText = `Academic Record: ${srn}`;
+            }
+
+            if (data.academic && data.academic.length > 0) {
+                data.academic.forEach(record => {
+                    const tbody = document.getElementById(`data-sem${record.semester}`);
+                    if (tbody) {
+                        // REMOVE "No marks added" message before first real entry
+                        if (tbody.innerHTML.includes("no-data-msg")) {
+                            tbody.innerHTML = ""; 
+                        }
+                        
+                        tbody.innerHTML += `
+                            <tr>
+                                <td style="text-align:left; font-weight:bold;">${record.subject_name}</td>
+                                <td>${record.cie_1}</td><td>${record.cie_2}</td><td>${record.cie_3}</td>
+                                <td>${record.lab_marks}</td><td><b>${record.see_marks}</b></td>
+                            </tr>
+                        `;
+                    }
+                });
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function goBack() {
+        const role = localStorage.getItem("role");
+        window.location.href = role === 'parent' ? 'parent.html' : 'student.html';
+    }
+
+    window.onload = loadAllData;
+</script>
+</body>
+</html>

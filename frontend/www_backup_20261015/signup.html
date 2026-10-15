@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Biometric Management System | Create Account</title>
+    <style>
+        /* ==========================================================================
+            🎨 UNIFORM PREMIUM ACADEMIC LIGHT DESIGN SYSTEM 
+            ========================================================================== */
+        :root {
+            --bg-canvas: #f1f5f9;
+            --surface-card: #ffffff;
+            --primary-blue: #1e40af;
+            --primary-hover: #1d4ed8;
+            --primary-glow: rgba(30, 64, 175, 0.08);
+
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --text-labels: #475569;
+
+            --border-clean: #e2e8f0;
+            --input-bg: #ffffff;
+            --accent-red: #ef4444;
+            --accent-green: #10b981;
+            --accent-purple: #6366f1;
+
+            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 20px 40px -5px rgba(15, 23, 42, 0.05);
+            --ease-kinetic: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-fluid: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-canvas);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 24px;
+            overflow-y: auto;
+            opacity: 0;
+            animation: signupFadeIn 0.4s var(--ease-fluid) forwards;
+        }
+
+        @keyframes signupFadeIn { to { opacity: 1; } }
+
+        .signup-container {
+            background: var(--surface-card);
+            border: 1px solid var(--border-clean);
+            padding: 44px 40px;
+            border-radius: 24px;
+            box-shadow: var(--shadow-premium);
+            width: 100%;
+            max-width: 460px;
+            z-index: 10;
+            text-align: center;
+            margin: auto;
+            transform: translateY(30px) scale(0.97);
+            opacity: 0;
+            animation: elasticCardEntrance 0.6s var(--ease-kinetic) 0.05s forwards;
+        }
+
+        @keyframes elasticCardEntrance { to { transform: translateY(0) scale(1); opacity: 1; } }
+
+        h2 {
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--primary-blue);
+            margin-bottom: 8px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-labels);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px 18px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-clean);
+            border-radius: 12px;
+            color: var(--text-dark);
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s var(--ease-fluid);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+            background: #ffffff;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-blue);
+            border: none;
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+            transition: all 0.2s var(--ease-fluid);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 24px;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            box-shadow: 0 6px 18px rgba(30, 64, 175, 0.35);
+            transform: translateY(-1px);
+        }
+
+        .btn:active { transform: translateY(1px) scale(0.98); }
+
+        .footer-links {
+            margin-top: 24px;
+            font-size: 14px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .footer-links a {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .alert {
+            padding: 14px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            text-align: center;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            font-weight: 500;
+        }
+
+        .biometric-modal {
+            position: fixed !important;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(241, 245, 249, 0.94);
+            z-index: 99999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+        }
+
+        .biometric-box {
+            background: #eff6ff; 
+            border: 1.5px dashed #bfdbfe; 
+            border-radius: 14px; 
+            padding: 16px; 
+            margin-bottom: 20px; 
+            text-align: center;
+        }
+        .biometric-status { font-size: 12px; font-weight: 700; color: var(--primary-blue); margin-top: 8px; }
+
+        select:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            background: #f8fafc;
+        }
+
+        .form-group small {
+            line-height: 1.45;
+        }
+
+        @media (max-width: 520px) {
+            body { padding: 18px 12px; align-items: flex-start; }
+            .signup-container { padding: 28px 20px; max-width: 100%; }
+            h2 { font-size: 25px; }
+            input, select { min-width: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="signup-container">
+        <h2 id="signupHeader">Create Account</h2>
+        <p class="subtitle" id="signupSubtitle">Academic Biometric Management System</p>
+
+        <div id="alertBox" class="alert"></div>
+
+        <form id="signupForm" onsubmit="handleSignupSubmit(event)">
+
+            <!-- 🔒 Locked Portal Banner (Displayed when role is designated from a portal) -->
+            <div id="lockedPortalBanner" style="display: none; background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 14px 18px; margin-bottom: 22px; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 26px;" id="lockedRoleIcon">🎓</span>
+                    <div>
+                        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--primary-blue); letter-spacing: 0.05em;" id="lockedRoleTag">AUTHORIZED PORTAL</div>
+                        <div style="font-size: 15px; font-weight: 850; color: var(--text-dark);" id="lockedRoleTitle">Student Registration</div>
+                    </div>
+                </div>
+                <span style="font-size: 11px; font-weight: 800; color: #047857; background: #d1fae5; padding: 5px 12px; border-radius: 8px; border: 1px solid #a7f3d0; text-transform: uppercase; letter-spacing: 0.05em;">🔒 Portal Locked</span>
+            </div>
+
+            <div class="form-group" id="roleGroup">
+                <label for="role">Portal Role</label>
+                <select id="role" onchange="toggleRoleFields()">
+                    <option value="student" selected>Student (Requires Hardware Fingerprint)</option>
+                    <option value="teacher">Faculty / Teacher</option>
+                    <option value="hod">HOD (Head of Department)</option>
+                    <option value="dean">Dean (Academic Affairs)</option>
+                    <option value="dean_pd">Dean (Planning & Development)</option>
+                    <option value="principal">Principal (Head of Institution)</option>
+                    <option value="parent">Parent / Guardian</option>
+                </select>
+            </div>
+
+            <!-- STUDENT-ONLY ACADEMIC DETAILS -->
+            <div id="studentAcademicGroup" style="display: none;">
+                <div class="form-group">
+                    <label for="studentBranch">Department / Branch *</label>
+                    <select id="studentBranch">
+                        <option value="">Select your branch</option>
+                        <option value="AIML">Artificial Intelligence &amp; Machine Learning (AIML)</option>
+                        <option value="CSBS">Computer Science &amp; Business Systems (CSBS)</option>
+                        <option value="CSE">Computer Science &amp; Engineering (CSE)</option>
+                        <option value="ISE">Information Science &amp; Engineering (ISE)</option>
+                        <option value="ECE">Electronics &amp; Communication Engineering (ECE)</option>
+                        <option value="EEE">Electrical &amp; Electronics Engineering (EEE)</option>
+                        <option value="MECH">Mechanical Engineering (MECH)</option>
+                        <option value="CIVIL">Civil Engineering (CIVIL)</option>
+                        <option value="MATHS">Mathematics Department</option>
+                        <option value="CHEM">Chemistry Department</option>
+                        <option value="PHYSICS">Physics Department</option>
+                        <option value="BIOLOGY">Biology Department</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="section">Section *</label>
+                    <select id="section" disabled>
+                        <option value="">Select branch first</option>
+                    </select>
+                    <small id="sectionHelp" style="display:block; margin-top:6px; color:var(--text-muted); font-size:11px;">
+                        Choose the section assigned by your department.
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label for="academicYear">Academic Year *</label>
+                    <input type="text" id="academicYear" placeholder="e.g. 2026-2027" autocomplete="off" value="2026-2027" required>
+                    <small style="display:block; margin-top:6px; color:var(--text-muted); font-size:11px;">
+                        Type your academic year (e.g., 2026-2027).
+                    </small>
+                </div>
+
+                <!-- STUDENT PROFILE PHOTO (OPTIONAL) -->
+                <div class="form-group" id="studentPhotoGroup">
+                    <label for="profilePhoto" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Profile Photo (Optional)</span>
+                        <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: none;">Max 2 MB (JPG, PNG, WebP)</span>
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 14px; margin-top: 8px; background: #f8fafc; border: 1.5px dashed var(--border-clean); border-radius: 14px; padding: 12px 14px;">
+                        <div id="photoPreviewBox" style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; background: #e2e8f0; border: 2px solid var(--border-clean); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <img id="photoPreviewImg" src="" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                            <span id="photoPreviewPlaceholder" style="font-size: 24px;">👤</span>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <input type="file" id="profilePhoto" accept="image/*,.jpg,.jpeg,.png,.webp" style="display: none;" onchange="handlePhotoSelect(event)">
+                            <button type="button" onclick="document.getElementById('profilePhoto').click()" style="padding: 7px 12px; font-size: 12px; font-weight: 700; color: var(--primary-blue); background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; cursor: pointer;">
+                                📁 Choose Photo
+                            </button>
+                            <button type="button" id="btnRemovePhoto" onclick="removeSelectedPhoto()" style="display: none; margin-left: 6px; padding: 7px 10px; font-size: 12px; font-weight: 700; color: #ef4444; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; cursor: pointer;">
+                                ✕ Remove
+                            </button>
+                            <div id="photoFileName" style="font-size: 11px; color: var(--text-muted); margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">No photo selected</div>
+                        </div>
+                    </div>
+                    <div id="photoValidationError" style="display: none; color: #ef4444; font-size: 12px; font-weight: 600; margin-top: 6px;"></div>
+                </div>
+            </div>
+
+            <!-- Branch Selection Group (For HOD & Teachers) -->
+            <div class="form-group" id="branchGroup" style="display: none;">
+                <label for="branch" style="color: var(--primary-blue); font-weight: 800;">Department Branch</label>
+                <select id="branch">
+                    <option value="AIML">Artificial Intelligence & Machine Learning (AIML)</option>
+                    <option value="CSBS">Computer Science & Business Systems (CSBS)</option>
+                    <option value="CSE">Computer Science & Engineering (CSE)</option>
+                    <option value="ISE">Information Science & Engineering (ISE)</option>
+                    <option value="ECE">Electronics & Communication Engineering (ECE)</option>
+                    <option value="EEE">Electrical & Electronics Engineering (EEE)</option>
+                    <option value="MECH">Mechanical Engineering (MECH)</option>
+                    <option value="CIVIL">Civil Engineering (CIVIL)</option>
+                    <option value="MATHS">Mathematics Department</option>
+                    <option value="CHEM">Chemistry Department</option>
+                    <option value="PHYSICS">Physics Department</option>
+                    <option value="BIOLOGY">Biology Department</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label id="nameLabel" for="fullName">Full Name</label>
+                <input type="text" id="fullName" placeholder="Enter full name" autocomplete="off" required>
+            </div>
+
+            <div class="form-group">
+                <label id="idLabel" for="username">Username / USN</label>
+                <input type="text" id="username" placeholder="Enter account identifier ID" autocomplete="off" required style="text-transform:uppercase;">
+            </div>
+
+            <div class="form-group" id="parentLinkGroup" style="display: none;">
+                <label for="childUsn" style="color: var(--primary-blue); font-weight: bold;">Student USN (Link to Child)</label>
+                <input type="text" id="childUsn" placeholder="Enter your child's USN" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" placeholder="example@domain.com" autocomplete="off" required>
+            </div>
+
+            <!-- 📱 PHONE NUMBER FIELD (Strictly 10-digit limit enforced) -->
+            <div class="form-group" id="phoneGroup">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel" id="phoneNumber" placeholder="9876543210" maxlength="10" pattern="[0-9]{10}" 
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10);" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Create Password</label>
+                <input type="password" id="password" placeholder="••••••••" autocomplete="new-password" required>
+            </div>
+
+            <!-- HARDWARE FINGERPRINT ENROLLMENT (STUDENT SPECIFIC) -->
+            <div class="biometric-box" id="studentBiometricBox">
+                <div style="font-size: 32px;">🖐️</div>
+                <div style="font-weight: 800; font-size: 13px; color: var(--primary-blue);">Device Hardware Fingerprint Binding</div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                    Links your account permanently to this phone's built-in fingerprint sensor to block proxy attendance.
+                </p>
+                <div id="biometricStatusText" class="biometric-status">⚠️ Fingerprint Not Yet Registered</div>
+                <button type="button" id="btnRegisterBiometric" onclick="registerHardwareFingerprint()" style="margin-top: 10px; padding: 10px 18px; background: var(--primary-blue); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer;">
+                    Register Phone Fingerprint
+                </button>
+            </div>
+
+            <button type="submit" class="btn">Register Account</button>
+        </form>
+
+        <div class="footer-links">
+            Already have an account? <a href="login.html" id="signInLink">Sign In</a>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div id="biometricAuthModal" class="biometric-modal">
+        <div style="background-color: #ffffff; padding: 36px; border-radius: 24px; width: 90%; max-width: 420px; text-align: center; border: 1px solid var(--border-clean); box-shadow: var(--shadow-premium);">
+            <h3 style="color: var(--primary-blue); font-size: 20px; font-weight: 800; margin-bottom: 6px;">ENROLLING ACCOUNT</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 20px; font-weight: 500;">Saving credentials and device hardware vectors...</p>
+            <div id="successMessage" style="color: var(--accent-green); font-size: 15px; font-weight: 700; margin-bottom: 15px;">ACCOUNT & DEVICE BOUND ✓</div>
+        </div>
+    </div>
+
+    <script>
+        // 🌐 Dynamic API Base Resolution matching other pages
+        let API_BASE = window.location.origin;
+        if (API_BASE.includes("-5501.")) {
+            API_BASE = API_BASE.replace("-5501.", "-5000.");
+        } else if (API_BASE.includes(":5501")) {
+            API_BASE = API_BASE.replace(":5501", ":5000");
+        } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                    API_BASE = "http://localhost:5000";
+        }
+
+        let enrolledCredentialId = null;
+        let enrolledPublicKey = null;
+        let currentLockedRole = 'student';
+
+        const ROLE_METADATA = {
+            student: {
+                roleValue: 'student',
+                header: 'Create Student Account',
+                subtitle: 'Biometric Hardware Binding & USN Registration',
+                portalTitle: 'Student Portal Registration',
+                icon: '🎓'
+            },
+            teacher: {
+                roleValue: 'teacher',
+                header: 'Create Faculty Account',
+                subtitle: 'Faculty Ownership & QR Attendance Dispatcher',
+                portalTitle: 'Faculty / Teacher Portal Registration',
+                icon: '👨‍🏫'
+            },
+            faculty: {
+                roleValue: 'teacher',
+                header: 'Create Faculty Account',
+                subtitle: 'Faculty Ownership & QR Attendance Dispatcher',
+                portalTitle: 'Faculty / Teacher Portal Registration',
+                icon: '👨‍🏫'
+            },
+            hod: {
+                roleValue: 'hod',
+                header: 'Create HOD Account',
+                subtitle: 'Head of Department Executive Portal Registration',
+                portalTitle: 'HOD Portal Registration',
+                icon: '👔'
+            },
+            dean: {
+                roleValue: 'dean',
+                header: 'Create Dean (Academic) Account',
+                subtitle: 'Office of Academic Affairs & Governance Registration',
+                portalTitle: 'Dean (Academic Affairs) Registration',
+                icon: '📜'
+            },
+            dean_pd: {
+                roleValue: 'dean_pd',
+                header: 'Create Dean (Planning & Development) Account',
+                subtitle: 'Office of Infrastructure & Institutional Growth Registration',
+                portalTitle: 'Dean (Planning & Development) Registration',
+                icon: '🏗️'
+            },
+            dean_planning: {
+                roleValue: 'dean_pd',
+                header: 'Create Dean (Planning & Development) Account',
+                subtitle: 'Office of Infrastructure & Institutional Growth Registration',
+                portalTitle: 'Dean (Planning & Development) Registration',
+                icon: '🏗️'
+            },
+            principal: {
+                roleValue: 'principal',
+                header: 'Create Principal Executive Account',
+                subtitle: 'Institutional Executive Head Workspace Registration',
+                portalTitle: 'Principal Executive Portal Registration',
+                icon: '🎓'
+            },
+            parent: {
+                roleValue: 'parent',
+                header: 'Create Parent / Guardian Account',
+                subtitle: 'Student Ward Linkage & Academic Scorecard Portal',
+                portalTitle: 'Parent / Guardian Portal Registration',
+                icon: '👥'
+            }
+        };
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roleParam = (urlParams.get('role') || 'student').toLowerCase().trim();
+
+            const config = ROLE_METADATA[roleParam] || ROLE_METADATA.student;
+            currentLockedRole = config.roleValue;
+
+            // Strictly lock the role selector: prune all other options and disable it
+            const roleSelect = document.getElementById('role');
+            if (roleSelect) {
+                roleSelect.innerHTML = `<option value="${config.roleValue}" selected>${config.portalTitle}</option>`;
+                roleSelect.value = config.roleValue;
+                roleSelect.disabled = true;
+            }
+
+            // Hide the role selector dropdown container completely
+            const roleGroup = document.getElementById('roleGroup');
+            if (roleGroup) {
+                roleGroup.style.display = 'none';
+            }
+
+            // Display the locked portal banner
+            const lockedBanner = document.getElementById('lockedPortalBanner');
+            if (lockedBanner) {
+                lockedBanner.style.display = 'flex';
+                const iconEl = document.getElementById('lockedRoleIcon');
+                const titleEl = document.getElementById('lockedRoleTitle');
+                if (iconEl) iconEl.innerText = config.icon;
+                if (titleEl) titleEl.innerText = config.portalTitle;
+            }
+
+            // Update page header and subtitle
+            const header = document.getElementById('signupHeader');
+            const subtitle = document.getElementById('signupSubtitle');
+            if (header) header.innerText = config.header;
+            if (subtitle) subtitle.innerText = config.subtitle;
+
+            // Update footer sign-in link to return to that portal's login
+            const signInLink = document.getElementById('signInLink');
+            if (signInLink) {
+                const loginPortalRole = roleParam === 'teacher' ? 'faculty' : roleParam;
+                signInLink.href = `login.html?role=${loginPortalRole}`;
+            }
+
+            toggleRoleFields();
+            setupStudentAcademicFields();
+            getOrCreateDeviceFingerprint();
+        };
+
+        function getOrCreateDeviceFingerprint() {
+            let deviceId = localStorage.getItem("dr_ait_persistent_device_id");
+            
+            if (!deviceId) {
+                const cookieMatch = document.cookie.match(/(^|;) ?deviceFingerprint=([^;]*)(;|$)/);
+                if (cookieMatch) {
+                    deviceId = decodeURIComponent(cookieMatch[2]);
+                    localStorage.setItem("dr_ait_persistent_device_id", deviceId);
+                }
+            }
+
+            if (!deviceId) {
+                deviceId = "DEVICE_" + (crypto.randomUUID ? crypto.randomUUID() : ('id_' + Math.random().toString(36).substring(2) + Date.now()));
+                localStorage.setItem("dr_ait_persistent_device_id", deviceId);
+            }
+
+            document.cookie = `deviceFingerprint=${deviceId}; path=/; max-age=31536000; SameSite=Strict`;
+            return deviceId;
+        }
+
+        function toggleRoleFields() {
+            const role = currentLockedRole || (document.getElementById('role') ? document.getElementById('role').value : 'student');
+            const nameLabel = document.getElementById('nameLabel');
+            const idLabel = document.getElementById('idLabel');
+            const fullNameInput = document.getElementById('fullName');
+            const usernameInput = document.getElementById('username');
+            const parentLinkGroup = document.getElementById('parentLinkGroup');
+            const childUsnInput = document.getElementById('childUsn');
+            const branchGroup = document.getElementById('branchGroup');
+            const bioBox = document.getElementById('studentBiometricBox');
+            const phoneGroup = document.getElementById('phoneGroup');
+            const studentAcademicGroup = document.getElementById('studentAcademicGroup');
+            const studentBranchInput = document.getElementById('studentBranch');
+            const sectionInput = document.getElementById('section');
+            const academicYearInput = document.getElementById('academicYear');
+
+            // Academic fields are visible and required ONLY for student signup.
+            const isStudent = role === 'student';
+            studentAcademicGroup.style.display = isStudent ? 'block' : 'none';
+            studentBranchInput.required = isStudent;
+            sectionInput.required = isStudent;
+            academicYearInput.required = isStudent;
+
+            if (role !== 'student') {
+                studentBranchInput.value = '';
+                sectionInput.innerHTML = '<option value="">Select branch first</option>';
+                sectionInput.disabled = true;
+                academicYearInput.value = '2026-2027';
+                if (typeof removeSelectedPhoto === 'function') removeSelectedPhoto();
+            }
+
+            if (role === 'parent') {
+                nameLabel.innerText = "Parent Full Name";
+                fullNameInput.placeholder = "Enter father or mother's name";
+                idLabel.innerText = "Parent ID / Username";
+                usernameInput.placeholder = "Create a Parent ID";
+                parentLinkGroup.style.display = 'block';
+                branchGroup.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for parents
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = true;
+            } else if (role === 'teacher') {
+                nameLabel.innerText = "Teacher Full Name";
+                fullNameInput.placeholder = "Enter professor name";
+                idLabel.innerText = "Teacher ID / Employee ID";
+                usernameInput.placeholder = "Enter Teacher Employee ID";
+                parentLinkGroup.style.display = 'none';
+                branchGroup.style.display = 'block';
+                bioBox.style.display = 'none'; // 🚫 Hidden for teachers
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
+            } else if (role === 'hod') {
+                nameLabel.innerText = "HOD Full Name";
+                fullNameInput.placeholder = "Enter HOD full name";
+                idLabel.innerText = "HOD Employee ID / Username";
+                usernameInput.placeholder = "Enter HOD Employee ID";
+                parentLinkGroup.style.display = 'none';
+                branchGroup.style.display = 'block';
+                bioBox.style.display = 'none'; // 🚫 Hidden for HODs
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
+            } else if (role === 'dean') {
+                nameLabel.innerText = "Dean Full Name";
+                fullNameInput.placeholder = "Enter Dean full name (e.g. Dr. S. K. Nandeesh)";
+                idLabel.innerText = "Dean Employee ID";
+                usernameInput.placeholder = "Enter Dean ID (e.g. DEAN01)";
+                parentLinkGroup.style.display = 'none';
+                branchGroup.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for Deans
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
+            } else if (role === 'dean_pd') {
+                nameLabel.innerText = "Dean (P&D) Full Name";
+                fullNameInput.placeholder = "Enter Dean full name (e.g. Dr. G. Rajendra)";
+                idLabel.innerText = "Dean (P&D) Employee ID";
+                usernameInput.placeholder = "Enter Dean (P&D) ID (e.g. DEAN_PD01)";
+                parentLinkGroup.style.display = 'none';
+                branchGroup.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for Dean P&D
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
+            } else if (role === 'principal') {
+                nameLabel.innerText = "Principal Full Name";
+                fullNameInput.placeholder = "Enter Principal full name (e.g. Dr. C. Ramesh)";
+                idLabel.innerText = "Principal Employee ID";
+                usernameInput.placeholder = "Enter Principal ID (e.g. PRIN01)";
+                parentLinkGroup.style.display = 'none';
+                branchGroup.style.display = 'none';
+                bioBox.style.display = 'none'; // 🚫 Hidden for Principal
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
+            } else if (role === 'student') {
+                nameLabel.innerText = "Full Name";
+                fullNameInput.placeholder = "Enter full name";
+                idLabel.innerText = "University USN";
+                usernameInput.placeholder = "Enter College USN (e.g., 1DA24AI015)";
+                parentLinkGroup.style.display = 'none';
+                branchGroup.style.display = 'none';
+                bioBox.style.display = 'block'; // ✅ Shown ONLY for students
+                phoneGroup.style.display = 'block';
+                childUsnInput.required = false;
+                childUsnInput.value = "";
+            }
+        }
+
+        // Section availability is configured per branch. A-E are offered for
+        // engineering branches here as a starting configuration; confirm the
+        // exact sections with Dr. AIT's official department records.
+        // Change any array below if a department has fewer sections.
+        const BRANCH_SECTIONS = {
+            AIML: ['A', 'B', 'C', 'D', 'E'],
+            CSBS: ['A', 'B', 'C', 'D', 'E'],
+            CSE: ['A', 'B', 'C', 'D', 'E'],
+            ISE: ['A', 'B', 'C', 'D', 'E'],
+            ECE: ['A', 'B', 'C', 'D', 'E'],
+            EEE: ['A', 'B', 'C', 'D', 'E'],
+            MECH: ['A', 'B', 'C', 'D', 'E'],
+            CIVIL: ['A', 'B', 'C', 'D', 'E'],
+            MATHS: ['A', 'B', 'C', 'D', 'E'],
+            CHEM: ['A', 'B', 'C', 'D', 'E'],
+            PHYSICS: ['A', 'B', 'C', 'D', 'E'],
+            BIOLOGY: ['A', 'B', 'C', 'D', 'E']
+        };
+
+        function setupStudentAcademicFields() {
+            const branchSelect = document.getElementById('studentBranch');
+            const sectionSelect = document.getElementById('section');
+
+            branchSelect.addEventListener('change', function () {
+                const branch = this.value;
+                const sections = BRANCH_SECTIONS[branch] || [];
+                sectionSelect.innerHTML = '';
+
+                if (!branch || sections.length === 0) {
+                    sectionSelect.innerHTML = '<option value="">No sections configured</option>';
+                    sectionSelect.disabled = true;
+                    return;
+                }
+
+                sectionSelect.appendChild(new Option('Select your section', ''));
+                sections.forEach(section => {
+                    sectionSelect.appendChild(new Option('Section ' + section, section));
+                });
+                sectionSelect.disabled = false;
+            });
+        }
+
+        let selectedPhotoFile = null;
+
+        function handlePhotoSelect(event) {
+            const file = event.target.files && event.target.files[0];
+            const errorBox = document.getElementById('photoValidationError');
+            const previewImg = document.getElementById('photoPreviewImg');
+            const placeholder = document.getElementById('photoPreviewPlaceholder');
+            const fileNameSpan = document.getElementById('photoFileName');
+            const btnRemove = document.getElementById('btnRemovePhoto');
+
+            if (errorBox) {
+                errorBox.style.display = 'none';
+                errorBox.innerText = '';
+            }
+
+            if (!file) {
+                removeSelectedPhoto();
+                return;
+            }
+
+            // 1. Enforce 2 MB size limit
+            const MAX_BYTES = 2 * 1024 * 1024;
+            if (file.size > MAX_BYTES) {
+                if (errorBox) {
+                    errorBox.innerText = '⚠️ Selected photo exceeds 2 MB. Please choose a smaller photo.';
+                    errorBox.style.display = 'block';
+                }
+                removeSelectedPhoto();
+                return;
+            }
+
+            // 2. Validate MIME type & file extension (JPEG, PNG, WebP)
+            const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            const validExts = ['jpg', 'jpeg', 'png', 'webp'];
+
+            if (!validTypes.includes(file.type) || !validExts.includes(ext)) {
+                if (errorBox) {
+                    errorBox.innerText = '⚠️ Unsupported format. Please upload a JPEG, PNG, or WebP image.';
+                    errorBox.style.display = 'block';
+                }
+                removeSelectedPhoto();
+                return;
+            }
+
+            selectedPhotoFile = file;
+            if (fileNameSpan) fileNameSpan.innerText = file.name;
+            if (btnRemove) btnRemove.style.display = 'inline-block';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                if (previewImg) {
+                    previewImg.src = e.target.result;
+                    previewImg.style.display = 'block';
+                }
+                if (placeholder) placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removeSelectedPhoto() {
+            selectedPhotoFile = null;
+            const input = document.getElementById('profilePhoto');
+            if (input) input.value = '';
+            const previewImg = document.getElementById('photoPreviewImg');
+            const placeholder = document.getElementById('photoPreviewPlaceholder');
+            const fileNameSpan = document.getElementById('photoFileName');
+            const btnRemove = document.getElementById('btnRemovePhoto');
+
+            if (previewImg) {
+                previewImg.style.display = 'none';
+                previewImg.src = '';
+            }
+            if (placeholder) placeholder.style.display = 'block';
+            if (fileNameSpan) fileNameSpan.innerText = 'No photo selected';
+            if (btnRemove) btnRemove.style.display = 'none';
+        }
+
+        async function registerHardwareFingerprint() {
+            const usn = document.getElementById('username').value.trim();
+            const fullName = document.getElementById('fullName').value.trim();
+            const statusText = document.getElementById('biometricStatusText');
+
+            if (!usn) {
+                alert("⚠️ Please enter your USN first before scanning your fingerprint.");
+                document.getElementById('username').focus();
+                return;
+            }
+
+            if (!window.PublicKeyCredential) {
+                alert("❌ Biometric hardware is not supported or enabled in this browser.");
+                return;
+            }
+
+            try {
+                statusText.innerText = "🖐️ Place your finger on the phone sensor...";
+                statusText.style.color = "var(--primary-blue)";
+
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+
+                const userIdBuffer = new Uint8Array(16);
+                window.crypto.getRandomValues(userIdBuffer);
+
+                const createOptions = {
+                    publicKey: {
+                        challenge: challenge,
+                        rp: { name: "Dr. AIT Biometric Portal", id: window.location.hostname },
+                        user: {
+                            id: userIdBuffer,
+                            name: usn,
+                            displayName: fullName || usn
+                        },
+                        pubKeyCredParams: [
+                            { type: "public-key", alg: -7 },  // ES256
+                            { type: "public-key", alg: -257 } // RS256
+                        ],
+                        authenticatorSelection: {
+                            authenticatorAttachment: "platform",
+                            userVerification: "required"
+                        },
+                        timeout: 60000,
+                        attestation: "none"
+                    }
+                };
+
+                const credential = await navigator.credentials.create(createOptions);
+
+                if (credential) {
+                    const rawIdBytes = new Uint8Array(credential.rawId);
+                    enrolledCredentialId = btoa(String.fromCharCode(...rawIdBytes))
+                        .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+                    enrolledPublicKey = enrolledCredentialId;
+
+                    statusText.innerText = "✅ Fingerprint Registered & Device Bound!";
+                    statusText.style.color = "#047857";
+                    document.getElementById('btnRegisterBiometric').innerText = "✓ Fingerprint Enrolled";
+                    document.getElementById('btnRegisterBiometric').style.background = "#047857";
+                }
+
+            } catch (err) {
+                console.error("Biometric registration error:", err);
+                statusText.innerText = "❌ Registration cancelled or sensor error. Try again.";
+                statusText.style.color = "#b91c1c";
+            }
+        }
+
+        async function handleSignupSubmit(event) {
+            event.preventDefault();
+            const alertBox = document.getElementById('alertBox');
+            alertBox.style.display = 'none';
+
+            const role = currentLockedRole || (document.getElementById('role') ? document.getElementById('role').value : 'student');
+            const name = document.getElementById('fullName').value.trim();
+            const usn = document.getElementById('username').value.trim().toUpperCase();
+            const email = document.getElementById('email').value.trim();
+            const phoneNumber = document.getElementById('phoneNumber').value.trim();
+            const password = document.getElementById('password').value;
+            const childUsn = document.getElementById('childUsn') ? document.getElementById('childUsn').value.trim() : '';
+            const branch = document.getElementById('branch') ? document.getElementById('branch').value : '';
+            const studentBranch = document.getElementById('studentBranch') ? document.getElementById('studentBranch').value : '';
+            const section = document.getElementById('section') ? document.getElementById('section').value : '';
+            let academicYear = document.getElementById('academicYear') ? document.getElementById('academicYear').value.trim() : '';
+            academicYear = academicYear.replace(/\s+/g, '').replace(/[–—]/g, '-');
+            if (/^\d{4}-\d{2}$/.test(academicYear)) {
+                const parts = academicYear.split('-');
+                academicYear = `${parts[0]}-${parts[0].slice(0, 2)}${parts[1]}`;
+            }
+            
+            const deviceFingerprint = getOrCreateDeviceFingerprint();
+
+            if (phoneNumber.length !== 10) {
+                alertBox.innerText = "⚠️ Please enter a valid 10-digit phone number.";
+                alertBox.style.display = 'block';
+                document.getElementById('phoneNumber').focus();
+                return;
+            }
+
+            if (role === 'student' && (!studentBranch || !section || !academicYear)) {
+                alertBox.innerText = "⚠️ Please select your branch, section, and type your academic year.";
+                alertBox.style.display = 'block';
+                if (!studentBranch) document.getElementById('studentBranch').focus();
+                else if (!section) document.getElementById('section').focus();
+                else document.getElementById('academicYear').focus();
+                return;
+            }
+
+            if (role === 'student' && !/^\d{4}-\d{4}$/.test(academicYear)) {
+                alertBox.innerText = "⚠️ Please enter a valid academic year format like 2026-2027.";
+                alertBox.style.display = 'block';
+                document.getElementById('academicYear').focus();
+                return;
+            }
+
+            if (role === 'student' && !enrolledCredentialId) {
+                alertBox.innerText = "⚠️ You must register your phone fingerprint sensor before completing signup.";
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            document.getElementById('biometricAuthModal').style.display = 'flex';
+
+            try {
+                let response;
+                const branchValue = role === 'student' ? studentBranch : (role === 'principal' ? 'ADMIN' : (role === 'dean' ? 'ACADEMIC' : (role === 'dean_pd' ? 'PLANNING' : branch)));
+
+                if (role === 'student' && selectedPhotoFile) {
+                    const formData = new FormData();
+                    formData.append('usn', usn);
+                    formData.append('email', email);
+                    formData.append('password', password);
+                    formData.append('role', role);
+                    formData.append('name', name);
+                    formData.append('childUsn', childUsn || '');
+                    formData.append('branch', branchValue || '');
+                    formData.append('section', section || '');
+                    formData.append('academicYear', academicYear || '');
+                    formData.append('phoneNumber', phoneNumber || '');
+                    formData.append('institutionId', 'DR_AIT');
+                    formData.append('deviceFingerprint', deviceFingerprint || '');
+                    formData.append('profilePhoto', selectedPhotoFile);
+
+                    response = await fetch(`${API_BASE}/api/auth/signup`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else {
+                    response = await fetch(`${API_BASE}/api/auth/signup`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            usn, 
+                            email, 
+                            password, 
+                            role, 
+                            name, 
+                            childUsn,
+                            branch: branchValue,
+                            section: role === 'student' ? section : '',
+                            academicYear: role === 'student' ? academicYear : '',
+                            phoneNumber,
+                            institutionId: 'DR_AIT',
+                            deviceFingerprint: deviceFingerprint
+                        })
+                    });
+                }
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    document.getElementById('biometricAuthModal').style.display = 'none';
+                    alertBox.innerText = data.message || "Registration failed. Please check your credentials.";
+                    alertBox.style.display = 'block';
+                    return;
+                }
+
+                setTimeout(() => {
+                    document.getElementById('biometricAuthModal').style.display = 'none';
+                    alert("🎉 Account created successfully! Please login using your credentials.");
+                    window.location.href = `login.html?role=${role === 'teacher' ? 'faculty' : role}`;
+                }, 1000);
+
+            } catch (err) {
+                document.getElementById('biometricAuthModal').style.display = 'none';
+                alertBox.innerText = "Error connecting to server: " + err.message;
+                alertBox.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

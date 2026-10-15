@@ -244,6 +244,30 @@ router.post('/login-challenge', async (req, res) => {
 
             const incomingFingerprint = cleanText(deviceFingerprint);
 
+            const hasStored = Boolean(storedFingerprint);
+            const hasIncoming = Boolean(incomingFingerprint);
+            const isMatch = hasStored && hasIncoming && storedFingerprint === incomingFingerprint;
+
+            let challengeDecision = 'ALLOWED';
+            if (hasStored && hasIncoming && !isMatch) {
+                challengeDecision = 'REJECTED_DEVICE_MISMATCH';
+            } else if (hasStored && !hasIncoming) {
+                challengeDecision = 'ALLOWED_MISSING_INCOMING_CHALLENGE';
+            } else if (!hasStored) {
+                challengeDecision = 'ALLOWED_UNBOUND_STUDENT';
+            } else if (isMatch) {
+                challengeDecision = 'ALLOWED_DEVICE_MATCH';
+            }
+
+            const requestId = crypto.randomBytes(4).toString('hex');
+            console.info(JSON.stringify({
+                requestId,
+                hasStoredFingerprint: hasStored,
+                hasIncomingFingerprint: hasIncoming,
+                isMatch: isMatch,
+                decision: challengeDecision
+            }));
+
 
 
             if (
@@ -467,6 +491,26 @@ router.post('/combined-login', async (req, res) => {
             const storedFingerprint = cleanText(user.device_fingerprint);
 
             const incomingFingerprint = cleanText(deviceFingerprint);
+
+            const hasStored = Boolean(storedFingerprint);
+            const hasIncoming = Boolean(incomingFingerprint);
+            const isMatch = hasStored && hasIncoming && storedFingerprint === incomingFingerprint;
+
+            let loginDecision = 'UNKNOWN';
+            if (!hasStored && hasIncoming) loginDecision = 'FIRST_DEVICE_BINDING';
+            else if (!hasStored && !hasIncoming) loginDecision = 'FIRST_LOGIN_NO_DEVICE';
+            else if (isMatch) loginDecision = 'DEVICE_VERIFIED_MATCH';
+            else if (hasStored && !hasIncoming) loginDecision = 'REJECTED_MISSING_INCOMING_DEVICE';
+            else if (hasStored && hasIncoming && !isMatch) loginDecision = 'REJECTED_DEVICE_MISMATCH';
+
+            const requestId = crypto.randomBytes(4).toString('hex');
+            console.info(JSON.stringify({
+                requestId,
+                hasStoredFingerprint: hasStored,
+                hasIncomingFingerprint: hasIncoming,
+                isMatch: isMatch,
+                decision: loginDecision
+            }));
 
 
 

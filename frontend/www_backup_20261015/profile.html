@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Profile</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h2>👤 My Profile</h2>
+        <p><strong>ID/SRN:</strong> <span id="user-id"></span></p>
+        <p><strong>Role:</strong> <span id="user-role"></span></p>
+        <button onclick="goBack()">Back</button>
+    </div>
+
+    <script>
+        document.getElementById("user-id").innerText = localStorage.getItem("student_id");
+        document.getElementById("user-role").innerText = localStorage.getItem("role");
+
+        function goBack() {
+            const role = localStorage.getItem("role");
+            window.location.href = role === "teacher" ? "teacher.html" : "student.html";
+        }
+    </script>
+</body>
+</html>

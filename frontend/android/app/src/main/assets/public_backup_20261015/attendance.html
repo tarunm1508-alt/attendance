@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scan Attendance</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+    <div class="container">
+        <h2> Scan QR Code</h2>
+        <div id="reader" style="width: 300px; margin: auto;"></div>
+        <p id="status-msg">Align the QR code inside the box</p>
+        <button onclick="window.location.href='student.html'">Cancel</button>
+    </div>
+
+    <script>
+        const studentId = localStorage.getItem("student_id");
+
+        function onScanSuccess(decodedText) {
+            html5QrcodeScanner.clear(); // Stop camera
+            
+            // Get GPS Location
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const response = await fetch('http://localhost:5000/api/attendance/mark', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_id: studentId,
+                        qr_code: decodedText,
+                        latitude: pos.coords.latitude,
+                        longitude: pos.coords.longitude
+                    })
+                });
+
+                const result = await response.json();
+                alert(result.message);
+                window.location.href = 'student.html';
+            }, (err) => {
+                alert("Please enable GPS to mark attendance.");
+            });
+        }
+
+        const html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+</body>
+</html>

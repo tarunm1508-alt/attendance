@@ -581,13 +581,22 @@
     </div>
 
     <script>
-        let BACKEND_URL = window.location.origin;
-        if (BACKEND_URL.includes("-5501.")) {
-            BACKEND_URL = BACKEND_URL.replace("-5501.", "-5000.");
-        } else if (BACKEND_URL.includes(":5501")) {
-            BACKEND_URL = BACKEND_URL.replace(":5501", ":5000");
-        } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-            BACKEND_URL = "http://localhost:5000";
+        const isCapacitor = Boolean(
+            (window.Capacitor && (window.Capacitor.isNativePlatform?.() || window.Capacitor.getPlatform?.() === 'android')) ||
+            window.location.protocol === 'capacitor:' ||
+            (window.location.hostname === 'localhost' && !window.location.port)
+        );
+
+        let BACKEND_URL;
+        if (isCapacitor) {
+            BACKEND_URL = "https://dr-ait-portal-backend.onrender.com";
+        } else {
+            BACKEND_URL = window.location.origin;
+            if (BACKEND_URL.includes("-5501.")) BACKEND_URL = BACKEND_URL.replace("-5501.", "-5000.");
+            else if (BACKEND_URL.includes(":5501")) BACKEND_URL = BACKEND_URL.replace(":5501", ":5000");
+            else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                if (window.location.port !== "5000") BACKEND_URL = "http://localhost:5000";
+            }
         }
 
         const institutionId = localStorage.getItem("userInstitution") || "DR_AIT";
@@ -1020,3 +1029,4 @@
     </script>
 </body>
 </html>
+

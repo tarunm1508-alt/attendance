@@ -48,11 +48,22 @@
 </div>
 
 <script>
-    let API_BASE = window.location.origin;
-    if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
-    else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
-    else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-        API_BASE = "http://localhost:5000";
+    const isCapacitor = Boolean(
+        (window.Capacitor && (window.Capacitor.isNativePlatform?.() || window.Capacitor.getPlatform?.() === 'android')) ||
+        window.location.protocol === 'capacitor:' ||
+        (window.location.hostname === 'localhost' && !window.location.port)
+    );
+
+    let API_BASE;
+    if (isCapacitor) {
+        API_BASE = "https://dr-ait-portal-backend.onrender.com";
+    } else {
+        API_BASE = window.location.origin;
+        if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
+        else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
+        else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            if (window.location.port !== "5000") API_BASE = "http://localhost:5000";
+        }
     }
 
     const institutionId = localStorage.getItem('institutionId') || 'DR_AIT';
@@ -127,13 +138,14 @@
                             tbody.innerHTML = ""; 
                         }
                         
+                        const displayMark = (v) => (v !== null && v !== undefined && v !== '') ? v : '-';
                         tbody.innerHTML += `
                             <tr>
                                 <td style="text-align:left; font-weight:bold;">${record.subject_name || record.subject_code || 'Subject'}</td>
-                                <td>${record.cie1 ?? record.cie_1 ?? 0}</td>
-                                <td>${record.cie2 ?? record.cie_2 ?? 0}</td>
-                                <td>${record.cie3 ?? record.cie_3 ?? 0}</td>
-                                <td><b>${record.see ?? record.see_marks ?? 0}</b></td>
+                                <td>${displayMark(record.cie1 ?? record.cie_1)}</td>
+                                <td>${displayMark(record.cie2 ?? record.cie_2)}</td>
+                                <td>${displayMark(record.cie3 ?? record.cie_3)}</td>
+                                <td><b>${displayMark(record.see ?? record.see_marks)}</b></td>
                             </tr>
                         `;
                     }

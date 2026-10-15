@@ -32,13 +32,22 @@
     </div>
 
     <script>
-        let API_BASE = window.location.origin;
-        if (API_BASE.includes("-5501.")) {
-            API_BASE = API_BASE.replace("-5501.", "-5000.");
-        } else if (API_BASE.includes(":5501")) {
-            API_BASE = API_BASE.replace(":5501", ":5000");
-        } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+        const isCapacitor = Boolean(
+            (window.Capacitor && (window.Capacitor.isNativePlatform?.() || window.Capacitor.getPlatform?.() === 'android')) ||
+            window.location.protocol === 'capacitor:' ||
+            (window.location.hostname === 'localhost' && !window.location.port)
+        );
+
+        let API_BASE;
+        if (isCapacitor) {
             API_BASE = "https://dr-ait-portal-backend.onrender.com";
+        } else {
+            API_BASE = window.location.origin;
+            if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
+            else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
+            else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                if (window.location.port !== "5000") API_BASE = "http://localhost:5000";
+            }
         }
 
         const studentUsn = localStorage.getItem("userUsn") || localStorage.getItem("student_id");

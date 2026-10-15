@@ -103,13 +103,24 @@
         </div>
     </div>
     <script>
-        let API_BASE = window.location.origin;
-        if (API_BASE.includes("-5501.")) {
-            API_BASE = API_BASE.replace("-5501.", "-5000.");
-        } else if (API_BASE.includes(":5501")) {
-            API_BASE = API_BASE.replace(":5501", ":5000");
-        } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-            API_BASE = "http://localhost:5000";
+        const isCapacitor = Boolean(
+            (window.Capacitor && (window.Capacitor.isNativePlatform?.() || window.Capacitor.getPlatform?.() === 'android')) ||
+            window.location.protocol === 'capacitor:' ||
+            (window.location.hostname === 'localhost' && !window.location.port)
+        );
+
+        let API_BASE;
+        if (isCapacitor) {
+            API_BASE = "https://dr-ait-portal-backend.onrender.com";
+        } else {
+            API_BASE = window.location.origin;
+            if (API_BASE.includes("-5501.")) {
+                API_BASE = API_BASE.replace("-5501.", "-5000.");
+            } else if (API_BASE.includes(":5501")) {
+                API_BASE = API_BASE.replace(":5501", ":5000");
+            } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                if (window.location.port !== "5000") API_BASE = "http://localhost:5000";
+            }
         }
 
         let activePortalRole = 'student';
@@ -284,43 +295,93 @@
             try {
                 let hardwareVerified = false;
 
-                if (window.PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
-                    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-                    if (available) {
-                        try {
-                            const challenge = new Uint8Array(32);
-                            window.crypto.getRandomValues(challenge);
+                // 1. Native Capacitor Android Biometric Authentication
+                const BiometricAuth = window.Capacitor?.Plugins?.BiometricAuth ||
+                    (window.Capacitor?.registerPlugin ? window.Capacitor.registerPlugin('BiometricAuth') : null);
 
-                            await navigator.credentials.get({
-                                publicKey: {
-                                    challenge: challenge,
-                                    timeout: 30000,
-                                    userVerification: "required",
-                                    rpId: window.location.hostname
-                                }
-                            });
-                            hardwareVerified = true;
-                        } catch (webAuthnErr) {
-                            console.warn("Hardware biometric check bypassed or cancelled:", webAuthnErr);
+                if (isCapacitor && BiometricAuth) {
+                    let avail = null;
+                    try {
+                        avail = await BiometricAuth.isAvailable();
+                    } catch (availErr) {
+                        console.warn("Biometric availability check failed:", availErr);
+                    }
+
+                    if (avail && !avail.available) {
+                        if (avail.status === 'NONE_ENROLLED') {
+                            throw new Error("No fingerprints enrolled on this device. Please register a fingerprint in Android Settings -> Security -> Fingerprint, then return to log in.");
+                        } else if (avail.status === 'NO_HARDWARE') {
+                            throw new Error("This device does not have a fingerprint/biometric sensor.");
+                        } else if (avail.status === 'HW_UNAVAILABLE') {
+                            throw new Error("Biometric sensor is busy or temporarily unavailable. Please try again.");
+                        } else {
+                            throw new Error(avail.message || "Biometric hardware is not available on this device.");
                         }
                     }
+
+                    // Invoke native Android BiometricPrompt system dialog
+                    const authResult = await BiometricAuth.authenticate({
+                        title: "Dr. AIT Biometric Portal",
+                        subtitle: "Student Identity Verification",
+                        description: "Place your enrolled finger on the device sensor to unlock your session.",
+                        cancelText: "Cancel"
+                    });
+
+                    if (authResult && authResult.success) {
+                        hardwareVerified = true;
+                    } else {
+                        throw new Error("Fingerprint verification failed.");
+                    }
+                } else if (window.PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function') {
+                    // 2. Web browser WebAuthn platform authenticator
+                    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                    if (available) {
+                        const challenge = new Uint8Array(32);
+                        window.crypto.getRandomValues(challenge);
+
+                        await navigator.credentials.get({
+                            publicKey: {
+                                challenge: challenge,
+                                timeout: 30000,
+                                userVerification: "required",
+                                rpId: window.location.hostname
+                            }
+                        });
+                        hardwareVerified = true;
+                    } else {
+                        throw new Error("Platform biometric authenticator not available in this browser. Please use the mobile app.");
+                    }
+                } else {
+                    throw new Error("Biometric authentication is not supported in this environment. Please open the Dr. AIT Android application.");
                 }
 
                 if (!hardwareVerified) {
-                    const confirmFingerprint = window.confirm("👆 Dr. AIT Hardware Fingerprint Security:\n\nPlace your finger on your device sensor and tap OK to verify your physical presence and unlock session.");
-                    if (!confirmFingerprint) {
-                        throw new Error("Fingerprint verification declined by user.");
-                    }
+                    throw new Error("Biometric verification could not be completed.");
                 }
 
                 sendLoginRequest();
             } catch (err) {
-                console.warn("Fingerprint scan canceled or failed:", err);
+                console.warn("Fingerprint verification failed or cancelled:", err);
 
                 document.getElementById('biometricCardSection').style.display = 'none';
                 document.getElementById('credentialsForm').style.display = 'block';
 
-                alertBox.innerText = "❌ Fingerprint verification canceled or failed. Access blocked.";
+                let rawMsg = err?.message || (typeof err === 'string' ? err : "Fingerprint verification cancelled or failed.");
+                let displayMsg = rawMsg;
+
+                if (rawMsg.includes("USER_CANCELED")) {
+                    displayMsg = "Fingerprint verification cancelled.";
+                } else if (rawMsg.includes("NONE_ENROLLED")) {
+                    displayMsg = "No fingerprints enrolled on this device. Please register a fingerprint in your phone's Android Settings -> Security -> Fingerprint.";
+                } else if (rawMsg.includes("NO_HARDWARE")) {
+                    displayMsg = "This device does not have a biometric sensor.";
+                } else if (rawMsg.includes("LOCKOUT")) {
+                    displayMsg = "Biometric sensor is locked due to too many failed attempts. Unlock using your phone lock screen PIN/password.";
+                } else if (rawMsg.includes("HW_UNAVAILABLE")) {
+                    displayMsg = "Biometric sensor is busy or temporarily unavailable. Please try again.";
+                }
+
+                alertBox.innerText = `❌ ${displayMsg}`;
                 alertBox.style.display = 'block';
             }
         }

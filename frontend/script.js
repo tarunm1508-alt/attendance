@@ -1,14 +1,16 @@
-// 1. API Base URL (Dynamically resolves local vs production Render deployment)
-let API_URL = window.location.origin;
-if (API_URL.includes("-5501.")) {
-    API_URL = API_URL.replace("-5501.", "-5000.") + "/api";
-} else if (API_URL.includes(":5501")) {
-    API_URL = API_URL.replace(":5501", ":5000") + "/api";
-} else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-    API_URL = "http://localhost:5000/api";
-} else {
-    API_URL = "https://dr-ait-portal-backend.onrender.com/api";
-}
+// 1. API Base URL (Dynamically resolves local vs Capacitor Android vs production Render deployment)
+const isCapacitorEnv = (window.Capacitor && (window.Capacitor.isNativePlatform?.() || window.Capacitor.getPlatform?.() === 'android')) ||
+                       window.location.protocol === 'capacitor:' ||
+                       (window.location.hostname === 'localhost' && !window.location.port);
+let API_URL = isCapacitorEnv
+    ? "https://dr-ait-portal-backend.onrender.com/api"
+    : (window.location.origin.includes("-5501.")
+        ? window.location.origin.replace("-5501.", "-5000.") + "/api"
+        : window.location.origin.includes(":5501")
+            ? window.location.origin.replace(":5501", ":5000") + "/api"
+            : (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
+                ? "http://localhost:5000/api"
+                : "https://dr-ait-portal-backend.onrender.com/api");
 
 // 2. Logout Function (Clears all stored session credentials)
 function logout() {

@@ -290,11 +290,22 @@
         </div>
     </div>
     <script>
-        let BACKEND_URL = window.location.origin;
-        if (BACKEND_URL.includes("-5501.")) BACKEND_URL = BACKEND_URL.replace("-5501.", "-5000.");
-        else if (BACKEND_URL.includes(":5501")) BACKEND_URL = BACKEND_URL.replace(":5501", ":5000");
-        else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-            BACKEND_URL = "http://localhost:5000";
+        const isCapacitor = Boolean(
+            (window.Capacitor && (window.Capacitor.isNativePlatform?.() || window.Capacitor.getPlatform?.() === 'android')) ||
+            window.location.protocol === 'capacitor:' ||
+            (window.location.hostname === 'localhost' && !window.location.port)
+        );
+
+        let BACKEND_URL;
+        if (isCapacitor) {
+            BACKEND_URL = "https://dr-ait-portal-backend.onrender.com";
+        } else {
+            BACKEND_URL = window.location.origin;
+            if (BACKEND_URL.includes("-5501.")) BACKEND_URL = BACKEND_URL.replace("-5501.", "-5000.");
+            else if (BACKEND_URL.includes(":5501")) BACKEND_URL = BACKEND_URL.replace(":5501", ":5000");
+            else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                if (window.location.port !== "5000") BACKEND_URL = "http://localhost:5000";
+            }
         }
         const parentUsn = localStorage.getItem("userUsn") || localStorage.getItem("parent_usn") || localStorage.getItem("parentUsn") || "";
         const parentName = localStorage.getItem("userName") || localStorage.getItem("user_name") || "Parent";
@@ -540,13 +551,14 @@
                             if (tbody.innerHTML.includes("No records found")) {
                                 tbody.innerHTML = "";
                             }
+                            const displayMark = (v) => (v !== null && v !== undefined && v !== '') ? v : '-';
                             tbody.innerHTML += `
                                 <tr>
                                     <td style="text-align:left; font-weight:600;">${record.subject_name || record.subject_code || 'Subject'}</td>
-                                    <td>${record.cie1 ?? record.cie_1 ?? 0}</td>
-                                    <td>${record.cie2 ?? record.cie_2 ?? 0}</td>
-                                    <td>${record.cie3 ?? record.cie_3 ?? 0}</td>
-                                    <td style="font-weight:600;">${record.see ?? record.see_marks ?? 0}</td>
+                                    <td>${displayMark(record.cie1 ?? record.cie_1)}</td>
+                                    <td>${displayMark(record.cie2 ?? record.cie_2)}</td>
+                                    <td>${displayMark(record.cie3 ?? record.cie_3)}</td>
+                                    <td style="font-weight:600;">${displayMark(record.see ?? record.see_marks)}</td>
                                 </tr>
                             `;
                         }

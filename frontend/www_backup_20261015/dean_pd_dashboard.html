@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dean Planning & Development Portal | Dr. AIT</title>
+    <!-- CDNs for visual export & UI -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-canvas: #f8fafc;
+            --surface-card: #ffffff;
+            --border-clean: #cbd5e1;
+            --primary-amber: #d97706;
+            --primary-hover: #b45309;
+            --accent-green: #059669;
+            --accent-blue: #1e40af;
+            --accent-purple: #7c3aed;
+            --accent-red: #ef4444;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --shadow-premium: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 10px 15px -3px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        body { background-color: var(--bg-canvas); color: var(--text-dark); padding: 24px; min-height: 100vh; display: flex; justify-content: center; }
+        
+        .container { max-width: 1250px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .bento-card { background: var(--surface-card); border: 1px solid var(--border-clean); border-radius: 20px; padding: 26px; box-shadow: var(--shadow-premium); width: 100%; }
+
+        /* Profile Header */
+        .profile-banner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .dean-badge { display: flex; align-items: center; gap: 14px; }
+        .avatar-circle { width: 56px; height: 56px; border-radius: 50%; background: #fef3c7; border: 2.5px solid var(--primary-amber); display: flex; justify-content: center; align-items: center; font-size: 26px; }
+        .dean-name { font-size: 20px; font-weight: 850; color: var(--text-dark); }
+        .dean-dept { font-size: 13px; color: var(--primary-amber); font-weight: 700; margin-top: 2px; }
+
+        /* KPI Stats Grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-top: 14px; }
+        .kpi-box { background: #f8fafc; border: 1px solid var(--border-clean); padding: 18px; border-radius: 14px; transition: transform 0.2s; }
+        .kpi-box:hover { transform: translateY(-2px); border-color: var(--primary-amber); }
+        .kpi-label { font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        .kpi-val { font-size: 26px; font-weight: 900; color: var(--text-dark); margin-top: 6px; }
+
+        /* Module Workspace Navigation */
+        .modules-nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-top: 14px; }
+        .module-tile { background: white; border: 1.5px solid var(--border-clean); border-radius: 16px; padding: 18px; cursor: pointer; transition: all 0.2s ease; text-align: left; }
+        .module-tile:hover { border-color: var(--primary-amber); transform: translateY(-2px); box-shadow: 0 8px 18px rgba(217,119,6,0.1); }
+        .module-tile.active { border-color: var(--primary-amber); background: #fffbeb; box-shadow: 0 0 0 2px var(--primary-amber); }
+        .module-tile-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .module-tile-header h4 { font-size: 15px; font-weight: 800; color: var(--text-dark); }
+        .module-tile-desc { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; }
+
+        /* Workspace View Section */
+        .workspace-panel { display: none; }
+        .workspace-panel.active { display: block; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; border-bottom: 1px solid var(--border-clean); padding-bottom: 14px; }
+        .panel-header h3 { font-size: 18px; font-weight: 850; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+
+        /* Form Controls */
+        .filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+        select, input[type="text"], input[type="number"], input[type="date"], textarea { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-clean); font-weight: 600; font-size: 13px; background: white; outline: none; }
+        select:focus, input:focus, textarea:focus { border-color: var(--primary-amber); }
+        .btn-action { padding: 10px 20px; background: var(--primary-amber); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-action:hover { background: var(--primary-hover); }
+        .btn-secondary { padding: 10px 18px; background: #f1f5f9; border: 1px solid var(--border-clean); border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        /* Tables */
+        .table-responsive { overflow-x: auto; border-radius: 14px; border: 1px solid var(--border-clean); margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; background: white; text-align: left; }
+        th, td { border: 1px solid var(--border-clean); padding: 12px 14px; font-size: 13px; }
+        th { background: #f8fafc; font-weight: 800; color: var(--text-dark); }
+        tr:hover td { background-color: #fbfbfe; }
+
+        /* Status & Urgency Badges */
+        .badge { padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; display: inline-block; text-transform: uppercase; }
+        .badge-green { background: #d1fae5; color: #065f46; }
+        .badge-amber { background: #fef3c7; color: #92400e; }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+        .badge-red { background: #fee2e2; color: #991b1b; }
+        .badge-purple { background: #ede9fe; color: #5b21b6; }
+
+        /* Progress Bar */
+        .progress-track { width: 100%; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-top: 6px; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #d97706, #059669); border-radius: 10px; }
+
+        /* Modal Overlay */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 99999; padding: 20px; }
+        .modal-box { background: white; border-radius: 20px; padding: 28px; width: 100%; max-width: 540px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+        .modal-box h3 { font-size: 18px; font-weight: 850; color: var(--text-dark); margin-bottom: 16px; }
+
+        /* Toast */
+        #customToastPopup {
+            position: fixed; bottom: 30px; right: 30px; background: #0f172a; color: white;
+            padding: 14px 22px; border-radius: 14px; font-weight: 700; font-size: 13px;
+            z-index: 10000; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            transform: translateY(20px); opacity: 0; transition: all 0.3s ease;
+        }
+        #customToastPopup.show { transform: translateY(0); opacity: 1; }
+
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .modules-nav-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="customToastPopup"></div>
+
+    <div class="container">
+        <!-- 🏗️ 1. Dean Planning & Development Profile Banner -->
+        <div class="bento-card">
+            <div class="profile-banner">
+                <div class="dean-badge">
+                    <div class="avatar-circle">🏗️</div>
+                    <div>
+                        <div class="dean-name" id="displayDeanPdName">Dr. G. Rajendra</div>
+                        <div class="dean-dept">Dean (Planning &amp; Development) | Office of Infrastructure &amp; Institutional Growth (Dr. AIT)</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="refreshAllPdData()" class="btn-secondary" style="background: #fffbeb; color: var(--primary-amber); border-color: #fde68a;">🔄 Refresh KPIs</button>
+                    <button onclick="handleLogout()" class="btn-secondary">Logout ⬅️</button>
+                </div>
+            </div>
+
+            <!-- Planning & Development Institutional KPIs -->
+            <div class="kpi-grid">
+                <div class="kpi-box">
+                    <div class="kpi-label">🏗️ Capital Projects</div>
+                    <div class="kpi-val" id="kpiProjects">Loading...</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">💰 Sponsoring Grants</div>
+                    <div class="kpi-val" id="kpiGrants">Loading...</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">📋 Dept Proposals</div>
+                    <div class="kpi-val" id="kpiProposals">Loading...</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">🤝 Industry MoUs &amp; CoEs</div>
+                    <div class="kpi-val" id="kpiMous">Loading...</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">🏛️ Academic Depts</div>
+                    <div class="kpi-val" id="kpiDepts">8</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-label">📢 P&amp;D Directives</div>
+                    <div class="kpi-val" id="kpiCirculars">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🧭 2. Planning & Development Workspaces Nav -->
+        <div class="bento-card">
+            <h3 style="font-size: 16px; font-weight: 800; margin-bottom: 12px; color: var(--text-dark);">🏗️ Planning &amp; Institutional Development Workspaces</h3>
+            <div class="modules-nav-grid">
+                <div class="module-tile active" id="tab_projects" onclick="switchPdWorkspace('projects')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">🏗️</span>
+                        <h4>Capital Projects</h4>
+                    </div>
+                    <p class="module-tile-desc">Campus physical &amp; digital infrastructure, smart labs, solar grid &amp; expansion.</p>
+                </div>
+
+                <div class="module-tile" id="tab_proposals" onclick="switchPdWorkspace('proposals')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">📋</span>
+                        <h4>Dept Proposals</h4>
+                    </div>
+                    <p class="module-tile-desc">Review lab modernization requests, GPU clusters &amp; equipment purchase proposals from HODs.</p>
+                </div>
+
+                <div class="module-tile" id="tab_grants" onclick="switchPdWorkspace('grants')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">💰</span>
+                        <h4>Grants &amp; Funding</h4>
+                    </div>
+                    <p class="module-tile-desc">Institutional funding from AICTE MODROBS, VGST CISEE, DST FIST &amp; VTU.</p>
+                </div>
+
+                <div class="module-tile" id="tab_mous" onclick="switchPdWorkspace('mous')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">🤝</span>
+                        <h4>Industry MoUs</h4>
+                    </div>
+                    <p class="module-tile-desc">Centers of Excellence, Intel, IBM, Cisco, Bosch corporate collaborative agreements.</p>
+                </div>
+
+                <div class="module-tile" id="tab_directives" onclick="switchPdWorkspace('directives')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">📢</span>
+                        <h4>P&amp;D Directives</h4>
+                    </div>
+                    <p class="module-tile-desc">Issue infrastructure maintenance notices, project tenders &amp; safety directives.</p>
+                </div>
+
+                <div class="module-tile" id="tab_departments" onclick="switchPdWorkspace('departments')">
+                    <div class="module-tile-header">
+                        <span style="font-size: 22px;">🏛️</span>
+                        <h4>Facility Audit</h4>
+                    </div>
+                    <p class="module-tile-desc">Department-wise student/faculty counts, space readiness and resource allocations.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 🏗️ 3. WORKSPACES CONTENT -->
+
+        <!-- Workspace 1: Capital Projects -->
+        <div id="workspace_projects" class="bento-card workspace-panel active">
+            <div class="panel-header">
+                <h3><span>🏗️</span> Campus Infrastructure &amp; Capital Development Projects</h3>
+                <button class="btn-action" onclick="openModal('projectModal')">➕ New Capital Project</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Master register of institutional infrastructure development, modernization milestones, and completion pacing.</p>
+            
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Project Name</th>
+                            <th>Category</th>
+                            <th>Location / Block</th>
+                            <th>Budget Allocated</th>
+                            <th>Budget Utilized</th>
+                            <th>Progress</th>
+                            <th>Target Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectsTableBody">
+                        <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading capital projects...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Workspace 2: Department Proposals -->
+        <div id="workspace_proposals" class="bento-card workspace-panel">
+            <div class="panel-header">
+                <h3><span>📋</span> Departmental Development &amp; Modernization Proposals</h3>
+                <button class="btn-action" onclick="openModal('proposalModal')">➕ Submit Dept Proposal</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Review equipment procurement, laboratory expansion, and renovation requests submitted by department HODs.</p>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Branch</th>
+                            <th>Proposal Title</th>
+                            <th>Description</th>
+                            <th>Est. Cost</th>
+                            <th>Urgency</th>
+                            <th>Submitted By</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proposalsTableBody">
+                        <tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading proposals...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Workspace 3: Institutional Grants -->
+        <div id="workspace_grants" class="bento-card workspace-panel">
+            <div class="panel-header">
+                <h3><span>💰</span> Institutional Development Grants &amp; Research Funding</h3>
+                <button class="btn-action" onclick="openModal('grantModal')">➕ Record Grant</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Sponsored research and laboratory modernization grants from AICTE, VGST, DST, VTU, and government bodies.</p>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Agency</th>
+                            <th>Scheme Name</th>
+                            <th>Sanctioned Amount</th>
+                            <th>Beneficiary Branch</th>
+                            <th>Principal Investigator (PI)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="grantsTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading grants ledger...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Workspace 4: Industry MoUs -->
+        <div id="workspace_mous" class="bento-card workspace-panel">
+            <div class="panel-header">
+                <h3><span>🤝</span> Strategic Industry MoUs &amp; Centers of Excellence (CoE)</h3>
+                <button class="btn-action" onclick="openModal('mouModal')">➕ Add Industry MoU</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Active corporate partnerships, technology transfer tie-ups, and student skill incubation centers.</p>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Partner Organization</th>
+                            <th>Collaboration Scope</th>
+                            <th>Signing Date</th>
+                            <th>Validity Period</th>
+                            <th>Associated Branch</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mousTableBody">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading MoUs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Workspace 5: P&D Directives -->
+        <div id="workspace_directives" class="bento-card workspace-panel">
+            <div class="panel-header">
+                <h3><span>📢</span> Official Planning &amp; Development Directives Desk</h3>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Publish institution-wide notices regarding lab renovations, safety protocols, energy audits, and master campus tenders.</p>
+
+            <form id="pdDirectiveForm" onsubmit="publishPdDirective(event)" style="display: flex; flex-direction: column; gap: 14px; background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--border-clean); margin-bottom: 24px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+                    <div>
+                        <label style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Directive Title *</label>
+                        <input type="text" id="dirTitle" placeholder="e.g. Schedule of Annual Campus Electrical &amp; Fire Safety Audit 2026" required style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Target Scope</label>
+                        <select id="dirScope" style="width: 100%;">
+                            <option value="all">Institution-Wide (All Staff, Faculty &amp; Students)</option>
+                            <option value="branch">Branch Specific</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 6px;">Directive Body / Executive Guidelines *</label>
+                    <textarea id="dirMessage" rows="3" placeholder="Enter detailed directive instructions, vendor requirements, or project deadlines..." required style="width: 100%;"></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn-action">Publish Directive 📢</button>
+                </div>
+            </form>
+
+            <h4 style="font-size: 15px; font-weight: 850; margin-bottom: 10px;">📜 Live Published Institutional Circulars</h4>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Published Date</th>
+                            <th>Title</th>
+                            <th>Audience</th>
+                            <th>Published By</th>
+                        </tr>
+                    </thead>
+                    <tbody id="circularsTableBody">
+                        <tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 15px;">Loading circulars...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Workspace 6: Departments & Facility Audit -->
+        <div id="workspace_departments" class="bento-card workspace-panel">
+            <div class="panel-header">
+                <h3><span>🏛️</span> Department Physical &amp; Academic Facility Readiness Audit</h3>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 14px;">Live cross-branch demographic audit reflecting teaching faculty strength, student enrollments, and departmental infrastructure support.</p>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Department Branch</th>
+                            <th>Faculty Strength</th>
+                            <th>Enrolled Students</th>
+                            <th>Lab Infrastructure Status</th>
+                            <th>P&amp;D Allocation Priority</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deptsTableBody">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">Loading departmental audit...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🌟 MODALS -->
+
+    <!-- 1. Modal: New Capital Project -->
+    <div id="projectModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>🏗️ Add New Capital Project</h3>
+            <form onsubmit="submitNewProject(event)" style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Project Name *</label>
+                    <input type="text" id="mProjName" placeholder="e.g. Center for Cyber Defense &amp; Cloud Security" required style="width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Category</label>
+                    <select id="mProjCat" style="width: 100%;">
+                        <option value="IT Infrastructure">IT Infrastructure</option>
+                        <option value="Classroom Modernization">Classroom Modernization</option>
+                        <option value="Research Lab">Research Lab</option>
+                        <option value="Green Campus">Green Campus &amp; Solar</option>
+                        <option value="Civil Infrastructure">Civil Infrastructure</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Location / Block</label>
+                    <input type="text" id="mProjLoc" placeholder="e.g. ISE / CSBS Block - 2nd Floor" style="width: 100%;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Budget Allocated</label>
+                        <input type="text" id="mProjAlloc" placeholder="e.g. ₹ 45,00,000" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Budget Utilized</label>
+                        <input type="text" id="mProjUtil" placeholder="e.g. ₹ 20,00,000" style="width: 100%;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Progress % (0-100)</label>
+                        <input type="number" id="mProjProg" min="0" max="100" value="25" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Target Completion</label>
+                        <input type="text" id="mProjDate" placeholder="e.g. Feb 2027" style="width: 100%;">
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Status</label>
+                    <select id="mProjStatus" style="width: 100%;">
+                        <option value="In Progress">In Progress</option>
+                        <option value="Planning">Planning</option>
+                        <option value="Commissioned">Commissioned</option>
+                    </select>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('projectModal')">Cancel</button>
+                    <button type="submit" class="btn-action">Save Project</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Modal: New Proposal -->
+    <div id="proposalModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>📋 Submit Department Proposal</h3>
+            <form onsubmit="submitNewProposal(event)" style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Branch *</label>
+                    <select id="mPropBranch" style="width: 100%;">
+                        <option value="AIML">Artificial Intelligence &amp; ML (AIML)</option>
+                        <option value="CSBS">Computer Science &amp; Business Systems (CSBS)</option>
+                        <option value="CSE">Computer Science &amp; Engg (CSE)</option>
+                        <option value="ISE">Information Science &amp; Engg (ISE)</option>
+                        <option value="ECE">Electronics &amp; Comm Engg (ECE)</option>
+                        <option value="EEE">Electrical &amp; Electronics Engg (EEE)</option>
+                        <option value="MECH">Mechanical Engg (MECH)</option>
+                        <option value="CIVIL">Civil Engg (CIVIL)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Proposal Title *</label>
+                    <input type="text" id="mPropTitle" placeholder="e.g. High-Voltage Power Electronics Test Bench" required style="width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Description</label>
+                    <textarea id="mPropDesc" rows="3" placeholder="Explain the laboratory justification and academic necessity..." style="width: 100%;"></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Estimated Cost</label>
+                        <input type="text" id="mPropCost" placeholder="e.g. ₹ 15,00,000" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Urgency</label>
+                        <select id="mPropUrgency" style="width: 100%;">
+                            <option value="High">High</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="Low">Low</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('proposalModal')">Cancel</button>
+                    <button type="submit" class="btn-action">Submit Proposal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Modal: New Grant -->
+    <div id="grantModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>💰 Record Institutional Grant</h3>
+            <form onsubmit="submitNewGrant(event)" style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Sponsoring Agency *</label>
+                    <input type="text" id="mGrantAgency" placeholder="e.g. AICTE / VGST / DST / VTU" required style="width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Scheme Name *</label>
+                    <input type="text" id="mGrantScheme" placeholder="e.g. MODROBS / Research Promotion Scheme (RPS)" required style="width: 100%;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Sanctioned Amount</label>
+                        <input type="text" id="mGrantAmount" placeholder="e.g. ₹ 25,00,000" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Branch</label>
+                        <input type="text" id="mGrantBranch" placeholder="e.g. AIML / EEE" style="width: 100%;">
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Principal Investigator (PI)</label>
+                    <input type="text" id="mGrantPI" placeholder="e.g. Dr. B. S. Shylaja" style="width: 100%;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('grantModal')">Cancel</button>
+                    <button type="submit" class="btn-action">Save Grant</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. Modal: New MoU -->
+    <div id="mouModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3>🤝 Add Strategic Industry MoU</h3>
+            <form onsubmit="submitNewMou(event)" style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Partner Organization *</label>
+                    <input type="text" id="mMouOrg" placeholder="e.g. Oracle India Pvt Ltd" required style="width: 100%;">
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Collaboration Scope</label>
+                    <input type="text" id="mMouScope" placeholder="e.g. Database Academy &amp; Autonomous Cloud Lab" style="width: 100%;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Signing Date</label>
+                        <input type="date" id="mMouDate" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Validity Period</label>
+                        <input type="text" id="mMouVal" placeholder="e.g. 3 Years" style="width: 100%;">
+                    </div>
+                </div>
+                <div>
+                    <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Associated Branch</label>
+                    <input type="text" id="mMouBranch" placeholder="e.g. CSBS / CSE" style="width: 100%;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('mouModal')">Cancel</button>
+                    <button type="submit" class="btn-action">Save MoU</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let BACKEND_URL = window.location.origin;
+        if (BACKEND_URL.includes("-5501.")) {
+            BACKEND_URL = BACKEND_URL.replace("-5501.", "-5000.");
+        } else if (BACKEND_URL.includes(":5501")) {
+            BACKEND_URL = BACKEND_URL.replace(":5501", ":5000");
+        } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+            BACKEND_URL = "http://localhost:5000";
+        }
+
+        const institutionId = localStorage.getItem("userInstitution") || "DR_AIT";
+
+        function showToast(msg) {
+            const toast = document.getElementById("customToastPopup");
+            toast.innerText = msg;
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 3500);
+        }
+
+        function handleLogout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+
+        function switchPdWorkspace(workspaceKey) {
+            document.querySelectorAll(".module-tile").forEach(t => t.classList.remove("active"));
+            document.querySelectorAll(".workspace-panel").forEach(p => p.classList.remove("active"));
+
+            const tab = document.getElementById(`tab_${workspaceKey}`);
+            const panel = document.getElementById(`workspace_${workspaceKey}`);
+
+            if (tab) tab.classList.add("active");
+            if (panel) panel.classList.add("active");
+        }
+
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // =========================================================================
+        // DATA LOADERS
+        // =========================================================================
+
+        async function loadPdMetrics() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/metrics?institutionId=${institutionId}`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('kpiProjects').innerText = data.totalProjects || '0';
+                    document.getElementById('kpiGrants').innerText = data.totalGrants || '0';
+                    document.getElementById('kpiProposals').innerText = `${data.pendingProposals || 0} / ${data.totalProposals || 0}`;
+                    document.getElementById('kpiMous').innerText = data.totalMous || '0';
+                }
+            } catch (err) {
+                console.error("Error loading PD metrics:", err);
+            }
+        }
+
+        async function loadInstitutionalMetrics() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/institutional-metrics?institutionId=${institutionId}`);
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('kpiDepts').innerText = data.totalDepartments || '8';
+                    document.getElementById('kpiCirculars').innerText = data.totalCirculars || '0';
+
+                    // Populate Departments audit table
+                    const tbody = document.getElementById('deptsTableBody');
+                    if (data.departments && data.departments.length > 0) {
+                        tbody.innerHTML = data.departments.map(d => `
+                            <tr>
+                                <td style="font-weight: 800; color: var(--accent-blue);">${d.branch}</td>
+                                <td>${d.faculty_count} Professors</td>
+                                <td>${d.student_count} Enrolled</td>
+                                <td><span class="badge badge-green">✓ Active &amp; Modernized</span></td>
+                                <td><span class="badge badge-amber">Phase-II Upgrades</span></td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:15px;">No departmental records available.</td></tr>`;
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading institutional metrics:", err);
+            }
+        }
+
+        async function loadProjects() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/projects?institutionId=${institutionId}`);
+                const data = await res.json();
+                const tbody = document.getElementById('projectsTableBody');
+                if (data.success && data.projects.length > 0) {
+                    tbody.innerHTML = data.projects.map(p => {
+                        const statusBadge = p.status === 'Commissioned' ? 'badge-green' : (p.status === 'In Progress' ? 'badge-blue' : 'badge-amber');
+                        return `
+                            <tr>
+                                <td style="font-weight: 800;">${p.project_name}</td>
+                                <td><span class="badge badge-purple">${p.category}</span></td>
+                                <td>${p.location_block || 'Main Campus'}</td>
+                                <td style="font-weight: 700;">${p.budget_allocated || '₹ 0'}</td>
+                                <td style="color: var(--accent-green); font-weight: 700;">${p.budget_utilized || '₹ 0'}</td>
+                                <td style="width: 140px;">
+                                    <div style="font-size: 11px; font-weight: 800;">${p.progress_percent || 0}%</div>
+                                    <div class="progress-track"><div class="progress-fill" style="width: ${p.progress_percent || 0}%;"></div></div>
+                                </td>
+                                <td>${p.target_completion || 'TBD'}</td>
+                                <td><span class="badge ${statusBadge}">${p.status}</span></td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:15px;">No capital projects recorded yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Error loading projects:", err);
+            }
+        }
+
+        async function loadProposals() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/proposals?institutionId=${institutionId}`);
+                const data = await res.json();
+                const tbody = document.getElementById('proposalsTableBody');
+                if (data.success && data.proposals.length > 0) {
+                    tbody.innerHTML = data.proposals.map(pr => {
+                        const urgBadge = pr.urgency_level === 'High' ? 'badge-red' : (pr.urgency_level === 'Medium' ? 'badge-amber' : 'badge-blue');
+                        const statusBadge = pr.status === 'Approved' ? 'badge-green' : (pr.status === 'Fund Sanctioned' ? 'badge-purple' : 'badge-amber');
+                        return `
+                            <tr>
+                                <td style="font-weight: 800; color: var(--accent-blue);">${pr.branch}</td>
+                                <td style="font-weight: 700;">${pr.proposal_title}</td>
+                                <td style="font-size: 12px; color: var(--text-muted); max-width: 250px;">${pr.description || ''}</td>
+                                <td style="font-weight: 800;">${pr.estimated_cost || '₹ 0'}</td>
+                                <td><span class="badge ${urgBadge}">${pr.urgency_level}</span></td>
+                                <td>${pr.submitted_by || 'HOD'}</td>
+                                <td><span class="badge ${statusBadge}">${pr.status}</span></td>
+                                <td>
+                                    ${pr.status === 'Under Review' ? `
+                                        <button onclick="updateProposalStatus(${pr.id}, 'Approved')" style="padding: 4px 8px; font-size: 11px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 700;">Approve</button>
+                                        <button onclick="updateProposalStatus(${pr.id}, 'Fund Sanctioned')" style="padding: 4px 8px; font-size: 11px; background: #7c3aed; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 700; margin-left: 4px;">Sanction</button>
+                                    ` : `<span style="font-size: 12px; color: var(--accent-green); font-weight: 700;">✓ Actioned</span>`}
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:15px;">No departmental proposals found.</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Error loading proposals:", err);
+            }
+        }
+
+        async function loadGrants() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/grants?institutionId=${institutionId}`);
+                const data = await res.json();
+                const tbody = document.getElementById('grantsTableBody');
+                if (data.success && data.grants.length > 0) {
+                    tbody.innerHTML = data.grants.map(g => `
+                        <tr>
+                            <td style="font-weight: 800; color: var(--primary-amber);">${g.agency_name}</td>
+                            <td style="font-weight: 700;">${g.scheme_name}</td>
+                            <td style="font-weight: 800; color: var(--accent-green);">${g.sanctioned_amount}</td>
+                            <td><span class="badge badge-blue">${g.branch || 'ALL'}</span></td>
+                            <td>${g.principal_investigator || 'Faculty PI'}</td>
+                            <td><span class="badge badge-green">${g.status}</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:15px;">No grants recorded yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Error loading grants:", err);
+            }
+        }
+
+        async function loadMous() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/mous?institutionId=${institutionId}`);
+                const data = await res.json();
+                const tbody = document.getElementById('mousTableBody');
+                if (data.success && data.mous.length > 0) {
+                    tbody.innerHTML = data.mous.map(m => `
+                        <tr>
+                            <td style="font-weight: 800; color: var(--accent-blue);">${m.partner_organization}</td>
+                            <td>${m.collaboration_scope || 'Academic & Research'}</td>
+                            <td>${m.signing_date || 'N/A'}</td>
+                            <td><span class="badge badge-purple">${m.validity_years || '3 Years'}</span></td>
+                            <td><span class="badge badge-amber">${m.branch || 'ALL'}</span></td>
+                            <td><span class="badge badge-green">${m.status}</span></td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:15px;">No MoUs recorded yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Error loading MoUs:", err);
+            }
+        }
+
+        async function loadCirculars() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/circulars?institutionId=${institutionId}`);
+                const data = await res.json();
+                const tbody = document.getElementById('circularsTableBody');
+                if (data.success && data.circulars && data.circulars.length > 0) {
+                    tbody.innerHTML = data.circulars.slice(0, 8).map(c => `
+                        <tr>
+                            <td style="font-size: 12px; color: var(--text-muted);">${new Date(c.published_at).toLocaleDateString()}</td>
+                            <td style="font-weight: 700;">${c.title}</td>
+                            <td><span class="badge badge-blue">${c.audience_scope.toUpperCase()}</span></td>
+                            <td style="font-size: 12px;">${c.created_by_name || c.created_by || 'Administration'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:15px;">No circulars published yet.</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Error loading circulars:", err);
+            }
+        }
+
+        // =========================================================================
+        // SUBMISSIONS & ACTIONS
+        // =========================================================================
+
+        async function submitNewProject(e) {
+            e.preventDefault();
+            const payload = {
+                institutionId,
+                projectName: document.getElementById('mProjName').value.trim(),
+                category: document.getElementById('mProjCat').value,
+                locationBlock: document.getElementById('mProjLoc').value.trim(),
+                budgetAllocated: document.getElementById('mProjAlloc').value.trim(),
+                budgetUtilized: document.getElementById('mProjUtil').value.trim(),
+                progressPercent: parseInt(document.getElementById('mProjProg').value, 10),
+                targetCompletion: document.getElementById('mProjDate').value.trim(),
+                status: document.getElementById('mProjStatus').value
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/projects`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("✅ Capital Project added successfully!");
+                    closeModal('projectModal');
+                    loadProjects();
+                    loadPdMetrics();
+                } else {
+                    alert("❌ Failed to add project: " + (data.message || "Unknown error"));
+                }
+            } catch (err) {
+                alert("❌ Network error connecting to server.");
+            }
+        }
+
+        async function submitNewProposal(e) {
+            e.preventDefault();
+            const payload = {
+                institutionId,
+                branch: document.getElementById('mPropBranch').value,
+                proposalTitle: document.getElementById('mPropTitle').value.trim(),
+                description: document.getElementById('mPropDesc').value.trim(),
+                estimatedCost: document.getElementById('mPropCost').value.trim(),
+                urgencyLevel: document.getElementById('mPropUrgency').value,
+                submittedBy: localStorage.getItem("userName") || "Dean (P&D)"
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/proposals`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("✅ Department proposal submitted!");
+                    closeModal('proposalModal');
+                    loadProposals();
+                    loadPdMetrics();
+                } else {
+                    alert("❌ Failed to submit proposal.");
+                }
+            } catch (err) {
+                alert("❌ Network error connecting to server.");
+            }
+        }
+
+        async function updateProposalStatus(id, newStatus) {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/proposals/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ institutionId, status: newStatus })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ Proposal status updated to ${newStatus}`);
+                    loadProposals();
+                    loadPdMetrics();
+                }
+            } catch (err) {
+                alert("❌ Failed to update proposal status.");
+            }
+        }
+
+        async function submitNewGrant(e) {
+            e.preventDefault();
+            const payload = {
+                institutionId,
+                agencyName: document.getElementById('mGrantAgency').value.trim(),
+                schemeName: document.getElementById('mGrantScheme').value.trim(),
+                sanctionedAmount: document.getElementById('mGrantAmount').value.trim(),
+                branch: document.getElementById('mGrantBranch').value.trim() || 'ALL',
+                principalInvestigator: document.getElementById('mGrantPI').value.trim() || 'Faculty PI',
+                status: 'Active'
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/grants`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("✅ Institutional grant recorded!");
+                    closeModal('grantModal');
+                    loadGrants();
+                    loadPdMetrics();
+                } else {
+                    alert("❌ Failed to record grant.");
+                }
+            } catch (err) {
+                alert("❌ Network error connecting to server.");
+            }
+        }
+
+        async function submitNewMou(e) {
+            e.preventDefault();
+            const payload = {
+                institutionId,
+                partnerOrganization: document.getElementById('mMouOrg').value.trim(),
+                collaborationScope: document.getElementById('mMouScope').value.trim(),
+                signingDate: document.getElementById('mMouDate').value,
+                validityYears: document.getElementById('mMouVal').value.trim() || '3 Years',
+                branch: document.getElementById('mMouBranch').value.trim() || 'ALL',
+                status: 'Active'
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/admin/pd/mous`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("✅ Industry MoU added successfully!");
+                    closeModal('mouModal');
+                    loadMous();
+                    loadPdMetrics();
+                } else {
+                    alert("❌ Failed to record MoU.");
+                }
+            } catch (err) {
+                alert("❌ Network error connecting to server.");
+            }
+        }
+
+        async function publishPdDirective(e) {
+            e.preventDefault();
+            const title = document.getElementById('dirTitle').value.trim();
+            const message = document.getElementById('dirMessage').value.trim();
+            const scope = document.getElementById('dirScope').value;
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/hod/circulars`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title,
+                        message,
+                        audienceScope: scope,
+                        createdBy: localStorage.getItem("userUsn") || "DEAN_PD01",
+                        createdByName: localStorage.getItem("userName") || "Dr. G. Rajendra (Dean P&D)",
+                        institutionId
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("📢 P&D Directive published across institution!");
+                    document.getElementById('pdDirectiveForm').reset();
+                    loadCirculars();
+                    loadInstitutionalMetrics();
+                } else {
+                    alert("❌ " + (data.message || "Failed to publish directive."));
+                }
+            } catch (err) {
+                alert("❌ Network error publishing directive.");
+            }
+        }
+
+        function refreshAllPdData() {
+            loadPdMetrics();
+            loadInstitutionalMetrics();
+            loadProjects();
+            loadProposals();
+            loadGrants();
+            loadMous();
+            loadCirculars();
+            showToast("🔄 Data refreshed successfully!");
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const storedName = localStorage.getItem("userName");
+            if (storedName) {
+                document.getElementById('displayDeanPdName').innerText = storedName;
+            }
+
+            // Set default date for MoU modal
+            const today = new Date().toISOString().split('T')[0];
+            const dateInput = document.getElementById('mMouDate');
+            if (dateInput) dateInput.value = today;
+
+            refreshAllPdData();
+        });
+    </script>
+</body>
+</html>

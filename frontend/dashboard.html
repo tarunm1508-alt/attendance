@@ -1915,13 +1915,22 @@
         });
 
         // 🌐 ROBUST DYNAMIC API BASE RESOLUTION
-        let API_BASE = window.location.origin;
-        if (API_BASE.includes("-5501.")) {
-            API_BASE = API_BASE.replace("-5501.", "-5000.");
-        } else if (API_BASE.includes(":5501")) {
-            API_BASE = API_BASE.replace(":5501", ":5000");
-        } else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
-            API_BASE = "http://localhost:5000";
+        const isCapacitor = Boolean(
+            (window.Capacitor && (window.Capacitor.isNativePlatform?.() || window.Capacitor.getPlatform?.() === 'android')) ||
+            window.location.protocol === 'capacitor:' ||
+            (window.location.hostname === 'localhost' && !window.location.port)
+        );
+
+        let API_BASE;
+        if (isCapacitor) {
+            API_BASE = "https://dr-ait-portal-backend.onrender.com";
+        } else {
+            API_BASE = window.location.origin;
+            if (API_BASE.includes("-5501.")) API_BASE = API_BASE.replace("-5501.", "-5000.");
+            else if (API_BASE.includes(":5501")) API_BASE = API_BASE.replace(":5501", ":5000");
+            else if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+                if (window.location.port !== "5000") API_BASE = "http://localhost:5000";
+            }
         }
 
         const userRole = localStorage.getItem('userRole') || localStorage.getItem('role') || 'student';
@@ -2683,7 +2692,7 @@
                     let link = '';
                     if (rawUrl) {
                         try {
-                            const parsed = new URL(rawUrl, window.location.origin);
+                            const parsed = new URL(rawUrl, API_BASE);
                             if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
                                 link = `<a href="${escapeStudentUpdateHtml(parsed.href)}" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin-top:8px;color:var(--primary-blue);font-size:12px;font-weight:800;">📎 Open attachment</a>`;
                             }
@@ -3038,15 +3047,17 @@
 
                     subjects.forEach(sub => {
                         const ratio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 100;
+                        const formatVal = (v, max = 25) => (v !== null && v !== undefined && v !== '') ? `${v}/${max}` : '-';
+                        const formatSeeVal = (v) => (v !== null && v !== undefined && v !== '') ? `<strong>${v} GP</strong>` : '-';
                         tbody.innerHTML += `
                             <tr>
                                 <td><strong>${sub.subject_name || sub.subject || 'Course'}</strong></td>
                                 <td><code>${sub.subject_code || 'SUB'}</code></td>
                                 <td><span style="font-weight: 800; color: ${ratio >= 75 ? 'var(--accent-green)' : 'var(--accent-red)'};">${ratio}%</span></td>
-                                <td>${sub.cie1 ?? 0}/25</td>
-                                <td>${sub.cie2 ?? 0}/25</td>
-                                <td>${sub.cie3 ?? 0}/25</td>
-                                <td><strong>${sub.see ?? 0} GP</strong></td>
+                                <td>${formatVal(sub.cie1)}</td>
+                                <td>${formatVal(sub.cie2)}</td>
+                                <td>${formatVal(sub.cie3)}</td>
+                                <td>${formatSeeVal(sub.see)}</td>
                             </tr>
                         `;
                     });
@@ -5000,16 +5011,18 @@
 
             filtered.forEach(sub => {
                 const ratio = sub.conducted > 0 ? Math.round((sub.attended / sub.conducted) * 100) : 100;
+                const formatCie = (v) => (v !== null && v !== undefined && v !== '') ? `${v}/25` : '-';
+                const formatSee = (v) => (v !== null && v !== undefined && v !== '') ? `${v} GP` : '-';
                 const card = document.createElement('div');
                 card.className = "subject-card";
                 card.innerHTML = `
                     <div><strong>${(sub.subject_code || 'SUB').trim()}</strong> - ${(sub.subject_name || sub.subject || 'Course').trim()}</div>
                     <div>Attendance: <strong>${ratio}%</strong></div>
                     <div class="marks-summary-subdeck">
-                        <div><div class="marks-cell-title">CIE-1</div><div class="marks-cell-value">${sub.cie1 ?? 0}/25</div></div>
-                        <div><div class="marks-cell-title">CIE-2</div><div class="marks-cell-value">${sub.cie2 ?? 0}/25</div></div>
-                        <div><div class="marks-cell-title">CIE-3</div><div class="marks-cell-value">${sub.cie3 ?? 0}/25</div></div>
-                        <div><div class="marks-cell-title">SEE</div><div class="marks-cell-value">${sub.see ?? 0} GP</div></div>
+                        <div><div class="marks-cell-title">CIE-1</div><div class="marks-cell-value">${formatCie(sub.cie1)}</div></div>
+                        <div><div class="marks-cell-title">CIE-2</div><div class="marks-cell-value">${formatCie(sub.cie2)}</div></div>
+                        <div><div class="marks-cell-title">CIE-3</div><div class="marks-cell-value">${formatCie(sub.cie3)}</div></div>
+                        <div><div class="marks-cell-title">SEE</div><div class="marks-cell-value">${formatSee(sub.see)}</div></div>
                     </div>
                 `;
                 container.appendChild(card);
